@@ -339,7 +339,7 @@ export default function EditProduct() {
                 </select>
               </div>
               {/* Subcategory — shown when selected category has subcategories */}
-              {form.category && categoryGroups.find(g => g.name === form.category)?.subcategories?.length > 0 && (
+              {form.category && (categoryGroups.find(g => g.name === form.category)?.subcategories?.length ?? 0) > 0 && (
                 <div>
                   <label style={labelStyle}>Subcategory</label>
                   <select value={form.subcategory} onChange={e => setForm(prev => ({ ...prev, subcategory: e.target.value }))} style={{ ...inputStyle, backgroundColor: "white" }}>
