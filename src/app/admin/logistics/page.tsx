@@ -64,13 +64,13 @@ export default function LogisticsPage() {
     const supabase = createClient()
     const existing = logistics[orderId]
     const updated: LogisticsEntry = {
-      order_id: orderId,
       delivery_charge: 0,
       travel_cost: 0,
       cod_tax: 0,
       notes: "",
       ...existing,
       ...entry,
+      order_id: orderId,
     }
     await supabase.from("logistics_costs").upsert(updated, { onConflict: "order_id" })
     setLogistics(prev => ({ ...prev, [orderId]: updated }))
