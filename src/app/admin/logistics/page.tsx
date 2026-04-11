@@ -64,10 +64,7 @@ export default function LogisticsPage() {
     const supabase = createClient()
     const existing = logistics[orderId]
     const updated: LogisticsEntry = {
-      delivery_charge: 0,
-      travel_cost: 0,
-      cod_tax: 0,
-      notes: "",
+      ...{ delivery_charge: 0, travel_cost: 0, cod_tax: 0, notes: "" },
       ...existing,
       ...entry,
       order_id: orderId,
