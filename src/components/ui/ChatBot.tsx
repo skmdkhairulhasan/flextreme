@@ -980,9 +980,9 @@ if (
       }
 
       if (zone) {
-        modeRef.current = null
+        modeRef.current = "awaiting_delivery_city"  // stay in delivery mode for follow-up cities
         const price = zone.charge ? "BDT " + zone.charge : "Free"
-        return "📦 Delivery to " + zone.label + ":\n\n💰 Charge: " + price + "\n⏱ Estimated time: " + zone.days + " business days\n\nCash on Delivery — pay when it arrives! 💪"
+        return "📦 Delivery to " + zone.label + ":\n\n💰 Charge: " + price + "\n⏱ Estimated time: " + zone.days + " business days\n\nCash on Delivery — pay when it arrives! 💪\n\nAnother city? Just type it! 🗺️"
       }
 
       // No city found — ask

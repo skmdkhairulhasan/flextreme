@@ -11,6 +11,7 @@ async function getSettings() {
   return map
 }
 
+export const dynamic = "force-dynamic"
 export default async function HomePage() {
   const supabase = await createClient()
   const [{ data: products }, settings, { count: productCount }, { data: reviews }, { count: orderCount }, { data: allReviews }] = await Promise.all([
@@ -210,16 +211,16 @@ function WhyFlextreme() {
           <h2 style={{ fontSize: "clamp(2rem, 5vw, 3.5rem)", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.03em", lineHeight: 1 }}>Why Flextreme?</h2>
         </div>
         <div style={{ border: "1px solid #e0e0e0" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 120px 120px", backgroundColor: "black", color: "white", padding: "1rem 1.5rem" }}>
-            <span style={{ fontSize: "0.75rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase" }}>Feature</span>
-            <span style={{ fontSize: "0.75rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", textAlign: "center" }}>Flextreme</span>
-            <span style={{ fontSize: "0.75rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>Others</span>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 100px 100px", backgroundColor: "black", color: "white", padding: "0.875rem 1.25rem" }}>
+            <div style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase" }}>Feature</div>
+            <div style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", display: "flex", justifyContent: "center" }}>Flextreme</div>
+            <div style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", display: "flex", justifyContent: "center", color: "rgba(255,255,255,0.4)" }}>Others</div>
           </div>
           {comparisons.map((row, index) => (
-            <div key={index} style={{ display: "grid", gridTemplateColumns: "1fr 120px 120px", padding: "1rem 1.5rem", borderTop: "1px solid #e0e0e0", backgroundColor: index % 2 === 0 ? "white" : "#fafafa", alignItems: "center" }}>
-              <span style={{ fontSize: "0.9rem", fontWeight: 500 }}>{row.feature}</span>
-              <span style={{ textAlign: "center", color: "#16a34a", fontWeight: 700, fontSize: "1.1rem" }}>{row.flextreme ? "✓" : "✗"}</span>
-              <span style={{ textAlign: "center", color: row.others ? "#16a34a" : "#dc2626", fontWeight: 700, fontSize: "1.1rem" }}>{row.others ? "✓" : "✗"}</span>
+            <div key={index} style={{ display: "grid", gridTemplateColumns: "1fr 100px 100px", padding: "0.875rem 1.25rem", borderTop: "1px solid #e0e0e0", backgroundColor: index % 2 === 0 ? "white" : "#fafafa", alignItems: "center" }}>
+              <div style={{ fontSize: "0.88rem", fontWeight: 500 }}>{row.feature}</div>
+              <div style={{ display: "flex", justifyContent: "center", alignItems: "center", color: "#16a34a", fontWeight: 900, fontSize: "1.2rem", lineHeight: 1 }}>{row.flextreme ? "✓" : "✗"}</div>
+              <div style={{ display: "flex", justifyContent: "center", alignItems: "center", color: row.others ? "#16a34a" : "#dc2626", fontWeight: 900, fontSize: "1.2rem", lineHeight: 1 }}>{row.others ? "✓" : "✗"}</div>
             </div>
           ))}
         </div>
@@ -235,6 +236,20 @@ function BrandStory({ settings, totalProducts, customerCount, avgRating, totalRe
     { number: "100%", label: "Cash on Delivery", sub: "Pay on arrival" },
     { number: avgRating, label: "Avg Rating", sub: totalReviews + " verified reviews" },
   ]
+  function renderText(text: string) {
+    if (!text) return null
+    const lines = text.split("\n")
+    return <>{lines.map((line: string, li: number) => {
+      const parts = line.split(/(\*\*[\s\S]+?\*\*|_[\s\S]+?_|<u>[\s\S]+?<\/u>)/g)
+      const rendered = parts.map((part: string, i: number) => {
+        if (part.startsWith("**") && part.endsWith("**") && part.length > 4) return <strong key={i}>{part.slice(2,-2)}</strong>
+        if (part.startsWith("_") && part.endsWith("_") && part.length > 2) return <em key={i}>{part.slice(1,-1)}</em>
+        if (part.startsWith("<u>") && part.endsWith("</u>")) return <u key={i}>{part.slice(3,-4)}</u>
+        return <span key={i}>{part}</span>
+      })
+      return <span key={li}>{rendered}{li < lines.length - 1 && <br/>}</span>
+    })}</>
+  }
   return (
     <section style={{ backgroundColor: "#0a0a0a", padding: "6rem 1.5rem", color: "white" }}>
       <div style={{ maxWidth: "1280px", margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "4rem", alignItems: "center" }}>
@@ -242,7 +257,7 @@ function BrandStory({ settings, totalProducts, customerCount, avgRating, totalRe
           <p style={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.3em", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", marginBottom: "1rem" }}>Our Story</p>
           <h2 style={{ fontSize: "clamp(2rem, 4vw, 3rem)", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.03em", lineHeight: 1.1, marginBottom: "1.5rem" }}>Born In The Gym.<br />Built For The Grind.</h2>
           <p style={{ color: "rgba(255,255,255,0.6)", lineHeight: 1.8, fontSize: "1rem", marginBottom: "2rem" }}>
-            {settings.brand_story || "Flextreme was born from frustration. We were athletes who could not find gym wear that matched our intensity."}
+            {renderText(settings.brand_story || "Flextreme was born from frustration. We were athletes who could not find gym wear that matched our intensity.")}
           </p>
           <Link href="/about" style={{ display: "inline-block", border: "1px solid rgba(255,255,255,0.4)", padding: "0.875rem 2rem", fontWeight: 700, fontSize: "0.75rem", letterSpacing: "0.15em", textTransform: "uppercase", textDecoration: "none", color: "white" }}>Read Our Story</Link>
         </div>
