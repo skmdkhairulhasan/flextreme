@@ -7,8 +7,8 @@ export default async function AdminDashboard() {
     supabase.from("orders").select("*").order("created_at", { ascending: false }),
     supabase.from("products").select("*"),
     supabase.from("reviews").select("rating, status"),
-    supabase.from("logistics_costs").select("*").then(r => r).catch(() => ({ data: [] })),
-    supabase.from("customers").select("order_history").then(r => r).catch(() => ({ data: [] })),
+    supabase.from("logistics_costs").select("*"),
+    supabase.from("customers").select("order_history"),
   ])
 
   const allOrders = orders || []
