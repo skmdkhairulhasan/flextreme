@@ -631,11 +631,8 @@ if (
         msg.includes("flextreme brand") || msg.includes("story of flextreme") ||
         msg.includes("flextreme story") || msg.includes("who is flextreme") ||
         (msg.includes("flextreme") && (msg.includes("what") || msg.includes("who") || msg.includes("tell") || msg.includes("about") || msg.includes("brand") || msg.includes("story") || msg.length < 15))) {
-      return (s.about_story || "Flextreme is a premium gym wear brand from Bangladesh, built by athletes for athletes. We create compression gear that performs as good as it looks.") + "
+      return (s.about_story || "Flextreme is a premium gym wear brand from Bangladesh, built by athletes for athletes. We create compression gear that performs as good as it looks.") + "\n\nWork Hard. Flex Extreme. 🔥\n\nWant to see our products? → /products"
 
-Work Hard. Flex Extreme. 🔥
-
-Want to see our products? → /products"
     }
 
     // Greetings & casual
