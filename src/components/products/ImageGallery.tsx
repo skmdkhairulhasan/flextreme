@@ -5,6 +5,17 @@ export default function ImageGallery({ images, productName }: { images: string[]
   const [current, setCurrent] = useState(0)
   const [lightbox, setLightbox] = useState(false)
   const [lens, setLens] = useState({ show: false, x: 0, y: 0, w: 0, h: 0 })
+
+  // Safety: ensure cursor attribute is always cleaned up
+  useEffect(() => {
+    function cleanup() {
+      document.documentElement.removeAttribute("data-hovering-image")
+      setLens(l => ({ ...l, show: false }))
+    }
+    // On any click outside, clean up
+    window.addEventListener("blur", cleanup)
+    return () => window.removeEventListener("blur", cleanup)
+  }, [])
   const containerRef = useRef<HTMLDivElement>(null)
   const LENS_SIZE = 130
   const ZOOM = 2.8
@@ -65,7 +76,13 @@ export default function ImageGallery({ images, productName }: { images: string[]
       <style>{`
         [data-hovering-image="true"] .fx-cur,
         [data-hovering-image="true"] .fx-particle,
-        [data-hovering-image="true"] .rage-label { display: none !important; }
+        [data-hovering-image="true"] .rage-label,
+        [data-hovering-image="true"] .logo-cur,
+        [data-hovering-image="true"] .logo-particle,
+        [data-hovering-image="true"] .logo-rage-label,
+        [data-hovering-image="true"] .db-cur,
+        [data-hovering-image="true"] .db-particle,
+        [data-hovering-image="true"] .db-rage-label { display: none !important; }
         .img-hover-zone { cursor: none !important; }
         .flx-lightbox {
           position: fixed !important;

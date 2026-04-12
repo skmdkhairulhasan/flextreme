@@ -273,7 +273,9 @@ const [profile] = useState({
         }
       }
     }
-    if (isPhone && modeRef.current === "order_lookup") {
+    // Also trigger order lookup if user just types a phone number anywhere
+    if (isPhone && (modeRef.current === "order_lookup" || modeRef.current === null)) {
+      if (modeRef.current === null) modeRef.current = "order_lookup"
       // async order lookup — return loading message, then update
       setTimeout(async () => {
         try {
@@ -295,9 +297,10 @@ if (data && data.length > 0) {
     const size = o.size ? "\nSize: " + o.size : ""
     const color = o.color ? "\nColor: " + o.color : ""
 
+    const sEmoji = status==="delivered"?"✅":status==="shipped"?"🚚":status==="confirmed"?"✓":status==="cancelled"?"❌":"⏳"
     orderReply += `ORDER ${i+1}
 Product: ${product}
-Status: ${status}
+🔘 STATUS: ${sEmoji} ${status.toUpperCase()}
 Quantity: ${qty}${size}${color}`
 
     if (status === "shipped" && o.tracking_url) {
@@ -1128,7 +1131,13 @@ if (
       msg.includes("when is my") && (msg.includes("order") || msg.includes("delivery")) ||
       msg.includes("what time") && msg.includes("order") ||
       msg.includes("how much time") && (msg.includes("order") || msg.includes("deliver") || msg.includes("arrive"))
-    if (isOrderTrack || (has(msg, "order") && (msg.includes("track") || msg.includes("status") || msg.includes("where") || msg.includes("find") || msg.includes("check") || msg.includes("lookup")))) {
+    // Smart order detection — matches partial phrases too
+    const orderWords = ["track", "status", "where", "find", "check", "lookup", "locate", "search", "show", "tell me about", "what happened", "update"]
+    const hasOrderIntent = isOrderTrack || 
+      (has(msg, "order") && orderWords.some(w => msg.includes(w))) ||
+      (msg.includes("my order") || msg.includes("my parcel") || msg.includes("my package") || msg.includes("my purchase")) ||
+      (msg.includes("order") && (msg.includes("can you") || msg.includes("please") || msg.includes("help") || msg.includes("want to")))
+    if (hasOrderIntent) {
       modeRef.current = "order_lookup"
       return "Sure! Send me the phone number you used when placing your order and I\'ll check it right away. 📦"
     }
