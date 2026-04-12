@@ -138,7 +138,7 @@ export default function LogisticsPage() {
       </div>
 
       {/* Filter tabs — scrollable on mobile */}
-      <div style={{ display: "flex", gap: "0", borderBottom: "2px solid black", marginBottom: "1.25rem", overflowX: "auto", WebkitOverflowScrolling: "touch" as any }}>
+      <div style={{ display: "flex", gap: "0", borderBottom: "2px solid black", marginBottom: "1.25rem", overflowX: "auto", touchAction: "pan-x" as any, overscrollBehaviorX: "contain" as any, WebkitOverflowScrolling: "touch" as any, WebkitOverflowScrolling: "touch" as any }}>
         {[
           { id: "delivered", label: "Delivered Orders" },
           { id: "all", label: "All Active Orders" },

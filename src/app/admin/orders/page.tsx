@@ -84,27 +84,10 @@ export default function AdminOrders() {
     const prevStatus = order?.status
     await supabase.from("orders").update({ status: newStatus }).eq("id", orderId)
     const counted = ["confirmed", "processing", "shipped", "delivered"]
-    const wasUncounted = ["pending", "cancelled"].includes(prevStatus || "")
-    const isNowCounted = counted.includes(newStatus)
-    const wasNowCounted = counted.includes(prevStatus || "")
-    const isNowCancelled = newStatus === "cancelled"
-    if ((wasUncounted && isNowCounted || wasNowCounted && isNowCancelled) && order) {
-      const { data: product } = await supabase.from("products").select("stock_matrix, stock_quantity").eq("id", order.product_id).single()
-      if (product) {
-        const matrix = { ...(product.stock_matrix || {}) }
-        const change = wasUncounted && isNowCounted ? -(order.quantity || 1) : +(order.quantity || 1)
-        const rawKey = (order.size || "").trim() + "_" + (order.color || "").trim()
-        const matchedKey = Object.keys(matrix).find(k => k.toLowerCase() === rawKey.toLowerCase()) || rawKey
-        if (matrix[matchedKey] !== undefined) {
-          matrix[matchedKey] = Math.max(0, (Number(matrix[matchedKey]) || 0) + change)
-          const newTotal = Object.values(matrix).reduce((s: number, v: any) => s + (Number(v) || 0), 0)
-          await supabase.from("products").update({ stock_matrix: matrix, stock_quantity: newTotal, in_stock: newTotal > 0 }).eq("id", order.product_id)
-        } else if (product.stock_quantity !== null) {
-          const newQty = Math.max(0, (Number(product.stock_quantity) || 0) + change)
-          await supabase.from("products").update({ stock_quantity: newQty, in_stock: newQty > 0 }).eq("id", order.product_id)
-        }
-      }
-    }
+    // Stock is NEVER modified by order status changes
+    // Main stock = what admin sets manually, always fixed
+    // Available stock = main stock - confirmed/delivered orders (calculated in stock page)
+    // Cancelling reduces sold count automatically since stock page reads live orders
     setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o))
     setUpdating(null)
     // Recalculate customer stats after status change
@@ -273,7 +256,7 @@ export default function AdminOrders() {
       </div>
 
       {/* Filter tabs */}
-      <div style={{ display: "flex", overflowX: "auto", borderBottom: "2px solid black", marginBottom: "0.875rem", WebkitOverflowScrolling: "touch" as any }}>
+      <div style={{ display: "flex", overflowX: "auto", touchAction: "pan-x" as any, overscrollBehaviorX: "contain" as any, WebkitOverflowScrolling: "touch" as any, borderBottom: "2px solid black", marginBottom: "0.875rem", WebkitOverflowScrolling: "touch" as any }}>
         {[{ id: "all", label: "All (" + orders.length + ")" }, ...allStatuses.map(s => ({ id: s, label: s.charAt(0).toUpperCase() + s.slice(1) + " (" + counts[s] + ")" }))].map(tab => (
           <button key={tab.id} onClick={() => { setFilter(tab.id); setSelected(new Set()) }} style={{ padding: isMobile ? "0.5rem 0.75rem" : "0.6rem 1rem", fontWeight: 700, fontSize: "0.68rem", textTransform: "uppercase", border: "none", borderBottom: filter === tab.id ? "3px solid black" : "3px solid transparent", marginBottom: "-2px", backgroundColor: "transparent", cursor: "pointer", color: filter === tab.id ? "black" : "#999", whiteSpace: "nowrap" }}>
             {tab.label}

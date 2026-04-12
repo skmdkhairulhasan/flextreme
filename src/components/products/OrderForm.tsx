@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react"
 import { Product } from "@/types"
 import { createClient } from "@/lib/supabase/client"
+import { upsertCustomer } from "@/lib/upsertCustomer"
 import { useCart } from "@/components/ui/Cart"
 import { fbEvent } from "@/components/ui/FacebookPixel"
 
@@ -11,8 +12,6 @@ export default function OrderForm({ product }: { product: Product & { stock_matr
   const [quantity, setQuantity] = useState(1)
   const [name, setName] = useState("")
   const [phone, setPhone] = useState("")
-  const [flexDiscount, setFlexDiscount] = useState(false)
-  const [customerName, setCustomerName] = useState("")
   const [address, setAddress] = useState("")
   const [notes, setNotes] = useState("")
   const [loading, setLoading] = useState(false)
@@ -20,37 +19,12 @@ export default function OrderForm({ product }: { product: Product & { stock_matr
   const [error, setError] = useState("")
   const [cartAdded, setCartAdded] = useState(false)
   const [liveMatrix, setLiveMatrix] = useState<Record<string, number> | null>(null)
+  const [isFlex100, setIsFlex100] = useState(false)
+  const [discountChecked, setDiscountChecked] = useState(false)
   const { addItem } = useCart()
 
   useEffect(() => {
     fbEvent.viewContent({ content_name: product.name, content_ids: [product.id], value: product.price })
-    // FLEX100 detection
-async function checkFlexCustomer() {
-
-  const cleaned = phone.replace(/\D/g, "")
-  if (cleaned.length < 10) {
-    setFlexDiscount(false)
-    setCustomerName("")
-    return
-  }
-
-  const supabase = createClient()
-
-  const { data } = await supabase
-    .from("customers")
-    .select("name, flex100")
-    .eq("phone", cleaned)
-    .maybeSingle()
-
-  if (data) {
-    setCustomerName(data.name || "")
-    setFlexDiscount(!!data.flex100)
-  } else {
-    setCustomerName("")
-    setFlexDiscount(false)
-  }
-
-}
     // Fetch live stock: subtract confirmed/shipped/delivered orders from stock_matrix
     async function fetchLiveStock() {
       if (!product.stock_matrix || Object.keys(product.stock_matrix).length === 0) return
@@ -69,12 +43,10 @@ async function checkFlexCustomer() {
       setLiveMatrix(live)
     }
     fetchLiveStock()
-    checkFlexCustomer()
-  }, [product.id, phone])
+  }, [product.id])
 
   const basePrice = product.price * quantity
-  const discount = flexDiscount ? Math.round(basePrice * 0.10) : 0
-  const totalPrice = basePrice - discount
+  const totalPrice = isFlex100 ? Math.round(basePrice * 0.9) : basePrice
 
   function getVariantStock(): number | null {
     const matrix = liveMatrix || product.stock_matrix
@@ -127,86 +99,15 @@ async function checkFlexCustomer() {
     setError("")
     try {
       const supabase = createClient()
-      // CHECK STOCK BEFORE ORDER
-const { data: existingOrders } = await supabase
-  .from("orders")
-  .select("size,color,quantity,status")
-  .eq("product_id", product.id)
-
-const countedStatuses = ["confirmed","processing","shipped","delivered"]
-
-const soldQty = (existingOrders || [])
-  .filter(o => countedStatuses.includes(o.status))
-  .reduce((sum, o) => {
-    if (
-      (o.size || "").toLowerCase() === selectedSize.toLowerCase() &&
-      (o.color || "").toLowerCase() === selectedColor.toLowerCase()
-    ) {
-      return sum + (o.quantity || 1)
-    }
-    return sum
-  }, 0)
-
-const key = Object.keys((product.stock_matrix ?? {})).find(
-  k => k.toLowerCase() === `${selectedSize}_${selectedColor}`.toLowerCase()
-)
-
-const totalStock = key ? ((product.stock_matrix ?? {})[key] ?? 0) : 0
-const remaining = totalStock - soldQty
-
-if (remaining < quantity) {
-  setError("Sorry, this item just sold out.")
-  setLoading(false)
-  return
-}
-
-const { error: dbError } = await supabase.from("orders").insert({
-  name: name.trim(),
-  phone: phone.trim(),
-  address: address.trim(),
-  product_id: product.id,
-  product_name: product.name,
-  size: selectedSize,
-  color: selectedColor,
-  quantity,
-  total_price: totalPrice,
-  notes: notes.trim(),
-  status: "pending",
-})
-
-if (dbError) throw dbError
-
-// CREATE OR UPDATE CUSTOMER + UPDATE STATS
-const cleanedPhone = phone.trim()
-
-const { data: existingCustomer } = await supabase
-  .from("customers")
-  .select("id,total_orders,total_spent")
-  .eq("phone", cleanedPhone)
-  .maybeSingle()
-
-if (!existingCustomer) {
-
-  await supabase.from("customers").insert({
-    name: name.trim(),
-    phone: cleanedPhone,
-    total_orders: 1,
-    total_spent: totalPrice,
-    flex100: false,
-    vip: false
-  })
-
-} else {
-
-  await supabase.from("customers")
-    .update({
-      name: name.trim(),
-      total_orders: (existingCustomer.total_orders || 0) + 1,
-      total_spent: (existingCustomer.total_spent || 0) + totalPrice
-    })
-    .eq("id", existingCustomer.id)
-
-}
+      const { error: dbError } = await supabase.from("orders").insert({
+        name: name.trim(), phone: phone.trim(), address: address.trim(),
+        product_id: product.id, product_name: product.name,
+        size: selectedSize, color: selectedColor, quantity, total_price: totalPrice,
+        notes: notes.trim(), status: "pending",
+      })
+      if (dbError) throw dbError
+      // Auto-create/update customer record
+      await upsertCustomer(supabase, { name: name.trim(), phone: phone.trim(), totalPrice })
       fbEvent.purchase({
         value: totalPrice,
         order_id: product.id + "_" + Date.now(),
@@ -278,21 +179,7 @@ if (!existingCustomer) {
           <button onClick={() => setQuantity(Math.max(1, quantity - 1))} style={{ width: "44px", height: "44px", border: "1px solid #e0e0e0", backgroundColor: "white", fontSize: "1.25rem", cursor: "pointer" }}>−</button>
           <div style={{ width: "60px", height: "44px", border: "1px solid #e0e0e0", borderLeft: "none", borderRight: "none", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700 }}>{quantity}</div>
           <button onClick={() => setQuantity(Math.min(maxQty, quantity + 1))} disabled={variantStock !== null && quantity >= variantStock} style={{ width: "44px", height: "44px", border: "1px solid #e0e0e0", backgroundColor: "white", fontSize: "1.25rem", cursor: (variantStock !== null && quantity >= variantStock) ? "not-allowed" : "pointer", opacity: (variantStock !== null && quantity >= variantStock) ? 0.4 : 1 }}>+</button>
-          <div style={{ marginLeft: "1rem" }}>
-  <div style={{ fontWeight: 700, fontSize: "1.1rem" }}>
-    BDT {totalPrice.toLocaleString()}
-  </div>
-
-  {flexDiscount && (
-    <div style={{
-      fontSize: "0.75rem",
-      color: "#b8a04a",
-      fontWeight: 700
-    }}>
-      FLEX100 Discount Applied (10%)
-    </div>
-  )}
-</div>
+          <span style={{ marginLeft: "1rem", fontWeight: 700, fontSize: "1.1rem" }}>BDT {totalPrice.toLocaleString()}</span>
         </div>
       </div>
 
@@ -372,51 +259,25 @@ if (!existingCustomer) {
           <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Your full name" style={{ width: "100%", border: "1px solid #e0e0e0", padding: "0.75rem 1rem", fontSize: "0.95rem", outline: "none", boxSizing: "border-box" as const }} />
         </div>
         <div style={{ marginBottom: "1rem" }}>
-  <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, marginBottom: "0.4rem", textTransform: "uppercase" }}>
-    Phone Number *
-  </label>
-
-  <input
-    type="tel"
-    value={phone}
-    onChange={e => setPhone(e.target.value)}
-    placeholder="01XXXXXXXXX"
-    style={{
-      width: "100%",
-      border: "1px solid #e0e0e0",
-      padding: "0.75rem 1rem",
-      fontSize: "0.95rem",
-      outline: "none",
-      boxSizing: "border-box"
-    }}
-  />
-
-  {flexDiscount && (
-  <div style={{
-    marginTop: "8px",
-    background:"#f6f4ea",
-    border:"1px solid #b8a04a",
-    padding:"8px 10px",
-    borderRadius:"4px"
-  }}>
-    <div style={{
-      fontSize:"0.75rem",
-      fontWeight:700,
-      color:"#111"
-    }}>
-      Welcome back {customerName}
-    </div>
-
-    <div style={{
-      fontSize:"0.75rem",
-      color:"#b8a04a",
-      fontWeight:700
-    }}>
-      ⬡ FLEX100 MEMBER — 10% lifetime discount applied
-    </div>
-  </div>
-)}
-</div>
+          <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, marginBottom: "0.4rem", textTransform: "uppercase" }}>Phone Number *</label>
+          <input type="tel" value={phone}
+            onChange={e => { setPhone(e.target.value); setDiscountChecked(false); setIsFlex100(false) }}
+            onBlur={async e => {
+              const ph = e.target.value.trim()
+              if (!ph) return
+              const supabase = createClient()
+              const { data } = await supabase.from("customers").select("flex100").eq("phone", ph).single()
+              setIsFlex100(data?.flex100 === true)
+              setDiscountChecked(true)
+            }}
+            placeholder="01XXXXXXXXX" style={{ width: "100%", border: "1px solid #e0e0e0", padding: "0.75rem 1rem", fontSize: "0.95rem", outline: "none", boxSizing: "border-box" as const }} />
+          {discountChecked && isFlex100 && (
+            <div style={{ backgroundColor: "#fef3c7", border: "1px solid #fbbf24", padding: "0.6rem 0.875rem", marginTop: "0.5rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              <span>🥇</span>
+              <p style={{ fontSize: "0.78rem", color: "#92400e", fontWeight: 700 }}>FLEX100 Member — 10% discount applied!</p>
+            </div>
+          )}
+        </div>
         <div style={{ marginBottom: "1rem" }}>
           <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, marginBottom: "0.4rem", textTransform: "uppercase" }}>Delivery Address *</label>
           <textarea value={address} onChange={e => setAddress(e.target.value)} placeholder="House/Flat, Road, Area, District" rows={3} style={{ width: "100%", border: "1px solid #e0e0e0", padding: "0.75rem 1rem", fontSize: "0.95rem", outline: "none", resize: "vertical" as const, boxSizing: "border-box" as const, fontFamily: "inherit" }} />

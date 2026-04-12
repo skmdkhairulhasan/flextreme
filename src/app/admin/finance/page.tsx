@@ -207,7 +207,7 @@ export default function FinancePage() {
       </div>
 
       {/* Tabs — scrollable on mobile */}
-      <div style={{ display: "flex", gap: "0", borderBottom: "2px solid black", marginBottom: "1.5rem", overflowX: "auto", WebkitOverflowScrolling: "touch" as any }}>
+      <div style={{ display: "flex", gap: "0", borderBottom: "2px solid black", marginBottom: "1.5rem", overflowX: "auto", touchAction: "pan-x" as any, overscrollBehaviorX: "contain" as any, WebkitOverflowScrolling: "touch" as any, WebkitOverflowScrolling: "touch" as any }}>
         {[
           { id: "overview", label: "P&L Overview" },
           { id: "batches", label: "Product Batches (" + batches.length + ")" },
