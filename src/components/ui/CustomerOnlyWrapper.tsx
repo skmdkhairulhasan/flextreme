@@ -10,8 +10,16 @@ import { FacebookPixelPageView } from "@/components/ui/FacebookPixel"
 export default function CustomerOnlyWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const isAdmin = pathname.startsWith("/admin")
+  const isFlexAI = pathname === "/flex-ai"
 
   if (isAdmin) return <main>{children}</main>
+  
+  if (isFlexAI) return (
+    <CartProvider>
+      <Suspense fallback={null}><FacebookPixelPageView /></Suspense>
+      <ChatBot fullPage />
+    </CartProvider>
+  )
 
   return (
     <CartProvider>

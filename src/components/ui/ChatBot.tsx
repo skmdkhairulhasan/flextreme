@@ -1358,6 +1358,10 @@ return (
         .ubadge{animation:badgePop 1.5s ease-in-out infinite;}
         .clabel{animation:labelSlide 0.3s ease-out forwards;}
         .ctoggle{animation:glowPulse 2.5s ease-in-out infinite;}
+        @media(max-width:768px){
+          .peek-tilt{animation:peekNod 2s ease-in-out infinite!important;}
+        }
+        @keyframes peekNod{0%,100%{transform:rotate(-20deg) translateY(0)}50%{transform:rotate(-15deg) translateY(-6px)}}
         .ctoggle:hover{transform:scale(1.08)!important;transition:transform 0.2s!important;}
         .qbtn:hover{background:#f0f0f0!important;}
         .cinput:focus{outline:none;border-color:#aaa!important;}
@@ -1496,32 +1500,6 @@ strokeLinecap="round"
         </div>
       )}
 
-      {/* MOBILE PEEK — same robot tilts/peeks when circle is hidden */}
-      {!open && hidden && !fullPage && (
-        <>
-          <style dangerouslySetInnerHTML={{__html:`
-            @keyframes peekIn { 0% { transform: rotate(-90deg) translateX(40px); opacity:0; } 100% { transform: rotate(-25deg); opacity:1; } }
-            @keyframes peekBob { 0%,100% { transform: rotate(-25deg) translateY(0); } 50% { transform: rotate(-20deg) translateY(-5px); } }
-            .peek-container { animation: peekIn 0.4s ease-out forwards, peekBob 2s ease-in-out 0.4s infinite; transform-origin: bottom right; }
-          `}}/>
-          <div className="peek-container" style={{ position:"fixed", bottom:16, right:0, zIndex:9995, cursor:"pointer", transformOrigin:"bottom right" }}
-            onClick={()=>{ /* clicking peek opens chatbot */ setOpen(true) }}>
-            <svg className="robotGlow" width="56" height="64" viewBox="0 0 120 120" style={{display:"block"}}>
-              <rect x="25" y="15" width="70" height="45" rx="12" fill="#0b1625"/>
-              <g className="robotEye">
-                <circle cx="50" cy="38" r="6" fill="#00eaff"/>
-                <circle cx="70" cy="38" r="6" fill="#00eaff"/>
-              </g>
-              <path d="M48 48 Q60 56 72 48" stroke="#00eaff" strokeWidth="2" strokeLinecap="round" fill="none"/>
-              <rect x="40" y="65" width="40" height="22" rx="6" fill="#dce2ee"/>
-              <rect x="45" y="88" width="8" height="10" rx="2" fill="#c8d0de"/>
-              <rect x="67" y="88" width="8" height="10" rx="2" fill="#c8d0de"/>
-              <rect x="20" y="68" width="15" height="7" rx="3" fill="#a8b4c4"/>
-              <rect x="85" y="68" width="15" height="7" rx="3" fill="#a8b4c4"/>
-            </svg>
-          </div>
-        </>
-      )}
 
       {/* BUTTON — slides right to hide, tap to restore */}
       {!fullPage && <div style={{
@@ -1530,9 +1508,11 @@ strokeLinecap="round"
         right: hidden ? -52 : 4,
         zIndex:9997,
         transition:"right 0.35s cubic-bezier(0.34,1.56,0.64,1)",
+        transform: hidden ? "rotate(-20deg)" : "rotate(0deg)",
+        transformOrigin: "bottom right",
       }}>
         <button
-className="ctoggle"
+className={`ctoggle ${hidden ? "peek-tilt" : ""}`}
 onClick={()=>setOpen(o=>!o)}
 onMouseDown={handleSwipe}
 onTouchStart={handleSwipe}
