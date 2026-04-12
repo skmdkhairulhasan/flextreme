@@ -1361,7 +1361,7 @@ return (
         @media(max-width:768px){
           .peek-tilt{animation:peekNod 2s ease-in-out infinite!important;}
         }
-        @keyframes peekNod{0%,100%{transform:rotate(-12deg) translateY(0)}50%{transform:rotate(-8deg) translateY(-5px)}}
+        @keyframes peekNod{0%,100%{transform:rotate(-35deg) translateY(-8px)}50%{transform:rotate(-28deg) translateY(-14px)}}
         .ctoggle:hover{transform:scale(1.08)!important;transition:transform 0.2s!important;}
         .qbtn:hover{background:#f0f0f0!important;}
         .cinput:focus{outline:none;border-color:#aaa!important;}
@@ -1475,7 +1475,7 @@ strokeLinecap="round"
               ))}
             </div>
           )}
-          <div style={{padding:"0.6rem 0.875rem",borderTop:"1px solid #f0f0f0",display:"flex",gap:"0.4rem",flexShrink:0}}>
+          <div style={{padding:"0.4rem 0.75rem",borderTop:"1px solid #f0f0f0",display:"flex",gap:"0.4rem",flexShrink:0}}>
             <input ref={inputRef} className="cinput" value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&sendMessage()} placeholder="Ask Flex anything..." style={{flex:1,border:"1px solid #e0e0e0",padding:"0.55rem 0.85rem",fontSize:"0.82rem",borderRadius:"24px",fontFamily:"inherit",cursor:"var(--chat-cursor,auto)",transition:"border-color 0.2s"}}/>
             <button onClick={()=>sendMessage()} disabled={!input.trim()||loading} style={{width:"38px",height:"38px",borderRadius:"50%",backgroundColor:input.trim()?"black":"#ddd",border:"none",color:"white",cursor:"var(--chat-cursor,auto)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all 0.2s"}}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
@@ -1505,10 +1505,10 @@ strokeLinecap="round"
       {!fullPage && <div style={{
         position:"fixed",
         bottom:20,
-        right: hidden ? -44 : 4,
+        right: hidden ? -58 : 4,
         zIndex:9997,
         transition:"right 0.35s cubic-bezier(0.34,1.56,0.64,1)",
-        transform: hidden ? "rotate(-12deg)" : "rotate(0deg)",
+        transform: hidden ? "rotate(-35deg) translateY(-8px)" : "rotate(0deg)",
         transformOrigin: "bottom right",
       }}>
         <button
