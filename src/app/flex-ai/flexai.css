@@ -1,0 +1,172 @@
+.flexai-layout{
+  background:#0a0a0a;
+  color:white;
+  min-height:100vh;
+  font-family:system-ui,sans-serif;
+}
+
+.flexai-root{
+  display:flex;
+  flex-direction:column;
+  height:100vh;
+}
+
+.flexai-header{
+  height:48px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 16px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+
+.flexai-logo{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-weight:900;
+  letter-spacing:.15em;
+  font-size:13px;
+}
+
+.bot{
+  width:26px;
+  height:26px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border:2px solid rgba(255,255,255,.2);
+}
+
+.flexai-body{
+  flex:1;
+  display:flex;
+  overflow:hidden;
+}
+
+.flexai-left{
+  width:230px;
+  border-right:1px solid rgba(255,255,255,.08);
+  padding:14px;
+  overflow-y:auto;
+}
+
+.flexai-right{
+  width:200px;
+  border-left:1px solid rgba(255,255,255,.08);
+  padding:14px;
+  overflow-y:auto;
+  display:flex;
+  flex-direction:column;
+}
+
+.flexai-chat{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+
+.side-title{
+  font-size:10px;
+  letter-spacing:.18em;
+  opacity:.4;
+  margin-bottom:10px;
+}
+
+.suggestion{
+  width:100%;
+  text-align:left;
+  padding:8px 10px;
+  border-radius:8px;
+  background:transparent;
+  border:1px solid rgba(255,255,255,.08);
+  color:rgba(255,255,255,.65);
+  font-size:12px;
+  margin-bottom:6px;
+  cursor:pointer;
+}
+
+.suggestion:hover{
+  background:rgba(255,255,255,.08);
+  color:white;
+}
+
+.navlink{
+  display:block;
+  padding:8px;
+  border-radius:8px;
+  color:rgba(255,255,255,.65);
+  text-decoration:none;
+  font-size:12px;
+}
+
+.navlink:hover{
+  background:rgba(255,255,255,.08);
+  color:white;
+}
+
+.brand{
+  margin-top:auto;
+  font-size:10px;
+  opacity:.25;
+  text-align:center;
+  padding-top:14px;
+  border-top:1px solid rgba(255,255,255,.08);
+}
+
+.hamburger{
+  width:34px;
+  height:34px;
+  border-radius:8px;
+  border:1px solid rgba(255,255,255,.2);
+  background:rgba(255,255,255,.06);
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  gap:3px;
+  cursor:pointer;
+}
+
+.hamburger span{
+  width:14px;
+  height:2px;
+  background:white;
+}
+
+.menu-wrap{
+  position:relative;
+}
+
+.menu{
+  position:absolute;
+  right:0;
+  top:40px;
+  background:#111;
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:10px;
+  min-width:160px;
+}
+
+.menu a{
+  display:block;
+  padding:10px 14px;
+  color:rgba(255,255,255,.8);
+  text-decoration:none;
+  font-size:13px;
+}
+
+.menu a:hover{
+  background:rgba(255,255,255,.08);
+}
+
+@media(max-width:768px){
+
+  .flexai-left,
+  .flexai-right{
+    display:none;
+  }
+
+}

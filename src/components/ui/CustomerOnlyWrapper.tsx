@@ -17,7 +17,7 @@ export default function CustomerOnlyWrapper({ children }: { children: React.Reac
   if (isFlexAI) return (
     <CartProvider>
       <Suspense fallback={null}><FacebookPixelPageView /></Suspense>
-      <ChatBot fullPage />
+      {children}
     </CartProvider>
   )
 

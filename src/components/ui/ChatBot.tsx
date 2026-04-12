@@ -1342,6 +1342,7 @@ function handleSwipe(e:any){
 
 
 return (
+<div style={fullPage ? {display:"flex",flexDirection:"column",flex:1,minHeight:0,width:"100%",height:"100%",overflow:"hidden",backgroundColor:"#0a0a0a"} : {}}>
 <>
       <style dangerouslySetInnerHTML={{__html:`
         @keyframes chatPop{0%{transform:scale(0.88) translateY(10px);opacity:0}100%{transform:scale(1) translateY(0);opacity:1}}
@@ -1370,8 +1371,8 @@ return (
       `}}/>
 
       {(open || fullPage) && (
-        <div className="cwin" data-chatbox="true" style={fullPage ? {position:"relative",width:"100%",flex:1,minHeight:0,backgroundColor:"white",border:"none",boxShadow:"none",zIndex:10,display:"flex",flexDirection:"column",overflow:"hidden"} : {position:"fixed",bottom:"1.5rem",right:"2rem",width:"340px",height:"540px",backgroundColor:"white",border:"1px solid #e0e0e0",boxShadow:"0 20px 60px rgba(0,0,0,0.2)",zIndex:9998,display:"flex",flexDirection:"column",overflow:"hidden"}}>
-          <div style={{background:"black",padding:"0.875rem 1rem",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0}}>
+        <div className="cwin" data-chatbox="true" style={fullPage ? {display:"flex",flexDirection:"column",flex:1,height:"100%",minHeight:0,width:"100%",backgroundColor:"#0a0a0a",border:"none",boxShadow:"none",zIndex:10,overflow:"hidden"} : {position:"fixed",bottom:"1.5rem",right:"2rem",width:"340px",height:"540px",backgroundColor:"white",border:"1px solid #e0e0e0",boxShadow:"0 20px 60px rgba(0,0,0,0.2)",zIndex:9998,display:"flex",flexDirection:"column",overflow:"hidden"}}>
+          <div style={{background:fullPage?"#111":"black",padding:"0.875rem 1rem",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0,borderBottom:fullPage?"1px solid rgba(255,255,255,0.08)":"none"}}>
             <div style={{display:"flex",alignItems:"center",gap:"0.65rem"}}>
               <div style={{position:"relative",width:"50px"}}>
 
@@ -1433,11 +1434,11 @@ strokeLinecap="round"
             </div>
             {!fullPage && <button onClick={()=>setOpen(false)} style={{background:"none",border:"none",color:"rgba(255,255,255,0.5)",fontSize:"1.2rem",cursor:"var(--chat-cursor,auto)",padding:"0.2rem",lineHeight:1}}>✕</button>}
           </div>
-          <div style={{backgroundColor:"#fafafa",borderBottom:"1px solid #eee",padding:"0.35rem 1rem",display:"flex",alignItems:"center",gap:"0.5rem"}}>
+          <div style={{backgroundColor:fullPage?"#111":"#fafafa",borderBottom:fullPage?"1px solid rgba(255,255,255,0.08)":"1px solid #eee",padding:"0.35rem 1rem",display:"flex",alignItems:"center",gap:"0.5rem"}}>
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
             <span style={{fontSize:"0.65rem",color:"#999",fontWeight:500}}>AI Fitness + Shopping Assistant · Flextreme</span>
           </div>
-          <div className="msgs" style={{flex:1,overflowY:"auto",padding:"0.875rem",display:"flex",flexDirection:"column",gap:"0.6rem"}}>
+          <div className="msgs" style={{flex:1,overflowY:"auto",padding:"0.875rem",display:"flex",flexDirection:"column",gap:"0.6rem",backgroundColor:fullPage?"#0a0a0a":"white"}}>
             {messages.map((msg,i)=>(
               <div key={i} className="cmsg" style={{display:"flex",justifyContent:msg.role==="user"?"flex-end":"flex-start",alignItems:"flex-end",gap:"0.35rem"}}>
                 {msg.role==="assistant"&&(
@@ -1445,7 +1446,7 @@ strokeLinecap="round"
                     <img src="/logo-transparent.png" alt="" style={{width:"15px",height:"15px",objectFit:"contain",filter:"invert(1)"}}/>
                   </div>
                 )}
-                <div style={{maxWidth:"83%",padding:"0.55rem 0.85rem",fontSize:"0.81rem",lineHeight:1.6,whiteSpace:"pre-line",borderRadius:msg.role==="user"?"16px 16px 4px 16px":"16px 16px 16px 4px",backgroundColor:msg.role==="user"?"black":"#f0f0f0",color:msg.role==="user"?"white":"#1a1a1a"}}>
+                <div style={{maxWidth:"83%",padding:"0.55rem 0.85rem",fontSize:"0.81rem",lineHeight:1.6,whiteSpace:"pre-line",borderRadius:msg.role==="user"?"16px 16px 4px 16px":"16px 16px 16px 4px",backgroundColor:msg.role==="user"?(fullPage?"white":"black"):(fullPage?"#1a1a1a":"#f0f0f0"),color:msg.role==="user"?(fullPage?"black":"white"):(fullPage?"white":"#1a1a1a")}}>
                   {msg.content.split(/(\bhttps?:\/\/\S+|\/products\/\S+)/g).map((part,i)=>{
                     if(/^https?:\/\//.test(part)) return <a key={i} href={part} target="_blank" rel="noopener noreferrer" style={{display:"inline-block",marginTop:"6px",padding:"5px 12px",background:"#0ea5e9",color:"white",borderRadius:"6px",textDecoration:"none",fontSize:"0.75rem",fontWeight:700}}>🚚 Track Package</a>
                     if(/^\/products\//.test(part)) return <a key={i} href={part} style={{display:"inline-block",marginTop:"4px",padding:"5px 12px",background:"black",color:"white",borderRadius:"6px",textDecoration:"none",fontSize:"0.75rem",fontWeight:700}}>👕 View Product →</a>
@@ -1471,12 +1472,12 @@ strokeLinecap="round"
           {messages.length<=1&&(
             <div style={{padding:"0 0.875rem 0.6rem",display:"flex",flexWrap:"wrap",gap:"0.35rem"}}>
               {quick.map(q=>(
-                <button key={q} className="qbtn" onClick={()=>sendMessage(q)} style={{fontSize:"0.66rem",padding:"0.28rem 0.65rem",border:"1px solid #e0e0e0",backgroundColor:"white",borderRadius:"20px",cursor:"var(--chat-cursor,auto)",color:"#444",fontFamily:"inherit",transition:"background 0.15s"}}>{q}</button>
+                <button key={q} className="qbtn" onClick={()=>sendMessage(q)} style={{fontSize:"0.66rem",padding:"0.28rem 0.65rem",border:fullPage?"1px solid rgba(255,255,255,0.12)":"1px solid #e0e0e0",backgroundColor:fullPage?"rgba(255,255,255,0.06)":"white",borderRadius:"20px",cursor:"var(--chat-cursor,auto)",color:fullPage?"rgba(255,255,255,0.7)":"#444",fontFamily:"inherit",transition:"background 0.15s"}}>{q}</button>
               ))}
             </div>
           )}
-          <div style={{padding:"0.4rem 0.75rem",borderTop:"1px solid #f0f0f0",display:"flex",gap:"0.4rem",flexShrink:0}}>
-            <input ref={inputRef} className="cinput" value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&sendMessage()} placeholder="Ask Flex anything..." style={{flex:1,border:"1px solid #e0e0e0",padding:"0.55rem 0.85rem",fontSize:"0.82rem",borderRadius:"24px",fontFamily:"inherit",cursor:"var(--chat-cursor,auto)",transition:"border-color 0.2s"}}/>
+          <div style={{padding:"0.4rem 0.75rem",borderTop:fullPage?"1px solid rgba(255,255,255,0.08)":"1px solid #f0f0f0",display:"flex",gap:"0.4rem",flexShrink:0,backgroundColor:fullPage?"#0a0a0a":"white"}}>
+            <input ref={inputRef} className="cinput" value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&sendMessage()} placeholder="Ask Flex anything..." style={{flex:1,border:fullPage?"1px solid rgba(255,255,255,0.15)":"1px solid #e0e0e0",padding:"0.55rem 0.85rem",fontSize:"0.82rem",borderRadius:"24px",fontFamily:"inherit",cursor:"var(--chat-cursor,auto)",transition:"border-color 0.2s",backgroundColor:fullPage?"rgba(255,255,255,0.06)":"white",color:fullPage?"white":"inherit"}}/>
             <button onClick={()=>sendMessage()} disabled={!input.trim()||loading} style={{width:"38px",height:"38px",borderRadius:"50%",backgroundColor:input.trim()?"black":"#ddd",border:"none",color:"white",cursor:"var(--chat-cursor,auto)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all 0.2s"}}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
             </button>
@@ -1613,8 +1614,8 @@ animation:eyePulse 1.2s infinite;
 
 `}}/>
 
-{/* ROBOT */}
-<div className="robotWrap">
+{/* ROBOT — hidden when open */}
+<div className="robotWrap" style={{display:open?"none":"block"}}>
 
 <svg
 className={`robotGlow ${loading ? "robotTalking" : ""}`}
@@ -1656,20 +1657,17 @@ strokeLinecap="round"
 
 </div>
 
-{/* CIRCLE ICON */}
-{open ? (
-<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
+{/* X icon when open only - robot shows when closed */}
+{open && (
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.8)" strokeWidth="2.5">
 <line x1="18" y1="6" x2="6" y2="18"/>
 <line x1="6" y1="6" x2="18" y2="18"/>
-</svg>
-) : (
-<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2">
-<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
 </svg>
 )}
 
 </button>
       </div>}
     </>
+  </div>
   )
 }
