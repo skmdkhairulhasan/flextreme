@@ -2,7 +2,6 @@
 import { useState, useRef, useEffect } from "react"
 import { usePathname } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
-import { flexAI } from "@/lib/flex-ai/brain"
 
 type Message = { role: "user" | "assistant", content: string }
 type Settings = Record<string, string>
@@ -22,7 +21,7 @@ const INTENTS = {
   diet: ["diet","meal","food","eat","nutrition","what to eat","eating plan","meal plan","food plan","diet plan","diet chart","what should i eat","meal chart","daily food","food guide","recipes","grocery","what food","not vegan","not vegetarian","i eat meat","i eat chicken","halal","change diet","update diet","wrong diet","incorrect diet"],
   workout: ["workout","exercise","training","gym plan","routine","program","lifting","weights","cardio","push pull","ppl","upper lower","split","sets reps","gym routine","fitness plan","training plan","exercise plan","how to train","train me","my routine","build routine"],
   supplement: ["supplement","protein powder","whey","creatine","pre workout","preworkout","bcaa","vitamin","what to take","supp","supps","what supplement","protein shake","mass gainer","fat burner","what pills"],
-  gymwear: ["what to wear","gym wear","gym gear","gym clothes","gym outfit","workout clothes","outfit","what clothes","dress for gym","gymwear","attire","gym kit","clothing","apparel","what should i wear","wear to gym","gym dress","active wear","activewear","sportswear"],
+  gymwear: ["what to wear","gym wear","gym gear","gym clothes","gym outfit","workout clothes","outfit","what clothes","dress for gym","gymwear","attire","gym kit","clothing","apparel","cloth","clothes","gym cloth","flextreme cloth","flextreme product","our product","your product","what should i wear","wear to gym","gym dress","active wear","activewear","sportswear"],
   size: ["size","sizing","what size","which size","size guide","fit me","my size","size for me","size recommendation","chest measurement","waist measurement","hip measurement","what fits","will it fit","size chart","size help","size?","fit?","my width","my length","width is","length is","width cm","length cm","chest is","my chest","my waist","waist is","i am width","width are","measure","shirt width","shirt length","width","length"],
   motivation: ["motivat","lazy","no motivation","give up","tired","skip","skip workout","hard","difficult","struggle","can't do","cant do","demotivat","no energy","procrastinat","dont want","don't feel like","hate gym","bore","bored gym","quit"],
   injury: ["injur","pain","hurt","knee","my knee","back pain","my back","back injury","shoulder pain","my shoulder","shoulder injury","wrist pain","ankle pain","sprain","strain","ache","pulled muscle","physiotherapy","my wrist","my ankle","i am injured","got injured","injured knee","injured back","injured shoulder","hurt my","hurt knee","hurt back","hurt shoulder","have pain","have injury","i have pain"],
@@ -239,6 +238,19 @@ const [profile] = useState({
   }, delay)
 }
 
+  async function classifyWithNLP(message: string): Promise<string | null> {
+    try {
+      const res = await fetch("/api/nlp-classify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message })
+      })
+      const data = await res.json()
+      if (data.intent && data.score > 0.65) return data.intent
+    } catch {}
+    return null
+  }
+
   function getReply(raw: string): string {
     const msg = smart(raw)
     const p = profileRef.current
@@ -297,7 +309,7 @@ if (data && data.length > 0) {
 
     orderReply += `ORDER ${i+1}
 Product: ${product}
-Status: ${status}
+🔘 STATUS: ${(status || "pending").toUpperCase()}
 Quantity: ${qty}${size}${color}`
 
     if (status === "shipped" && o.tracking_url) {
@@ -592,6 +604,11 @@ if (
       if (area === "ankle") return "Ankle issue — no running, jumping, or heavy leg work.\n\nSafe alternatives:\n→ Upper body — chest, back, arms, shoulders\n→ Seated exercises\n→ Swimming\n\nICE + elevate. Don't walk on it if swollen."
       modeRef.current = "injury"
       return "Safety first. Which area — knee, back, shoulder, wrist, or ankle?\n\nTell me and I'll give you a modified plan."
+    }
+
+    // Flextreme product/clothing queries
+    if (msg.includes("flextreme cloth") || msg.includes("flextreme wear") || msg.includes("flextreme product") || msg.includes("your cloth") || msg.includes("your product") || (msg.includes("cloth") && !msg.includes("change"))) {
+      return has(msg, "gymwear") ? "GYM WEAR GUIDE by Flextreme\n\nAll our products are sweat-wicking, 4-way stretch compression fit.\n\nVisit our Products page to see the full collection! 👕\n→ /products" : "Check out our products! 👕\n→ /products\n\nAll Flextreme gear is compression fit, sweat-wicking, 4-way stretch. Built for real athletes."
     }
 
     // Greetings & casual
@@ -1241,6 +1258,24 @@ if (
 
   setTimeout(async () => {
 
+    // Try NLP classification first for smarter intent detection
+    let nlpIntent: string | null = null
+    try {
+      const nlpRes = await fetch("/api/nlp-classify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: userMsg })
+      })
+      const nlpData = await nlpRes.json()
+      if (nlpData.intent && nlpData.score > 0.65) nlpIntent = nlpData.intent
+    } catch {}
+
+    // Map NLP intent to set mode before getReply processes
+    if (nlpIntent && !modeRef.current) {
+      if (nlpIntent === "find_order") modeRef.current = "order_lookup"
+      if (nlpIntent === "injury_help") modeRef.current = "injury"
+    }
+
     let reply = getReply(userMsg)
 
     // Phone lookup is async — getReply returns sentinel and handles its own async + setLoading
@@ -1256,13 +1291,7 @@ if (
       reply = fixedReply
     }
 
-    // fallback AI (only when truly no intent matched)
-    if (
-      reply.includes("Got it — what specifically") ||
-      reply.includes("Ask me about workouts")
-    ) {
-      reply = await flexAI(userMsg)
-    }
+    // NLP handles fallback — no external brain needed
 
     setMessages(prev => [
       ...prev,
