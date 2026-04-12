@@ -207,7 +207,7 @@ export default function FinancePage() {
       </div>
 
       {/* Tabs — scrollable on mobile */}
-      <div style={{ display: "flex", gap: "0", borderBottom: "2px solid black", marginBottom: "1.5rem", overflowX: "auto", touchAction: "pan-x" as any, overscrollBehaviorX: "contain" as any, WebkitOverflowScrolling: "touch" as any, WebkitOverflowScrolling: "touch" as any }}>
+      <div style={{ display: "flex", gap: "0", borderBottom: "2px solid black", marginBottom: "1.5rem", overflowX: "auto", touchAction: "pan-x" as any, overscrollBehaviorX: "contain" as any, WebkitOverflowScrolling: "touch" as any, }}>
         {[
           { id: "overview", label: "P&L Overview" },
           { id: "batches", label: "Product Batches (" + batches.length + ")" },
@@ -372,7 +372,7 @@ export default function FinancePage() {
               <p style={{ fontSize: "0.82rem" }}>Add marketing costs, packaging, photography, etc.</p>
             </div>
           ) : (
-            <div style={{ backgroundColor: "white", border: "1px solid #e0e0e0", overflowX: "auto", WebkitOverflowScrolling: "touch" as any }}>
+            <div style={{ backgroundColor: "white", border: "1px solid #e0e0e0", overflowX: "auto", WebkitOverflowScrolling: "touch" as any, }}>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 130px 150px 120px 36px", gap: "0.5rem", padding: "0.5rem 0.75rem", backgroundColor: "black", color: "white", fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase", minWidth: "530px" }}>
                 <span>Description</span><span>Category</span><span>Amount</span><span>Date</span><span></span>
               </div>

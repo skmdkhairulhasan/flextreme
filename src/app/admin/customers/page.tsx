@@ -253,7 +253,7 @@ export default function AdminCustomers() {
       </div>
 
       {/* TABS */}
-      <div style={{ display: "flex", overflowX: "auto", borderBottom: "2px solid black", marginBottom: "1rem" }}>
+      <div style={{ display: "flex", overflowX: "auto", touchAction: "pan-x" as any, overscrollBehaviorX: "contain" as any, WebkitOverflowScrolling: "touch" as any, borderBottom: "2px solid black", marginBottom: "1rem" }}>
         {[
           { id: "all", label: "All" },
           { id: "flex100", label: "🥇 FLEX100" },

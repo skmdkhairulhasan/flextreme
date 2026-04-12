@@ -134,7 +134,7 @@ export default function AdminProducts() {
       </div>
 
       {/* Filter tabs — scrollable */}
-      <div style={{ display: "flex", overflowX: "auto", touchAction: "pan-x" as any, overscrollBehaviorX: "contain" as any, WebkitOverflowScrolling: "touch" as any, borderBottom: "2px solid black", marginBottom: "1rem", WebkitOverflowScrolling: "touch" as any }}>
+      <div style={{ display: "flex", overflowX: "auto", touchAction: "pan-x" as any, overscrollBehaviorX: "contain" as any, WebkitOverflowScrolling: "touch" as any, borderBottom: "2px solid black", marginBottom: "1rem", WebkitOverflowScrolling: "touch" as any, }}>
         {[
           { id: "all", label: "All (" + products.length + ")" },
           { id: "featured", label: "Featured" },
