@@ -1,126 +1,121 @@
 "use client"
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import ChatBot from "@/components/ui/ChatBot"
 
 export default function FlexAIPage() {
   const [menuOpen, setMenuOpen] = useState(false)
 
   const navLinks = [
-    { href: "/", label: "🏠 Home" },
-    { href: "/products", label: "👕 Products" },
-    { href: "/reviews", label: "⭐ Reviews" },
-    { href: "/about", label: "ℹ️ About" },
-    { href: "/size-guide", label: "📏 Size Guide" },
-    { href: "/delivery", label: "🚚 Delivery" },
-    { href: "/contact", label: "📞 Contact" },
+    { href: "/", label: "Home" },
+    { href: "/products", label: "Products" },
+    { href: "/reviews", label: "Reviews" },
+    { href: "/about", label: "About" },
+    { href: "/size-guide", label: "Size Guide" },
+    { href: "/delivery", label: "Delivery" },
+    { href: "/contact", label: "Contact" },
   ]
 
   const suggestions = [
     "Find my order 🚚",
-    "Build workout plan 💪",
-    "Make diet chart 🥗",
-    "Calculate my BMI 📊",
+    "Workout plan 💪",
+    "Diet chart 🥗",
+    "My BMI 📊",
     "What size fits me? 📏",
-    "Supplement advice 💊",
+    "Supplements 💊",
     "Delivery charges 🚛",
-    "Show me products 👕",
+    "Show products 👕",
     "Gym gear guide 🏋️",
     "Recovery tips 😴",
     "Injury advice 🩹",
-    "Motivation 🔥",
+    "Motivate me 🔥",
   ]
 
   function sendSuggestion(text: string) {
-    const input = document.querySelector('.cinput') as HTMLInputElement
+    const input = document.querySelector(".cinput") as HTMLInputElement
     if (!input) return
-    const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set
-    nativeInputValueSetter?.call(input, text)
-    input.dispatchEvent(new Event('input', { bubbles: true }))
+    const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value")?.set
+    setter?.call(input, text)
+    input.dispatchEvent(new Event("input", { bubbles: true }))
     setTimeout(() => {
-      const sendBtn = input.closest('div')?.querySelector('button') as HTMLButtonElement
-      sendBtn?.click()
-    }, 50)
+      const btn = input.parentElement?.querySelector("button") as HTMLButtonElement
+      btn?.click()
+    }, 60)
   }
 
   return (
-    <>
-      <style>{`
-        .fai-root { position:fixed; inset:0; background:#0a0a0a; display:flex; flex-direction:column; }
-        .fai-mobile-bar { display:none; }
-        .fai-body { flex:1; display:flex; overflow:hidden; }
-        .fai-left { width:190px; flex-shrink:0; border-right:1px solid rgba(255,255,255,0.07); padding:1rem 0.75rem; display:flex; flex-direction:column; gap:0.35rem; overflow-y:auto; }
-        .fai-center { flex:1; display:flex; flex-direction:column; overflow:hidden; min-width:0; }
-        .fai-right { width:170px; flex-shrink:0; border-left:1px solid rgba(255,255,255,0.07); padding:1rem 0.75rem; display:flex; flex-direction:column; gap:0.25rem; overflow-y:auto; }
-        .fai-label { font-size:0.58rem; font-weight:700; letter-spacing:0.18em; text-transform:uppercase; color:rgba(255,255,255,0.28); margin-bottom:0.4rem; padding:0 0.25rem; }
-        .fai-sugg { display:flex; align-items:center; padding:0.5rem 0.65rem; background:transparent; border:1px solid rgba(255,255,255,0.07); border-radius:7px; color:rgba(255,255,255,0.65); font-size:0.74rem; font-weight:500; cursor:pointer; text-align:left; width:100%; transition:all 0.15s; }
-        .fai-sugg:hover { background:rgba(255,255,255,0.06); border-color:rgba(255,255,255,0.14); color:white; }
-        .fai-navlink { display:block; padding:0.5rem 0.65rem; color:rgba(255,255,255,0.55); text-decoration:none; font-size:0.74rem; font-weight:500; border-radius:7px; border:1px solid transparent; transition:all 0.15s; }
-        .fai-navlink:hover { background:rgba(255,255,255,0.06); border-color:rgba(255,255,255,0.1); color:white; }
-        .fai-hamburger { background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); color:white; width:38px; height:38px; border-radius:8px; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:4px; flex-shrink:0; }
-        .fai-dropdown { position:absolute; top:48px; right:0; background:#111; border:1px solid rgba(255,255,255,0.12); border-radius:10px; padding:0.5rem; min-width:170px; z-index:200; }
-        .fai-dropdown a { display:block; padding:0.55rem 0.875rem; color:rgba(255,255,255,0.8); text-decoration:none; font-size:0.8rem; font-weight:600; border-radius:6px; }
-        .fai-dropdown a:hover { background:rgba(255,255,255,0.08); color:white; }
-        @media (max-width: 768px) {
-          .fai-mobile-bar { display:flex !important; }
-          .fai-left { display:none !important; }
-          .fai-right { display:none !important; }
-        }
-        @media (min-width: 769px) {
-          .fai-mobile-bar { display:none !important; }
-        }
-      `}</style>
+    <div style={{ position: "fixed", inset: 0, background: "#0a0a0a", display: "flex", flexDirection: "column", overflow: "hidden" }}>
 
-      <div className="fai-root">
-        {/* Mobile top bar */}
-        <div className="fai-mobile-bar" style={{ padding:"0.75rem 1rem", borderBottom:"1px solid rgba(255,255,255,0.08)", display:"flex", alignItems:"center", justifyContent:"space-between", flexShrink:0 }}>
-          <div style={{ display:"flex", alignItems:"center", gap:"0.6rem" }}>
-            <div style={{ width:"28px", height:"28px", background:"black", borderRadius:"50%", display:"flex", alignItems:"center", justifyContent:"center", border:"1px solid rgba(255,255,255,0.2)" }}>
-              <span style={{ fontSize:"0.9rem" }}>🤖</span>
-            </div>
-            <span style={{ color:"white", fontWeight:800, fontSize:"0.9rem", letterSpacing:"0.08em", textTransform:"uppercase" }}>Flex AI</span>
+      {/* ── MOBILE TOP BAR ── */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.7rem 1rem", borderBottom: "1px solid rgba(255,255,255,0.08)", flexShrink: 0 }} className="fai-topbar">
+        <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+          <div style={{ width: 30, height: 30, background: "black", borderRadius: "50%", border: "2px solid rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <span style={{ fontSize: "1rem" }}>🤖</span>
           </div>
-          <div style={{ position:"relative" }}>
-            <button className="fai-hamburger" onClick={() => setMenuOpen(o => !o)}>
-              <span style={{ width:"16px", height:"2px", background:"white", borderRadius:"2px" }}/>
-              <span style={{ width:"16px", height:"2px", background:"white", borderRadius:"2px" }}/>
-              <span style={{ width:"16px", height:"2px", background:"white", borderRadius:"2px" }}/>
-            </button>
-            {menuOpen && (
-              <div className="fai-dropdown">
-                {navLinks.map(l => (
-                  <a key={l.href} href={l.href} onClick={() => setMenuOpen(false)}>{l.label}</a>
-                ))}
-              </div>
-            )}
-          </div>
+          <span style={{ color: "white", fontWeight: 900, fontSize: "0.95rem", textTransform: "uppercase", letterSpacing: "0.1em" }}>Flex AI</span>
         </div>
-
-        <div className="fai-body">
-          {/* LEFT — suggestions */}
-          <div className="fai-left">
-            <p className="fai-label">Quick Ask</p>
-            {suggestions.map(s => (
-              <button key={s} className="fai-sugg" onClick={() => sendSuggestion(s)}>{s}</button>
-            ))}
-          </div>
-
-          {/* CENTER — chat */}
-          <div className="fai-center">
-            <ChatBot fullPage />
-          </div>
-
-          {/* RIGHT — nav */}
-          <div className="fai-right">
-            <p className="fai-label">Navigate</p>
-            {navLinks.map(l => (
-              <a key={l.href} href={l.href} className="fai-navlink">{l.label}</a>
-            ))}
-            <div style={{ marginTop:"auto", paddingTop:"1rem", borderTop:"1px solid rgba(255,255,255,0.07)", textAlign:"center" as const }}>
-              <span style={{ fontSize:"0.6rem", color:"rgba(255,255,255,0.2)", textTransform:"uppercase", letterSpacing:"0.12em" }}>Flextreme AI</span>
+        <div style={{ position: "relative" }}>
+          <button onClick={() => setMenuOpen(o => !o)} style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 8, width: 38, height: 38, cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4, padding: 0 }}>
+            {[0,1,2].map(i => <span key={i} style={{ display: "block", width: 16, height: 2, background: "white", borderRadius: 2 }} />)}
+          </button>
+          {menuOpen && (
+            <div style={{ position: "absolute", top: 44, right: 0, background: "#111", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 10, padding: "0.5rem", minWidth: 170, zIndex: 300 }}>
+              {navLinks.map(l => (
+                <a key={l.href} href={l.href} onClick={() => setMenuOpen(false)} style={{ display: "block", padding: "0.55rem 0.875rem", color: "rgba(255,255,255,0.8)", textDecoration: "none", fontSize: "0.82rem", fontWeight: 600, borderRadius: 6 }}>
+                  {l.label}
+                </a>
+              ))}
             </div>
-          </div>
+          )}
         </div>
       </div>
-    </>
+
+      {/* ── BODY ── */}
+      <div style={{ flex: 1, display: "flex", overflow: "hidden", minHeight: 0 }}>
+
+        {/* LEFT — nav links (desktop only) */}
+        <div style={{ width: 175, flexShrink: 0, borderRight: "1px solid rgba(255,255,255,0.07)", padding: "1rem 0.75rem", display: "flex", flexDirection: "column", gap: "0.2rem", overflowY: "auto" }} className="fai-left">
+          <p style={{ fontSize: "0.58rem", fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.28)", marginBottom: "0.5rem" }}>Navigate</p>
+          {navLinks.map(l => (
+            <a key={l.href} href={l.href} style={{ display: "block", padding: "0.55rem 0.65rem", color: "rgba(255,255,255,0.6)", textDecoration: "none", fontSize: "0.78rem", fontWeight: 500, borderRadius: 7, border: "1px solid transparent", transition: "all 0.15s" }}
+              onMouseEnter={e => { (e.target as HTMLElement).style.background = "rgba(255,255,255,0.06)"; (e.target as HTMLElement).style.color = "white" }}
+              onMouseLeave={e => { (e.target as HTMLElement).style.background = "transparent"; (e.target as HTMLElement).style.color = "rgba(255,255,255,0.6)" }}>
+              {l.label}
+            </a>
+          ))}
+        </div>
+
+        {/* CENTER — chat, fills remaining space */}
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", minWidth: 0 }}>
+          <ChatBot fullPage />
+        </div>
+
+        {/* RIGHT — suggestions (desktop only) */}
+        <div style={{ width: 185, flexShrink: 0, borderLeft: "1px solid rgba(255,255,255,0.07)", padding: "1rem 0.75rem", display: "flex", flexDirection: "column", gap: "0.3rem", overflowY: "auto" }} className="fai-right">
+          <p style={{ fontSize: "0.58rem", fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.28)", marginBottom: "0.5rem" }}>Quick Ask</p>
+          {suggestions.map(s => (
+            <button key={s} onClick={() => sendSuggestion(s)} style={{ display: "flex", alignItems: "center", padding: "0.5rem 0.65rem", background: "transparent", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 7, color: "rgba(255,255,255,0.65)", fontSize: "0.74rem", fontWeight: 500, cursor: "pointer", textAlign: "left", width: "100%", transition: "all 0.15s" }}
+              onMouseEnter={e => { const el = e.currentTarget; el.style.background = "rgba(255,255,255,0.06)"; el.style.color = "white" }}
+              onMouseLeave={e => { const el = e.currentTarget; el.style.background = "transparent"; el.style.color = "rgba(255,255,255,0.65)" }}>
+              {s}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <style>{`
+        /* Desktop: show sidebars, hide topbar hamburger on desktop */
+        @media (min-width: 769px) {
+          .fai-topbar { display: none !important; }
+          .fai-left { display: flex !important; }
+          .fai-right { display: flex !important; }
+        }
+        /* Mobile: hide sidebars, show topbar */
+        @media (max-width: 768px) {
+          .fai-topbar { display: flex !important; }
+          .fai-left { display: none !important; }
+          .fai-right { display: none !important; }
+        }
+      `}</style>
+    </div>
   )
 }

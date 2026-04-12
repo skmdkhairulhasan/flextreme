@@ -1361,7 +1361,7 @@ return (
         @media(max-width:768px){
           .peek-tilt{animation:peekNod 2s ease-in-out infinite!important;}
         }
-        @keyframes peekNod{0%,100%{transform:rotate(-35deg) translateY(-8px)}50%{transform:rotate(-28deg) translateY(-14px)}}
+        @keyframes peekNod{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
         .ctoggle:hover{transform:scale(1.08)!important;transition:transform 0.2s!important;}
         .qbtn:hover{background:#f0f0f0!important;}
         .cinput:focus{outline:none;border-color:#aaa!important;}
@@ -1370,7 +1370,7 @@ return (
       `}}/>
 
       {(open || fullPage) && (
-        <div className="cwin" data-chatbox="true" style={fullPage ? {position:"relative",width:"100%",height:"100%",backgroundColor:"white",border:"none",boxShadow:"none",zIndex:10,display:"flex",flexDirection:"column",overflow:"hidden"} : {position:"fixed",bottom:"1.5rem",right:"2rem",width:"340px",height:"540px",backgroundColor:"white",border:"1px solid #e0e0e0",boxShadow:"0 20px 60px rgba(0,0,0,0.2)",zIndex:9998,display:"flex",flexDirection:"column",overflow:"hidden"}}>
+        <div className="cwin" data-chatbox="true" style={fullPage ? {position:"relative",width:"100%",flex:1,minHeight:0,backgroundColor:"white",border:"none",boxShadow:"none",zIndex:10,display:"flex",flexDirection:"column",overflow:"hidden"} : {position:"fixed",bottom:"1.5rem",right:"2rem",width:"340px",height:"540px",backgroundColor:"white",border:"1px solid #e0e0e0",boxShadow:"0 20px 60px rgba(0,0,0,0.2)",zIndex:9998,display:"flex",flexDirection:"column",overflow:"hidden"}}>
           <div style={{background:"black",padding:"0.875rem 1rem",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0}}>
             <div style={{display:"flex",alignItems:"center",gap:"0.65rem"}}>
               <div style={{position:"relative",width:"50px"}}>
@@ -1505,10 +1505,10 @@ strokeLinecap="round"
       {!fullPage && <div style={{
         position:"fixed",
         bottom:20,
-        right: hidden ? -58 : 4,
+        right: hidden ? -50 : 4,
         zIndex:9997,
         transition:"right 0.35s cubic-bezier(0.34,1.56,0.64,1)",
-        transform: hidden ? "rotate(-35deg) translateY(-8px)" : "rotate(0deg)",
+        transform: hidden ? "translateX(0)" : "translateX(0)",
         transformOrigin: "bottom right",
       }}>
         <button
