@@ -18,6 +18,7 @@ export default function CheckoutPage() {
   const [error, setError] = useState("")
   const [isFlex100, setIsFlex100] = useState(false)
   const [discountChecked, setDiscountChecked] = useState(false)
+  const [customerName, setCustomerName] = useState("")
 
   useEffect(() => {
     setMounted(true)
@@ -169,16 +170,17 @@ export default function CheckoutPage() {
                   const ph = e.target.value.trim()
                   if (!ph) return
                   const supabase = createClient()
-                  const { data } = await supabase.from("customers").select("flex100").eq("phone", ph).single()
+                  const { data } = await supabase.from("customers").select("flex100, name").eq("phone", ph).single()
                   setIsFlex100(data?.flex100 === true)
                   setDiscountChecked(true)
+                  if (data?.name) setCustomerName(data.name)
                 }}
                 placeholder="01XXXXXXXXX" style={{ width: "100%", border: "1px solid #e0e0e0", padding: "0.875rem 1rem", fontSize: "0.95rem", outline: "none", boxSizing: "border-box" as const }} />
               <p style={{ fontSize: "0.72rem", color: "#999", marginTop: "0.3rem" }}>We will call this number to confirm your order</p>
               {discountChecked && isFlex100 && (
-                <div style={{ backgroundColor: "#fef3c7", border: "1px solid #fbbf24", padding: "0.6rem 0.875rem", marginTop: "0.5rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                  <span>🥇</span>
-                  <p style={{ fontSize: "0.78rem", color: "#92400e", fontWeight: 700 }}>FLEX100 Member — 10% discount applied!</p>
+                <div style={{ backgroundColor: "#fef3c7", border: "1px solid #fbbf24", padding: "0.75rem 0.875rem", marginTop: "0.5rem" }}>
+                  <p style={{ fontSize: "0.85rem", color: "#92400e", fontWeight: 900, marginBottom: "0.2rem" }}>🥇 Welcome back{customerName ? ", " + customerName : ""}!</p>
+                  <p style={{ fontSize: "0.75rem", color: "#92400e", fontWeight: 600 }}>FLEX100 Member — 10% lifetime discount applied ✓</p>
                 </div>
               )}
             </div>

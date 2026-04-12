@@ -890,7 +890,7 @@ export default function AdminSettings() {
         </div>
         <div style={{ backgroundColor: "#f9f9f9", border: "1px solid #e0e0e0", padding: "1.25rem" }}>
           <p style={{ fontWeight: 700, fontSize: "0.8rem", marginBottom: "1rem", textTransform: "uppercase" }}>Custom Colors</p>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px,1fr))", gap: "1rem" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: "1rem" }}>
             {([
               { key: "primary", label: "Primary (Navbar/Footer)" },
               { key: "accent", label: "Accent (Highlights)" },
@@ -902,7 +902,7 @@ export default function AdminSettings() {
               <div key={String(key)}>
                 <label style={{ display: "block", fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", marginBottom: "0.4rem", color: "#555" }}>{label}</label>
                 <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
-                  <input type="color" value={custom[key]} onChange={e => setCustom((prev: ColorTheme) => ({ ...prev, [key]: e.target.value }))} style={{ width: "40px", height: "36px", padding: "2px", border: "1px solid #e0e0e0", cursor: "pointer" }} />
+                  <input type="color" value={custom[key]} onChange={e => setCustom((prev: ColorTheme) => ({ ...prev, [key]: e.target.value }))} style={{ width: "44px", height: "36px", padding: "0", border: "1px solid #e0e0e0", cursor: "pointer", flexShrink: 0, borderRadius: "4px" }} />
                   <input value={custom[key]} onChange={e => setCustom((prev: ColorTheme) => ({ ...prev, [key]: e.target.value }))} style={{ flex: 1, border: "1px solid #e0e0e0", padding: "0.4rem 0.6rem", fontSize: "0.75rem", fontFamily: "monospace", outline: "none" }} />
                 </div>
               </div>

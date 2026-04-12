@@ -18,38 +18,19 @@ export default function OrderForm({ product }: { product: Product & { stock_matr
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState("")
   const [cartAdded, setCartAdded] = useState(false)
-  const [liveMatrix, setLiveMatrix] = useState<Record<string, number> | null>(null)
   const [isFlex100, setIsFlex100] = useState(false)
   const [discountChecked, setDiscountChecked] = useState(false)
   const { addItem } = useCart()
 
   useEffect(() => {
     fbEvent.viewContent({ content_name: product.name, content_ids: [product.id], value: product.price })
-    // Fetch live stock: subtract confirmed/shipped/delivered orders from stock_matrix
-    async function fetchLiveStock() {
-      if (!product.stock_matrix || Object.keys(product.stock_matrix).length === 0) return
-      const supabase = createClient()
-      const { data: orders } = await supabase
-        .from("orders")
-        .select("size, color, quantity, status")
-        .eq("product_id", product.id)
-        .in("status", ["confirmed", "processing", "shipped", "delivered"])
-      const live: Record<string, number> = { ...product.stock_matrix }
-      ;(orders || []).forEach((o: any) => {
-        const rawKey = (o.size || "").trim() + "_" + (o.color || "").trim()
-        const matched = Object.keys(live).find(k => k.toLowerCase() === rawKey.toLowerCase()) || rawKey
-        if (live[matched] !== undefined) live[matched] = Math.max(0, live[matched] - (o.quantity || 1))
-      })
-      setLiveMatrix(live)
-    }
-    fetchLiveStock()
   }, [product.id])
 
   const basePrice = product.price * quantity
   const totalPrice = isFlex100 ? Math.round(basePrice * 0.9) : basePrice
 
   function getVariantStock(): number | null {
-    const matrix = liveMatrix || product.stock_matrix
+    const matrix = product.stock_matrix
     if (!matrix || !selectedSize || !selectedColor) return null
     const rawKey = selectedSize.trim() + "_" + selectedColor.trim()
     const matchedKey = Object.keys(matrix).find(
@@ -266,15 +247,16 @@ export default function OrderForm({ product }: { product: Product & { stock_matr
               const ph = e.target.value.trim()
               if (!ph) return
               const supabase = createClient()
-              const { data } = await supabase.from("customers").select("flex100").eq("phone", ph).single()
+              const { data } = await supabase.from("customers").select("flex100, name").eq("phone", ph).single()
               setIsFlex100(data?.flex100 === true)
               setDiscountChecked(true)
+              if (data?.name && !name) setName(data.name)
             }}
             placeholder="01XXXXXXXXX" style={{ width: "100%", border: "1px solid #e0e0e0", padding: "0.75rem 1rem", fontSize: "0.95rem", outline: "none", boxSizing: "border-box" as const }} />
           {discountChecked && isFlex100 && (
-            <div style={{ backgroundColor: "#fef3c7", border: "1px solid #fbbf24", padding: "0.6rem 0.875rem", marginTop: "0.5rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-              <span>🥇</span>
-              <p style={{ fontSize: "0.78rem", color: "#92400e", fontWeight: 700 }}>FLEX100 Member — 10% discount applied!</p>
+            <div style={{ backgroundColor: "#fef3c7", border: "1px solid #fbbf24", padding: "0.75rem 0.875rem", marginTop: "0.5rem" }}>
+              <p style={{ fontSize: "0.85rem", color: "#92400e", fontWeight: 900, marginBottom: "0.2rem" }}>🥇 Welcome back{name ? ", " + name : ""}!</p>
+              <p style={{ fontSize: "0.75rem", color: "#92400e", fontWeight: 600 }}>FLEX100 Member — 10% lifetime discount applied ✓</p>
             </div>
           )}
         </div>
