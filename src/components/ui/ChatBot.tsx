@@ -632,7 +632,6 @@ if (
         msg.includes("flextreme story") || msg.includes("who is flextreme") ||
         (msg.includes("flextreme") && (msg.includes("what") || msg.includes("who") || msg.includes("tell") || msg.includes("about") || msg.includes("brand") || msg.includes("story") || msg.length < 15))) {
       return (s.about_story || "Flextreme is a premium gym wear brand from Bangladesh, built by athletes for athletes. We create compression gear that performs as good as it looks.") + "\n\nWork Hard. Flex Extreme. 🔥\n\nWant to see our products? → /products"
-
     }
 
     // Greetings & casual
@@ -1513,6 +1512,65 @@ strokeLinecap="round"
         }}>
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
           Chat with Flex AI
+        </div>
+      )}
+
+      {/* MOBILE PEEK — robot peeks from bottom right when closed */}
+      {!open && !hidden && (
+        <style>{`
+          .flex-peek { display: none; }
+          @media (max-width: 768px) {
+            .flex-peek { display: block; }
+            @keyframes peekUp { 0%,100% { transform: translateY(0) rotate(-5deg); } 50% { transform: translateY(-8px) rotate(5deg); } }
+            @keyframes waveHand { 0%,100% { transform: rotate(0deg); transform-origin: bottom center; } 25% { transform: rotate(25deg); transform-origin: bottom center; } 75% { transform: rotate(-15deg); transform-origin: bottom center; } }
+            @keyframes peekBlink { 0%,90%,100% { transform: scaleY(1); } 95% { transform: scaleY(0.1); } }
+          }
+        `}</style>
+      )}
+      {!open && !hidden && (
+        <div className="flex-peek" style={{
+          position:"fixed", bottom:90, right:8, zIndex:9995,
+          animation:"peekUp 3s ease-in-out infinite",
+          pointerEvents:"none",
+        }}>
+          {/* Speech bubble */}
+          <div style={{
+            position:"absolute", bottom:"100%", right:0, marginBottom:"6px",
+            backgroundColor:"black", color:"white", padding:"0.35rem 0.6rem",
+            borderRadius:"10px 10px 2px 10px", fontSize:"0.65rem", fontWeight:700,
+            whiteSpace:"nowrap", boxShadow:"0 2px 8px rgba(0,0,0,0.3)",
+            animation:"peekUp 2s ease-in-out infinite 0.5s",
+          }}>
+            💬 Ask me anything!
+            <div style={{position:"absolute",bottom:"-5px",right:"8px",width:0,height:0,borderLeft:"5px solid transparent",borderRight:"5px solid transparent",borderTop:"5px solid black"}}/>
+          </div>
+          {/* Mini waving robot */}
+          <svg width="44" height="44" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            {/* Body */}
+            <rect x="28" y="45" width="44" height="38" rx="8" fill="black" stroke="white" strokeWidth="3"/>
+            {/* Head */}
+            <rect x="30" y="18" width="40" height="30" rx="8" fill="black" stroke="white" strokeWidth="3"/>
+            {/* Eyes */}
+            <ellipse cx="43" cy="33" rx="5" ry="5" fill="white" style={{animation:"peekBlink 3s infinite"}}/>
+            <ellipse cx="57" cy="33" rx="5" ry="5" fill="white" style={{animation:"peekBlink 3s infinite 0.1s"}}/>
+            <ellipse cx="43" cy="33" rx="2.5" ry="2.5" fill="black"/>
+            <ellipse cx="57" cy="33" rx="2.5" ry="2.5" fill="black"/>
+            {/* Antenna */}
+            <line x1="50" y1="18" x2="50" y2="10" stroke="white" strokeWidth="2.5"/>
+            <circle cx="50" cy="8" r="3" fill="white"/>
+            {/* Mouth smile */}
+            <path d="M42 42 Q50 48 58 42" stroke="white" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
+            {/* Waving arm */}
+            <g style={{animation:"waveHand 1.2s ease-in-out infinite"}}>
+              <rect x="72" y="50" width="14" height="8" rx="4" fill="black" stroke="white" strokeWidth="2.5"/>
+              <circle cx="86" cy="54" r="5" fill="black" stroke="white" strokeWidth="2.5"/>
+            </g>
+            {/* Other arm */}
+            <rect x="14" y="50" width="14" height="8" rx="4" fill="black" stroke="white" strokeWidth="2.5"/>
+            {/* Legs */}
+            <rect x="35" y="83" width="10" height="12" rx="4" fill="black" stroke="white" strokeWidth="2.5"/>
+            <rect x="55" y="83" width="10" height="12" rx="4" fill="black" stroke="white" strokeWidth="2.5"/>
+          </svg>
         </div>
       )}
 

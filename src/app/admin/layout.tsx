@@ -78,6 +78,37 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   return (
     <div style={{ minHeight: "100vh", backgroundColor: "#f5f5f5" }}>
       <style>{`
+        /* Fix modals to viewport center on mobile */
+        @media (max-width: 768px) {
+          [data-modal="true"] {
+            position: fixed !important;
+            top: 50% !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) !important;
+            max-height: 85vh !important;
+            overflow-y: auto !important;
+            width: 92vw !important;
+            max-width: 92vw !important;
+            margin: 0 !important;
+          }
+          /* Auto-fix any overlay's child that looks like a modal box */
+          div[style*="zIndex: 10000"] > div,
+          div[style*="zIndex: 9999"] > div,
+          div[style*="z-index: 10000"] > div,
+          div[style*="inset: 0"] > div {
+            position: fixed !important;
+            top: 50% !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) !important;
+            max-height: 85vh !important;
+            overflow-y: auto !important;
+            width: 92vw !important;
+            max-width: 480px !important;
+            margin: 0 !important;
+          }
+        }
+      `}</style>
+      <style>{`
         .admin-desktop-nav { display: none; }
         @media (min-width: 900px) {
           .admin-desktop-nav { display: flex !important; }

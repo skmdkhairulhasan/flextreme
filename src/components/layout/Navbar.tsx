@@ -20,10 +20,12 @@ export default function Navbar() {
   const navLinks = [
     { href: "/", label: "Home" },
     { href: "/products", label: "Products" },
+    { href: "/reviews", label: "Reviews" },
     { href: "/about", label: "About" },
     { href: "/size-guide", label: "Size Guide" },
     { href: "/delivery", label: "Delivery" },
     { href: "/contact", label: "Contact" },
+    { href: "/flex-ai", label: "✦ Flex AI", special: true },
   ]
 
   const isTransparent = isHome && !scrolled
@@ -45,7 +47,17 @@ export default function Navbar() {
         {/* Desktop Nav Links */}
         <div style={{ display: "flex", alignItems: "center", gap: "2rem", flex: 1, justifyContent: "center" }} className="hidden-mobile">
           {navLinks.map((link) => (
-            <Link key={link.href} href={link.href} style={{ color: pathname === link.href ? "white" : "rgba(255,255,255,0.65)", textDecoration: "none", fontSize: "0.78rem", fontWeight: pathname === link.href ? 700 : 500, letterSpacing: "0.1em", textTransform: "uppercase", borderBottom: pathname === link.href ? "1px solid white" : "1px solid transparent", paddingBottom: "2px", transition: "all 0.2s", whiteSpace: "nowrap" }}>
+            <Link key={link.href} href={link.href} style={(link as any).special ? {
+              color: "black", textDecoration: "none", fontSize: "0.72rem", fontWeight: 800,
+              letterSpacing: "0.08em", textTransform: "uppercase", whiteSpace: "nowrap",
+              backgroundColor: "white", padding: "0.35rem 0.9rem", borderRadius: "2px",
+              transition: "all 0.2s", display: "inline-block"
+            } : {
+              color: pathname === link.href ? "white" : "rgba(255,255,255,0.65)", textDecoration: "none",
+              fontSize: "0.78rem", fontWeight: pathname === link.href ? 700 : 500, letterSpacing: "0.1em",
+              textTransform: "uppercase", borderBottom: pathname === link.href ? "1px solid white" : "1px solid transparent",
+              paddingBottom: "2px", transition: "all 0.2s", whiteSpace: "nowrap"
+            }}>
               {link.label}
             </Link>
           ))}
@@ -69,7 +81,15 @@ export default function Navbar() {
       {isOpen && (
         <div style={{ backgroundColor: "black", borderTop: "1px solid rgba(255,255,255,0.1)", padding: "1.5rem", display: "flex", flexDirection: "column", gap: "1.5rem" }}>
           {navLinks.map((link) => (
-            <Link key={link.href} href={link.href} onClick={() => setIsOpen(false)} style={{ color: pathname === link.href ? "white" : "rgba(255,255,255,0.7)", textDecoration: "none", fontSize: "1rem", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", padding: "0.5rem 0", borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
+            <Link key={link.href} href={link.href} onClick={() => setIsOpen(false)} style={(link as any).special ? {
+              color: "black", backgroundColor: "white", textDecoration: "none", fontSize: "1rem",
+              fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase",
+              padding: "0.75rem 1.5rem", textAlign: "center" as const, display: "block", marginTop: "0.5rem"
+            } : {
+              color: pathname === link.href ? "white" : "rgba(255,255,255,0.7)", textDecoration: "none",
+              fontSize: "1rem", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase",
+              padding: "0.5rem 0", borderBottom: "1px solid rgba(255,255,255,0.1)"
+            }}>
               {link.label}
             </Link>
           ))}
