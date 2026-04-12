@@ -1361,7 +1361,7 @@ return (
         @media(max-width:768px){
           .peek-tilt{animation:peekNod 2s ease-in-out infinite!important;}
         }
-        @keyframes peekNod{0%,100%{transform:rotate(-20deg) translateY(0)}50%{transform:rotate(-15deg) translateY(-6px)}}
+        @keyframes peekNod{0%,100%{transform:rotate(-12deg) translateY(0)}50%{transform:rotate(-8deg) translateY(-5px)}}
         .ctoggle:hover{transform:scale(1.08)!important;transition:transform 0.2s!important;}
         .qbtn:hover{background:#f0f0f0!important;}
         .cinput:focus{outline:none;border-color:#aaa!important;}
@@ -1370,7 +1370,7 @@ return (
       `}}/>
 
       {(open || fullPage) && (
-        <div className="cwin" data-chatbox="true" style={fullPage ? {position:"fixed",top:0,left:0,right:0,bottom:0,width:"100%",height:"100%",backgroundColor:"white",border:"none",boxShadow:"none",zIndex:10,display:"flex",flexDirection:"column",overflow:"hidden"} : {position:"fixed",bottom:"1.5rem",right:"2rem",width:"340px",height:"540px",backgroundColor:"white",border:"1px solid #e0e0e0",boxShadow:"0 20px 60px rgba(0,0,0,0.2)",zIndex:9998,display:"flex",flexDirection:"column",overflow:"hidden"}}>
+        <div className="cwin" data-chatbox="true" style={fullPage ? {position:"relative",width:"100%",height:"100%",backgroundColor:"white",border:"none",boxShadow:"none",zIndex:10,display:"flex",flexDirection:"column",overflow:"hidden"} : {position:"fixed",bottom:"1.5rem",right:"2rem",width:"340px",height:"540px",backgroundColor:"white",border:"1px solid #e0e0e0",boxShadow:"0 20px 60px rgba(0,0,0,0.2)",zIndex:9998,display:"flex",flexDirection:"column",overflow:"hidden"}}>
           <div style={{background:"black",padding:"0.875rem 1rem",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0}}>
             <div style={{display:"flex",alignItems:"center",gap:"0.65rem"}}>
               <div style={{position:"relative",width:"50px"}}>
@@ -1505,10 +1505,10 @@ strokeLinecap="round"
       {!fullPage && <div style={{
         position:"fixed",
         bottom:20,
-        right: hidden ? -52 : 4,
+        right: hidden ? -44 : 4,
         zIndex:9997,
         transition:"right 0.35s cubic-bezier(0.34,1.56,0.64,1)",
-        transform: hidden ? "rotate(-20deg)" : "rotate(0deg)",
+        transform: hidden ? "rotate(-12deg)" : "rotate(0deg)",
         transformOrigin: "bottom right",
       }}>
         <button
@@ -1618,8 +1618,8 @@ animation:eyePulse 1.2s infinite;
 
 <svg
 className={`robotGlow ${loading ? "robotTalking" : ""}`}
-width="56"
-height="64"
+width="66"
+height="74"
 viewBox="0 0 120 120"
 >
 
