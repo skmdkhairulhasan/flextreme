@@ -71,17 +71,17 @@ export default async function DeliveryPage() {
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1px 1fr 1px 1fr", gap: "0", marginTop: "1.25rem", maxWidth: "420px", margin: "1.25rem auto 0" }}>
               <div style={{ textAlign: "center", padding: "0 0.5rem" }}>
                 <p style={{ fontWeight: 900, fontSize: "1.25rem", color: "#15803d" }}>1-2</p>
-                <p style={{ fontSize: "0.72rem", color: "#166534", fontWeight: 600 }}>Days · Khulna City</p>
+                <p style={{ fontSize: "0.72rem", color: "#166534", fontWeight: 600, lineHeight: 1.4 }}>Days<br/>Khulna City</p>
               </div>
               <div style={{ backgroundColor: "#86efac", width: "1px" }} />
               <div style={{ textAlign: "center", padding: "0 0.5rem" }}>
                 <p style={{ fontWeight: 900, fontSize: "1.25rem", color: "#15803d" }}>2-3</p>
-                <p style={{ fontSize: "0.72rem", color: "#166534", fontWeight: 600 }}>Days · Nearby</p>
+                <p style={{ fontSize: "0.72rem", color: "#166534", fontWeight: 600, lineHeight: 1.4 }}>Days<br/>Near Khulna</p>
               </div>
               <div style={{ backgroundColor: "#86efac", width: "1px" }} />
               <div style={{ textAlign: "center", padding: "0 0.5rem" }}>
                 <p style={{ fontWeight: 900, fontSize: "1.25rem", color: "#15803d" }}>3-5</p>
-                <p style={{ fontSize: "0.72rem", color: "#166534", fontWeight: 600 }}>Days · All BD</p>
+                <p style={{ fontSize: "0.72rem", color: "#166534", fontWeight: 600, lineHeight: 1.4 }}>Days<br/>All Bangladesh</p>
               </div>
             </div>
           </div>

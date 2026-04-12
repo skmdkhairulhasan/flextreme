@@ -5,16 +5,24 @@ export default function ImageGallery({ images, productName }: { images: string[]
   const [current, setCurrent] = useState(0)
   const [lightbox, setLightbox] = useState(false)
   const [lens, setLens] = useState({ show: false, x: 0, y: 0, w: 0, h: 0 })
+  const [isTouch, setIsTouch] = useState(false)
 
-  // Safety: ensure cursor attribute is always cleaned up
   useEffect(() => {
+    // Detect touch device — disable zoom and cursor hiding on mobile
+    const touch = window.matchMedia("(hover: none) and (pointer: coarse)").matches
+    setIsTouch(touch)
+
+    // Safety: clean up cursor state on blur or visibility change
     function cleanup() {
       document.documentElement.removeAttribute("data-hovering-image")
       setLens(l => ({ ...l, show: false }))
     }
-    // On any click outside, clean up
     window.addEventListener("blur", cleanup)
-    return () => window.removeEventListener("blur", cleanup)
+    document.addEventListener("visibilitychange", cleanup)
+    return () => {
+      window.removeEventListener("blur", cleanup)
+      document.removeEventListener("visibilitychange", cleanup)
+    }
   }, [])
   const containerRef = useRef<HTMLDivElement>(null)
   const LENS_SIZE = 130
@@ -66,6 +74,7 @@ export default function ImageGallery({ images, productName }: { images: string[]
   function next(e?: React.MouseEvent) { e?.stopPropagation(); setCurrent(i => i === images.length - 1 ? 0 : i + 1) }
 
   function onMouseMove(e: React.MouseEvent<HTMLDivElement>) {
+    if (isTouch) return
     const rect = containerRef.current?.getBoundingClientRect()
     if (!rect) return
     setLens({ show: true, x: e.clientX - rect.left, y: e.clientY - rect.top, w: rect.width, h: rect.height })
@@ -130,6 +139,7 @@ export default function ImageGallery({ images, productName }: { images: string[]
         onClick={() => { setLightbox(true); setLens(l => ({ ...l, show: false })) }}
         onMouseMove={onMouseMove}
         onMouseEnter={e => {
+          if (isTouch) return
           document.documentElement.setAttribute("data-hovering-image", "true")
           const rect = containerRef.current?.getBoundingClientRect()
           if (!rect) return
@@ -137,13 +147,13 @@ export default function ImageGallery({ images, productName }: { images: string[]
         }}
         onMouseLeave={() => {
           document.documentElement.removeAttribute("data-hovering-image")
-          setLens(l => ({ ...l, show: false }))
+          setLens({ show: false, x: 0, y: 0, w: 0, h: 0 })
         }}
         style={{ position: "relative", backgroundColor: "#f5f5f5", aspectRatio: "3/4", overflow: "hidden", marginBottom: "0.75rem" }}
       >
         <img src={images[current]} alt={productName} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
 
-        {lens.show && (
+        {lens.show && !isTouch && (
           <div style={{ position: "absolute", left: lens.x - LENS_SIZE / 2, top: lens.y - LENS_SIZE / 2, width: LENS_SIZE, height: LENS_SIZE, borderRadius: "50%", border: "2px solid rgba(255,255,255,0.9)", boxShadow: "0 4px 24px rgba(0,0,0,0.5)", overflow: "hidden", pointerEvents: "none", zIndex: 10 }}>
             <img src={images[current]} alt="" style={{ position: "absolute", width: lens.w * ZOOM, height: lens.h * ZOOM, maxWidth: "none", left: -(lens.x * ZOOM - LENS_SIZE / 2), top: -(lens.y * ZOOM - LENS_SIZE / 2), objectFit: "cover" }} />
           </div>

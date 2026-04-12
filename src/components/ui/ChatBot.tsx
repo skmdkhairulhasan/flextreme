@@ -1131,12 +1131,15 @@ if (
       msg.includes("when is my") && (msg.includes("order") || msg.includes("delivery")) ||
       msg.includes("what time") && msg.includes("order") ||
       msg.includes("how much time") && (msg.includes("order") || msg.includes("deliver") || msg.includes("arrive"))
-    // Smart order detection — matches partial phrases too
-    const orderWords = ["track", "status", "where", "find", "check", "lookup", "locate", "search", "show", "tell me about", "what happened", "update"]
+    // Smart order detection — scan ENTIRE message for any trigger combo
+    const orderTrackWords = ["track", "find", "check", "where", "status", "lookup", "locate", "search", "show", "update", "look up", "look for"]
+    const orderRefWords = ["order", "parcel", "package", "purchase", "delivery", "shipment"]
+    // Check if message contains ANY order-related word AND ANY action word
+    const hasAnyOrderRef = orderRefWords.some(w => msg.includes(w))
+    const hasAnyAction = orderTrackWords.some(w => msg.includes(w))
     const hasOrderIntent = isOrderTrack || 
-      (has(msg, "order") && orderWords.some(w => msg.includes(w))) ||
-      (msg.includes("my order") || msg.includes("my parcel") || msg.includes("my package") || msg.includes("my purchase")) ||
-      (msg.includes("order") && (msg.includes("can you") || msg.includes("please") || msg.includes("help") || msg.includes("want to")))
+      (hasAnyOrderRef && hasAnyAction) ||
+      msg.includes("my order") || msg.includes("my parcel") || msg.includes("my package") || msg.includes("my shipment")
     if (hasOrderIntent) {
       modeRef.current = "order_lookup"
       return "Sure! Send me the phone number you used when placing your order and I\'ll check it right away. 📦"
