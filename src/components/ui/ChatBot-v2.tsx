@@ -277,17 +277,10 @@ const [profile] = useState({
       // async order lookup — return loading message, then update
       setTimeout(async () => {
         try {
-          const supabase = createClient()
-          // Try multiple formats: 01XXXXXXXXX, 8801XXXXXXXXX, +8801XXXXXXXXX
-          const digits = phoneRaw.replace(/^88/, "")  // strip country code
-          const withCountry = "88" + digits.replace(/^0/, "").replace(/^1/, "01").replace(/^01/, "01")
-          const local = digits.startsWith("0") ? digits : "0" + digits.replace(/^88/, "")
-          const { data } = await supabase
-            .from("orders")
-            .select("*")
-            .or("phone.eq." + phoneRaw + ",phone.eq." + local + ",phone.eq." + withCountry + ",phone.eq.0" + digits.slice(-10))
-            .order("created_at", { ascending: false })
-            .limit(5)
+          // Use server API route to bypass RLS
+          const res = await fetch("/api/order-lookup?phone=" + encodeURIComponent(phoneRaw))
+          const json = await res.json()
+          const data = json.orders
           let orderReply = ""
 
 if (data && data.length > 0) {
@@ -713,7 +706,8 @@ if (
       if (msg.includes("buy") || msg.includes("purchase") || msg.includes("shop") || msg.includes("order now") || msg.includes("want to get")) {
         // User wants to buy — show products instead of guide
         if (products.length > 0) {
-          const cats: string[] = (() => { try { return JSON.parse(s.product_categories || "[]") } catch { return [] } })()
+          const rawCats = (() => { try { return JSON.parse(s.product_categories || "[]") } catch { return [] } })()
+          const cats: string[] = rawCats.map((c: any) => typeof c === "string" ? c : c.name).filter(Boolean)
           if (cats.length > 1) {
             modeRef.current = "awaiting_category"
             return "Great choice! What are you looking for? 🛍️\n\n" + cats.map((c: string, i: number) => (i+1) + ". " + c).join("\n") + "\n\nJust type the number or name!"
@@ -1040,7 +1034,10 @@ if (
 
     // Check if user is replying to a category choice
     const cats: string[] = (() => {
-      try { return JSON.parse(s.product_categories || "[]") } catch { return [] }
+      try {
+        const raw = JSON.parse(s.product_categories || "[]")
+        return raw.map((c: any) => typeof c === "string" ? c : c.name).filter(Boolean)
+      } catch { return [] }
     })()
     if (cats.length > 0 && modeRef.current === "awaiting_category") {
       // Allow numeric selection too

@@ -287,10 +287,10 @@ function Reviews({ reviews }: { reviews: any[] }) {
         </div>
         <style>{`
               @media (max-width: 640px) {
-                .featured-grid { grid-template-columns: 1fr 1fr !important; gap: 1rem !important; }
+                .featured-grid { grid-template-columns: 1fr !important; gap: 1rem !important; }
               }
             `}</style>
-            <div className="featured-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "2rem" }}>
+            <div className="featured-grid" style={{ display: "grid", gridTemplateColumns: reviews.length === 1 ? "minmax(auto, 480px)" : "repeat(auto-fit, minmax(280px, 1fr))", gap: "2rem", justifyContent: "center" }}>
           {reviews.map((review: any, index: number) => (
             <div key={review.id || index} style={{ border: "1px solid #e0e0e0", padding: "2rem" }}>
               <div style={{ fontSize: "1rem", marginBottom: "1rem", color: "#f0a500" }}>{"★".repeat(review.rating)}<span style={{ color: "#e0e0e0" }}>{"★".repeat(5 - review.rating)}</span></div>

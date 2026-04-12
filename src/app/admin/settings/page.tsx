@@ -957,7 +957,7 @@ export default function AdminSettings() {
       </div>
 
       {/* Tabs */}
-      <div style={{ display: "flex", gap: "0", borderBottom: "2px solid black", marginBottom: "1.5rem", overflowX: "auto", WebkitOverflowScrolling: "touch" as any, touchAction: "pan-x", scrollbarWidth: "none" as any }}>
+      <div style={{ display: "flex", gap: "0", borderBottom: "2px solid black", marginBottom: "1.5rem", overflowX: "auto", WebkitOverflowScrolling: "touch" as any, touchAction: "pan-x", scrollbarWidth: "none" as any, overscrollBehaviorX: "contain" as any, msOverflowStyle: "none" as any }}>
         {tabs.map(tab => (
           <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{ padding: "0.75rem 1.25rem", fontWeight: 700, fontSize: "0.78rem", textTransform: "uppercase", letterSpacing: "0.05em", border: "none", borderBottom: activeTab === tab.id ? "3px solid black" : "3px solid transparent", marginBottom: "-2px", backgroundColor: "transparent", cursor: "pointer", color: activeTab === tab.id ? "black" : "#999", whiteSpace: "nowrap", transition: "color 0.2s" }}>
             {tab.label}

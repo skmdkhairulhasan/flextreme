@@ -177,7 +177,7 @@ export default function DumbbellCursorOnly() {
         className={"db-cur " + (rapidClick ? "raging" : clicked ? "clicking" : "")}
         style={{ left: pos.x, top: pos.y, opacity: visible ? 1 : 0 }}
       >
-        <svg width={size} height={size} viewBox="0 0 48 48" style={{ display: "block", transition: "width 0.15s ease, height 0.15s ease" }}>
+        <svg width={size} height={size} viewBox="0 0 48 48" style={{ display: "block", transition: "width 0.15s ease, height 0.15s ease", filter: "drop-shadow(0 0 2px rgba(0,0,0,0.8))" }}>
           <rect x="18" y="21" width="12" height="6" rx="2" fill="white"/>
           <rect x="6"  y="16" width="8"  height="16" rx="3" fill="white"/>
           <rect x="3"  y="19" width="6"  height="10" rx="2" fill="white"/>

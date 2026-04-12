@@ -173,7 +173,7 @@ export default function LogoCursor() {
             width: size + "px",
             height: size + "px",
             objectFit: "contain",
-            filter: "invert(1)",
+            filter: "invert(1) drop-shadow(0 0 2px rgba(0,0,0,0.8))",
             display: "block",
             transition: "width 0.15s ease, height 0.15s ease",
           }}
