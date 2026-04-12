@@ -1224,424 +1224,6 @@ if (
       return "I didn\'t catch that. " + (hints[p.step] || "Please continue.")
     }
     return "Got it — what specifically do you need?\n\n🚚 Find my order\n🚛 Delivery info\n🛍️ Shop products\n💪 Workout plan\n🥗 Diet chart\n📊 BMI + calories\n💊 Supplements\n👕 Gym gear"
-  }
-
-  async function sendMessage(text?: string) {
-
-  const userMsg = (text ?? input).trim()
-   if (userMsg.toLowerCase().includes("talk to human")) {
-  window.open("https://wa.me/8801935962421?text=Hi%20Flextreme!", "_blank")
-  return
-}
-  if (!userMsg || loading) return
-
-  setInput("")
-
-  setMessages(prev => [
-    ...prev,
-    { role: "user", content: userMsg }
-  ])
-
-  setLoading(true)
-
-  setTimeout(async () => {
-
-    let reply = getReply(userMsg)
-
-    // Phone lookup is async — getReply returns sentinel and handles its own async + setLoading
-    if (reply === "__ASYNC__") return
-
-    // Auto-corrected phone number
-    if (reply.startsWith("__PHONE_LOOKUP__:")) {
-      const fixedPhone = reply.replace("__PHONE_LOOKUP__:", "")
-      modeRef.current = "order_lookup"
-      // Recurse with fixed number
-      const fixedReply = getReply(fixedPhone)
-      if (fixedReply === "__ASYNC__") return
-      reply = fixedReply
-    }
-
-    // fallback AI (only when truly no intent matched)
-    if (
-      reply.includes("Got it — what specifically") ||
-      reply.includes("Ask me about workouts")
-    ) {
-      reply = await flexAI(userMsg)
-    }
-
-    setMessages(prev => [
-      ...prev,
-      { role: "assistant", content: reply }
-    ])
-
-    setLoading(false)
-
-  }, 300 + Math.random() * 200)
-
-}
-
-  const quick = [
-"Find my order 🚚",
-"Delivery info 🚚",
-"Shop Products 🛍️",
-"Size guide 📏",
-"Build my full plan 💪",
-"Calculate BMI 📊",
-"Workout plan 🏋️",
-"Diet chart 🥗",
-"Talk to human 💬"
-]
-
-function handleSwipe(e:any){
-  if(window.innerWidth > 768) return
-  if(hidden) { setHidden(false); return }
-
-  const startX = e.touches ? e.touches[0].clientX : e.clientX
-  const startY = e.touches ? e.touches[0].clientY : e.clientY
-
-  function onEnd(ev:any){
-    const endX = ev.changedTouches ? ev.changedTouches[0].clientX : ev.clientX
-    const endY = ev.changedTouches ? ev.changedTouches[0].clientY : ev.clientY
-    const dx = endX - startX
-    const dy = Math.abs(endY - startY)
-    // Swipe left or right (more horizontal than vertical, min 40px)
-    if(Math.abs(dx) > 40 && Math.abs(dx) > dy) {
-      setHidden(true)
-    }
-    window.removeEventListener("touchend", onEnd)
-    window.removeEventListener("mouseup", onEnd)
-  }
-  window.addEventListener("touchend", onEnd)
-  window.addEventListener("mouseup", onEnd)
-}
-
-
-return (
-<>
-      <style dangerouslySetInnerHTML={{__html:`
-        @keyframes chatPop{0%{transform:scale(0.88) translateY(10px);opacity:0}100%{transform:scale(1) translateY(0);opacity:1}}
-        @keyframes msgIn{0%{transform:translateY(5px);opacity:0}100%{transform:translateY(0);opacity:1}}
-        @keyframes dot{0%,80%,100%{transform:scale(0.5);opacity:0.3}40%{transform:scale(1);opacity:1}}
-        @keyframes badgePop{0%,100%{transform:scale(1)}50%{transform:scale(1.3)}}
-        @keyframes labelSlide{0%{opacity:0;transform:translateX(8px)}100%{opacity:1;transform:translateX(0)}}
-        @keyframes glowPulse{0%,100%{box-shadow:0 4px 20px rgba(0,0,0,0.35),0 0 0 0 rgba(0,0,0,0.1)}50%{box-shadow:0 4px 20px rgba(0,0,0,0.35),0 0 0 8px rgba(0,0,0,0.04)}}
-        .cwin{animation:chatPop 0.22s cubic-bezier(0.34,1.56,0.64,1) forwards;}
-        .cmsg{animation:msgIn 0.18s ease-out forwards;}
-        .d1{animation:dot 1.2s ease-in-out infinite;}
-        .d2{animation:dot 1.2s ease-in-out 0.2s infinite;}
-        .d3{animation:dot 1.2s ease-in-out 0.4s infinite;}
-        .ubadge{animation:badgePop 1.5s ease-in-out infinite;}
-        .clabel{animation:labelSlide 0.3s ease-out forwards;}
-        .ctoggle{animation:glowPulse 2.5s ease-in-out infinite;}
-        .ctoggle:hover{transform:scale(1.08)!important;transition:transform 0.2s!important;}
-        .qbtn:hover{background:#f0f0f0!important;}
-        .cinput:focus{outline:none;border-color:#aaa!important;}
-        .msgs::-webkit-scrollbar{width:4px}
-        .msgs::-webkit-scrollbar-thumb{background:#e0e0e0;border-radius:4px}
-      `}}/>
-
-      {open && (
-        <div className="cwin" data-chatbox="true" style={{position:"fixed",bottom:"1.5rem",right:"2rem",width:"340px",height:"540px",backgroundColor:"white",border:"1px solid #e0e0e0",boxShadow:"0 20px 60px rgba(0,0,0,0.2)",zIndex:9998,display:"flex",flexDirection:"column",overflow:"hidden"}}>
-          <div style={{background:"black",padding:"0.875rem 1rem",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0}}>
-            <div style={{display:"flex",alignItems:"center",gap:"0.65rem"}}>
-              <div style={{position:"relative",width:"50px"}}>
-
-<style dangerouslySetInnerHTML={{__html:`
-
-@keyframes robotFloat{
-0%,100%{transform:translateY(0)}
-50%{transform:translateY(-8px)}
-}
-
-.robotFloating{
-position:absolute;
-top:-32px;
-left:-6px;
-animation:robotFloat 2.5s ease-in-out infinite;
-}
-
-`}}/>
-
-<svg
-className={`robotFloating robotGlow ${loading ? "robotTalking" : ""}`}
-width="66"
-height="74"
-viewBox="0 0 120 120"
->
-
-<rect x="25" y="15" width="70" height="45" rx="12" fill="#0b1625"/>
-
-<g className="robotEye">
-<circle cx="50" cy="38" r="6" fill="#00eaff"/>
-<circle cx="70" cy="38" r="6" fill="#00eaff"/>
-</g>
-
-<path
-d="M48 48 Q60 56 72 48"
-stroke="#00eaff"
-strokeWidth="2"
-strokeLinecap="round"
-/>
-
-<rect x="40" y="65" width="40" height="22" rx="6" fill="#dce2ee"/>
-
-<rect x="45" y="88" width="8" height="10" rx="2" fill="#c8d0de"/>
-<rect x="67" y="88" width="8" height="10" rx="2" fill="#c8d0de"/>
-
-<rect x="20" y="68" width="15" height="7" rx="3" fill="#a8b4c4"/>
-<rect x="85" y="68" width="15" height="7" rx="3" fill="#a8b4c4"/>
-
-</svg>
-
-</div>
-              <div>
-                <p style={{fontWeight:800,fontSize:"0.9rem",color:"white",margin:0}}>Flex — AI Fitness Coach</p>
-                <div style={{display:"flex",alignItems:"center",gap:"0.3rem",marginTop:"0.15rem"}}>
-                  <div style={{width:"7px",height:"7px",borderRadius:"50%",backgroundColor:"#22c55e",boxShadow:"0 0 5px #22c55e"}}/>
-                  <p style={{fontSize:"0.63rem",color:"rgba(255,255,255,0.5)",margin:0}}>Online · Powered by Flextreme</p>
-                </div>
-              </div>
-            </div>
-            <button onClick={()=>setOpen(false)} style={{background:"none",border:"none",color:"rgba(255,255,255,0.5)",fontSize:"1.2rem",cursor:"var(--chat-cursor,auto)",padding:"0.2rem",lineHeight:1}}>✕</button>
-          </div>
-          <div style={{backgroundColor:"#fafafa",borderBottom:"1px solid #eee",padding:"0.35rem 1rem",display:"flex",alignItems:"center",gap:"0.5rem"}}>
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
-            <span style={{fontSize:"0.65rem",color:"#999",fontWeight:500}}>AI Fitness + Shopping Assistant · Flextreme</span>
-          </div>
-          <div className="msgs" style={{flex:1,overflowY:"auto",padding:"0.875rem",display:"flex",flexDirection:"column",gap:"0.6rem"}}>
-            {messages.map((msg,i)=>(
-              <div key={i} className="cmsg" style={{display:"flex",justifyContent:msg.role==="user"?"flex-end":"flex-start",alignItems:"flex-end",gap:"0.35rem"}}>
-                {msg.role==="assistant"&&(
-                  <div style={{width:"26px",height:"26px",backgroundColor:"black",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-                    <img src="/logo-transparent.png" alt="" style={{width:"15px",height:"15px",objectFit:"contain",filter:"invert(1)"}}/>
-                  </div>
-                )}
-                <div style={{maxWidth:"83%",padding:"0.55rem 0.85rem",fontSize:"0.81rem",lineHeight:1.6,whiteSpace:"pre-line",borderRadius:msg.role==="user"?"16px 16px 4px 16px":"16px 16px 16px 4px",backgroundColor:msg.role==="user"?"black":"#f0f0f0",color:msg.role==="user"?"white":"#1a1a1a"}}>
-                  {msg.content.split(/(\bhttps?:\/\/\S+|\/products\/\S+)/g).map((part,i)=>{
-                    if(/^https?:\/\//.test(part)) return <a key={i} href={part} target="_blank" rel="noopener noreferrer" style={{display:"inline-block",marginTop:"6px",padding:"5px 12px",background:"#0ea5e9",color:"white",borderRadius:"6px",textDecoration:"none",fontSize:"0.75rem",fontWeight:700}}>🚚 Track Package</a>
-                    if(/^\/products\//.test(part)) return <a key={i} href={part} style={{display:"inline-block",marginTop:"4px",padding:"5px 12px",background:"black",color:"white",borderRadius:"6px",textDecoration:"none",fontSize:"0.75rem",fontWeight:700}}>👕 View Product →</a>
-                    return <span key={i}>{part}</span>
-                  })}
-                </div>
-              </div>
-            ))}
-            {loading&&(
-              <div className="cmsg" style={{display:"flex",alignItems:"flex-end",gap:"0.35rem"}}>
-                <div style={{width:"26px",height:"26px",backgroundColor:"black",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-                  <img src="/logo-transparent.png" alt="" style={{width:"15px",height:"15px",objectFit:"contain",filter:"invert(1)"}}/>
-                </div>
-                <div style={{backgroundColor:"#f0f0f0",padding:"0.65rem 0.875rem",borderRadius:"16px 16px 16px 4px",display:"flex",gap:"0.3rem",alignItems:"center"}}>
-                  <div className="d1" style={{width:"6px",height:"6px",borderRadius:"50%",backgroundColor:"#999"}}/>
-                  <div className="d2" style={{width:"6px",height:"6px",borderRadius:"50%",backgroundColor:"#999"}}/>
-                  <div className="d3" style={{width:"6px",height:"6px",borderRadius:"50%",backgroundColor:"#999"}}/>
-                </div>
-              </div>
-            )}
-            <div ref={messagesEndRef}/>
-          </div>
-          {messages.length<=1&&(
-            <div style={{padding:"0 0.875rem 0.6rem",display:"flex",flexWrap:"wrap",gap:"0.35rem"}}>
-              {quick.map(q=>(
-                <button key={q} className="qbtn" onClick={()=>sendMessage(q)} style={{fontSize:"0.66rem",padding:"0.28rem 0.65rem",border:"1px solid #e0e0e0",backgroundColor:"white",borderRadius:"20px",cursor:"var(--chat-cursor,auto)",color:"#444",fontFamily:"inherit",transition:"background 0.15s"}}>{q}</button>
-              ))}
-            </div>
-          )}
-          <div style={{padding:"0.6rem 0.875rem",borderTop:"1px solid #f0f0f0",display:"flex",gap:"0.4rem",flexShrink:0}}>
-            <input ref={inputRef} className="cinput" value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&sendMessage()} placeholder="Ask Flex anything..." style={{flex:1,border:"1px solid #e0e0e0",padding:"0.55rem 0.85rem",fontSize:"0.82rem",borderRadius:"24px",fontFamily:"inherit",cursor:"var(--chat-cursor,auto)",transition:"border-color 0.2s"}}/>
-            <button onClick={()=>sendMessage()} disabled={!input.trim()||loading} style={{width:"38px",height:"38px",borderRadius:"50%",backgroundColor:input.trim()?"black":"#ddd",border:"none",color:"white",cursor:"var(--chat-cursor,auto)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all 0.2s"}}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* LABEL */}
-      {!open && !hidden && (
-        <div className="clabel" style={{
-          position:"fixed", bottom:28, right:80, zIndex:9996,
-          backgroundColor:"black", color:"white",
-          padding:"0.4rem 0.9rem", borderRadius:"24px",
-          fontSize:"0.72rem", fontWeight:700, letterSpacing:"0.04em",
-          whiteSpace:"nowrap", boxShadow:"0 4px 16px rgba(0,0,0,0.25)",
-          display:"flex", alignItems:"center", gap:"0.4rem",
-          pointerEvents:"none",
-        }}>
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-          Chat with Flex AI
-        </div>
-      )}
-
-      {/* BUTTON — slides right to hide, tap to restore */}
-      <div style={{
-        position:"fixed",
-        bottom:20,
-        right: hidden ? -52 : 4,
-        zIndex:9997,
-        transition:"right 0.35s cubic-bezier(0.34,1.56,0.64,1)",
-      }}>
-        <button
-className="ctoggle"
-onClick={()=>setOpen(o=>!o)}
-onMouseDown={handleSwipe}
-onTouchStart={handleSwipe}
-style={{
-  width:"68px",
-  height:"68px",
-  borderRadius:"50%",
-  backgroundColor:"black",
-  border:"2px solid rgba(255,255,255,0.15)",
-  cursor:"pointer",
-  display:"flex",
-  alignItems:"center",
-  justifyContent:"center",
-  position:"relative",
-  overflow:"visible"
-}}
->
-
-<style dangerouslySetInnerHTML={{__html:`
-
-@keyframes robotGlow{
-0%,100%{filter:drop-shadow(0 0 4px #00eaff)}
-50%{filter:drop-shadow(0 0 14px #00eaff)}
-}
-
-@keyframes robotBlink{
-0%,92%,100%{transform:scaleY(1)}
-95%{transform:scaleY(.1)}
-}
-
-@keyframes auraPulse{
-0%{transform:scale(1);opacity:.6}
-100%{transform:scale(1.8);opacity:0}
-}
-
-.robotGlow{
-animation:robotGlow 2.4s ease-in-out infinite;
-}
-
-.robotEye{
-animation:robotBlink 4s infinite;
-transform-origin:center;
-}
-
-.robotAura{
-position:absolute;
-width:74px;
-height:74px;
-border-radius:50%;
-border:1.5px solid rgba(0,234,255,0.4);
-animation:auraPulse 2.6s infinite;
-pointer-events:none;
-}
-
-.robotAura2{
-animation-delay:1.3s;
-}
-
-@keyframes robotFloat{
-0%,100%{transform:translate(-50%,0)}
-50%{transform:translate(-50%,-8px)}
-}
-
-@keyframes robotBlink{
-0%,92%,100%{transform:scaleY(1)}
-95%{transform:scaleY(.15)}
-}
-
-.robotWrap{
-position:absolute;
-bottom:32px;
-left:50%;
-transform:translateX(-50%);
-animation:robotFloat 2.2s ease-in-out infinite;
-}
-
-.robotEye{
-animation:robotBlink 4s infinite;
-transform-origin:center;
-}
-@keyframes robotTalk {
-0%,100%{d:path("M48 48 Q60 56 72 48")}
-50%{d:path("M46 52 Q60 64 74 52")}
-}
-
-@keyframes eyePulse{
-0%,100%{filter:drop-shadow(0 0 4px #00eaff)}
-50%{filter:drop-shadow(0 0 12px #00eaff)}
-}
-
-.robotTalking path{
-animation:robotTalk 0.6s infinite;
-}
-
-.robotTalking .robotEye{
-animation:eyePulse 1.2s infinite;
-}
-
-`}}/>
-
-{/* ROBOT */}
-<div className="robotWrap">
-
-<svg
-className={`robotGlow ${loading ? "robotTalking" : ""}`}
-width="56"
-height="64"
-viewBox="0 0 120 120"
->
-
-{/* head */}
-<rect x="25" y="15" width="70" height="45" rx="12" fill="#0b1625"/>
-
-{/* eyes */}
-<g className="robotEye">
-<circle cx="50" cy="38" r="6" fill="#00eaff"/>
-<circle cx="70" cy="38" r="6" fill="#00eaff"/>
-</g>
-
-{/* smile */}
-<path
-className="robotMouth"
-d="M48 48 Q60 56 72 48"
-stroke="#00eaff"
-strokeWidth="2"
-strokeLinecap="round"
-/>
-
-{/* body */}
-<rect x="40" y="65" width="40" height="22" rx="6" fill="#dce2ee"/>
-
-{/* legs */}
-<rect x="45" y="88" width="8" height="10" rx="2" fill="#c8d0de"/>
-<rect x="67" y="88" width="8" height="10" rx="2" fill="#c8d0de"/>
-
-{/* arms */}
-<rect x="20" y="68" width="15" height="7" rx="3" fill="#a8b4c4"/>
-<rect x="85" y="68" width="15" height="7" rx="3" fill="#a8b4c4"/>
-
-</svg>
-
-</div>
-
-{/* CIRCLE ICON */}
-{open ? (
-<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
-<line x1="18" y1="6" x2="6" y2="18"/>
-<line x1="6" y1="6" x2="18" y2="18"/>
-</svg>
-) : (
-<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2">
-<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-</svg>
-)}
-
-</button>
-      </div>
-    </>
-  )
-}
-
     // Greetings & casual
     if (has(msg, "greeting")) {
       const greetings = [
@@ -2943,6 +2525,423 @@ if (
       return "I didn\'t catch that. " + (hints[p.step] || "Please continue.")
     }
     return "Got it — what specifically do you need?\n\n🚚 Find my order\n🚛 Delivery info\n🛍️ Shop products\n💪 Workout plan\n🥗 Diet chart\n📊 BMI + calories\n💊 Supplements\n👕 Gym gear"
+  }
+
+  async function sendMessage(text?: string) {
+
+  const userMsg = (text ?? input).trim()
+   if (userMsg.toLowerCase().includes("talk to human")) {
+  window.open("https://wa.me/8801935962421?text=Hi%20Flextreme!", "_blank")
+  return
+}
+  if (!userMsg || loading) return
+
+  setInput("")
+
+  setMessages(prev => [
+    ...prev,
+    { role: "user", content: userMsg }
+  ])
+
+  setLoading(true)
+
+  setTimeout(async () => {
+
+    let reply = getReply(userMsg)
+
+    // Phone lookup is async — getReply returns sentinel and handles its own async + setLoading
+    if (reply === "__ASYNC__") return
+
+    // Auto-corrected phone number
+    if (reply.startsWith("__PHONE_LOOKUP__:")) {
+      const fixedPhone = reply.replace("__PHONE_LOOKUP__:", "")
+      modeRef.current = "order_lookup"
+      // Recurse with fixed number
+      const fixedReply = getReply(fixedPhone)
+      if (fixedReply === "__ASYNC__") return
+      reply = fixedReply
+    }
+
+    // fallback AI (only when truly no intent matched)
+    if (
+      reply.includes("Got it — what specifically") ||
+      reply.includes("Ask me about workouts")
+    ) {
+      reply = await flexAI(userMsg)
+    }
+
+    setMessages(prev => [
+      ...prev,
+      { role: "assistant", content: reply }
+    ])
+
+    setLoading(false)
+
+  }, 300 + Math.random() * 200)
+
+}
+
+  const quick = [
+"Find my order 🚚",
+"Delivery info 🚚",
+"Shop Products 🛍️",
+"Size guide 📏",
+"Build my full plan 💪",
+"Calculate BMI 📊",
+"Workout plan 🏋️",
+"Diet chart 🥗",
+"Talk to human 💬"
+]
+
+function handleSwipe(e:any){
+  if(window.innerWidth > 768) return
+  if(hidden) { setHidden(false); return }
+
+  const startX = e.touches ? e.touches[0].clientX : e.clientX
+  const startY = e.touches ? e.touches[0].clientY : e.clientY
+
+  function onEnd(ev:any){
+    const endX = ev.changedTouches ? ev.changedTouches[0].clientX : ev.clientX
+    const endY = ev.changedTouches ? ev.changedTouches[0].clientY : ev.clientY
+    const dx = endX - startX
+    const dy = Math.abs(endY - startY)
+    // Swipe left or right (more horizontal than vertical, min 40px)
+    if(Math.abs(dx) > 40 && Math.abs(dx) > dy) {
+      setHidden(true)
+    }
+    window.removeEventListener("touchend", onEnd)
+    window.removeEventListener("mouseup", onEnd)
+  }
+  window.addEventListener("touchend", onEnd)
+  window.addEventListener("mouseup", onEnd)
+}
+
+
+return (
+<>
+      <style dangerouslySetInnerHTML={{__html:`
+        @keyframes chatPop{0%{transform:scale(0.88) translateY(10px);opacity:0}100%{transform:scale(1) translateY(0);opacity:1}}
+        @keyframes msgIn{0%{transform:translateY(5px);opacity:0}100%{transform:translateY(0);opacity:1}}
+        @keyframes dot{0%,80%,100%{transform:scale(0.5);opacity:0.3}40%{transform:scale(1);opacity:1}}
+        @keyframes badgePop{0%,100%{transform:scale(1)}50%{transform:scale(1.3)}}
+        @keyframes labelSlide{0%{opacity:0;transform:translateX(8px)}100%{opacity:1;transform:translateX(0)}}
+        @keyframes glowPulse{0%,100%{box-shadow:0 4px 20px rgba(0,0,0,0.35),0 0 0 0 rgba(0,0,0,0.1)}50%{box-shadow:0 4px 20px rgba(0,0,0,0.35),0 0 0 8px rgba(0,0,0,0.04)}}
+        .cwin{animation:chatPop 0.22s cubic-bezier(0.34,1.56,0.64,1) forwards;}
+        .cmsg{animation:msgIn 0.18s ease-out forwards;}
+        .d1{animation:dot 1.2s ease-in-out infinite;}
+        .d2{animation:dot 1.2s ease-in-out 0.2s infinite;}
+        .d3{animation:dot 1.2s ease-in-out 0.4s infinite;}
+        .ubadge{animation:badgePop 1.5s ease-in-out infinite;}
+        .clabel{animation:labelSlide 0.3s ease-out forwards;}
+        .ctoggle{animation:glowPulse 2.5s ease-in-out infinite;}
+        .ctoggle:hover{transform:scale(1.08)!important;transition:transform 0.2s!important;}
+        .qbtn:hover{background:#f0f0f0!important;}
+        .cinput:focus{outline:none;border-color:#aaa!important;}
+        .msgs::-webkit-scrollbar{width:4px}
+        .msgs::-webkit-scrollbar-thumb{background:#e0e0e0;border-radius:4px}
+      `}}/>
+
+      {open && (
+        <div className="cwin" data-chatbox="true" style={{position:"fixed",bottom:"1.5rem",right:"2rem",width:"340px",height:"540px",backgroundColor:"white",border:"1px solid #e0e0e0",boxShadow:"0 20px 60px rgba(0,0,0,0.2)",zIndex:9998,display:"flex",flexDirection:"column",overflow:"hidden"}}>
+          <div style={{background:"black",padding:"0.875rem 1rem",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0}}>
+            <div style={{display:"flex",alignItems:"center",gap:"0.65rem"}}>
+              <div style={{position:"relative",width:"50px"}}>
+
+<style dangerouslySetInnerHTML={{__html:`
+
+@keyframes robotFloat{
+0%,100%{transform:translateY(0)}
+50%{transform:translateY(-8px)}
+}
+
+.robotFloating{
+position:absolute;
+top:-32px;
+left:-6px;
+animation:robotFloat 2.5s ease-in-out infinite;
+}
+
+`}}/>
+
+<svg
+className={`robotFloating robotGlow ${loading ? "robotTalking" : ""}`}
+width="66"
+height="74"
+viewBox="0 0 120 120"
+>
+
+<rect x="25" y="15" width="70" height="45" rx="12" fill="#0b1625"/>
+
+<g className="robotEye">
+<circle cx="50" cy="38" r="6" fill="#00eaff"/>
+<circle cx="70" cy="38" r="6" fill="#00eaff"/>
+</g>
+
+<path
+d="M48 48 Q60 56 72 48"
+stroke="#00eaff"
+strokeWidth="2"
+strokeLinecap="round"
+/>
+
+<rect x="40" y="65" width="40" height="22" rx="6" fill="#dce2ee"/>
+
+<rect x="45" y="88" width="8" height="10" rx="2" fill="#c8d0de"/>
+<rect x="67" y="88" width="8" height="10" rx="2" fill="#c8d0de"/>
+
+<rect x="20" y="68" width="15" height="7" rx="3" fill="#a8b4c4"/>
+<rect x="85" y="68" width="15" height="7" rx="3" fill="#a8b4c4"/>
+
+</svg>
+
+</div>
+              <div>
+                <p style={{fontWeight:800,fontSize:"0.9rem",color:"white",margin:0}}>Flex — AI Fitness Coach</p>
+                <div style={{display:"flex",alignItems:"center",gap:"0.3rem",marginTop:"0.15rem"}}>
+                  <div style={{width:"7px",height:"7px",borderRadius:"50%",backgroundColor:"#22c55e",boxShadow:"0 0 5px #22c55e"}}/>
+                  <p style={{fontSize:"0.63rem",color:"rgba(255,255,255,0.5)",margin:0}}>Online · Powered by Flextreme</p>
+                </div>
+              </div>
+            </div>
+            <button onClick={()=>setOpen(false)} style={{background:"none",border:"none",color:"rgba(255,255,255,0.5)",fontSize:"1.2rem",cursor:"var(--chat-cursor,auto)",padding:"0.2rem",lineHeight:1}}>✕</button>
+          </div>
+          <div style={{backgroundColor:"#fafafa",borderBottom:"1px solid #eee",padding:"0.35rem 1rem",display:"flex",alignItems:"center",gap:"0.5rem"}}>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+            <span style={{fontSize:"0.65rem",color:"#999",fontWeight:500}}>AI Fitness + Shopping Assistant · Flextreme</span>
+          </div>
+          <div className="msgs" style={{flex:1,overflowY:"auto",padding:"0.875rem",display:"flex",flexDirection:"column",gap:"0.6rem"}}>
+            {messages.map((msg,i)=>(
+              <div key={i} className="cmsg" style={{display:"flex",justifyContent:msg.role==="user"?"flex-end":"flex-start",alignItems:"flex-end",gap:"0.35rem"}}>
+                {msg.role==="assistant"&&(
+                  <div style={{width:"26px",height:"26px",backgroundColor:"black",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                    <img src="/logo-transparent.png" alt="" style={{width:"15px",height:"15px",objectFit:"contain",filter:"invert(1)"}}/>
+                  </div>
+                )}
+                <div style={{maxWidth:"83%",padding:"0.55rem 0.85rem",fontSize:"0.81rem",lineHeight:1.6,whiteSpace:"pre-line",borderRadius:msg.role==="user"?"16px 16px 4px 16px":"16px 16px 16px 4px",backgroundColor:msg.role==="user"?"black":"#f0f0f0",color:msg.role==="user"?"white":"#1a1a1a"}}>
+                  {msg.content.split(/(\bhttps?:\/\/\S+|\/products\/\S+)/g).map((part,i)=>{
+                    if(/^https?:\/\//.test(part)) return <a key={i} href={part} target="_blank" rel="noopener noreferrer" style={{display:"inline-block",marginTop:"6px",padding:"5px 12px",background:"#0ea5e9",color:"white",borderRadius:"6px",textDecoration:"none",fontSize:"0.75rem",fontWeight:700}}>🚚 Track Package</a>
+                    if(/^\/products\//.test(part)) return <a key={i} href={part} style={{display:"inline-block",marginTop:"4px",padding:"5px 12px",background:"black",color:"white",borderRadius:"6px",textDecoration:"none",fontSize:"0.75rem",fontWeight:700}}>👕 View Product →</a>
+                    return <span key={i}>{part}</span>
+                  })}
+                </div>
+              </div>
+            ))}
+            {loading&&(
+              <div className="cmsg" style={{display:"flex",alignItems:"flex-end",gap:"0.35rem"}}>
+                <div style={{width:"26px",height:"26px",backgroundColor:"black",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                  <img src="/logo-transparent.png" alt="" style={{width:"15px",height:"15px",objectFit:"contain",filter:"invert(1)"}}/>
+                </div>
+                <div style={{backgroundColor:"#f0f0f0",padding:"0.65rem 0.875rem",borderRadius:"16px 16px 16px 4px",display:"flex",gap:"0.3rem",alignItems:"center"}}>
+                  <div className="d1" style={{width:"6px",height:"6px",borderRadius:"50%",backgroundColor:"#999"}}/>
+                  <div className="d2" style={{width:"6px",height:"6px",borderRadius:"50%",backgroundColor:"#999"}}/>
+                  <div className="d3" style={{width:"6px",height:"6px",borderRadius:"50%",backgroundColor:"#999"}}/>
+                </div>
+              </div>
+            )}
+            <div ref={messagesEndRef}/>
+          </div>
+          {messages.length<=1&&(
+            <div style={{padding:"0 0.875rem 0.6rem",display:"flex",flexWrap:"wrap",gap:"0.35rem"}}>
+              {quick.map(q=>(
+                <button key={q} className="qbtn" onClick={()=>sendMessage(q)} style={{fontSize:"0.66rem",padding:"0.28rem 0.65rem",border:"1px solid #e0e0e0",backgroundColor:"white",borderRadius:"20px",cursor:"var(--chat-cursor,auto)",color:"#444",fontFamily:"inherit",transition:"background 0.15s"}}>{q}</button>
+              ))}
+            </div>
+          )}
+          <div style={{padding:"0.6rem 0.875rem",borderTop:"1px solid #f0f0f0",display:"flex",gap:"0.4rem",flexShrink:0}}>
+            <input ref={inputRef} className="cinput" value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&sendMessage()} placeholder="Ask Flex anything..." style={{flex:1,border:"1px solid #e0e0e0",padding:"0.55rem 0.85rem",fontSize:"0.82rem",borderRadius:"24px",fontFamily:"inherit",cursor:"var(--chat-cursor,auto)",transition:"border-color 0.2s"}}/>
+            <button onClick={()=>sendMessage()} disabled={!input.trim()||loading} style={{width:"38px",height:"38px",borderRadius:"50%",backgroundColor:input.trim()?"black":"#ddd",border:"none",color:"white",cursor:"var(--chat-cursor,auto)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all 0.2s"}}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* LABEL */}
+      {!open && !hidden && (
+        <div className="clabel" style={{
+          position:"fixed", bottom:28, right:80, zIndex:9996,
+          backgroundColor:"black", color:"white",
+          padding:"0.4rem 0.9rem", borderRadius:"24px",
+          fontSize:"0.72rem", fontWeight:700, letterSpacing:"0.04em",
+          whiteSpace:"nowrap", boxShadow:"0 4px 16px rgba(0,0,0,0.25)",
+          display:"flex", alignItems:"center", gap:"0.4rem",
+          pointerEvents:"none",
+        }}>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          Chat with Flex AI
+        </div>
+      )}
+
+      {/* BUTTON — slides right to hide, tap to restore */}
+      <div style={{
+        position:"fixed",
+        bottom:20,
+        right: hidden ? -52 : 4,
+        zIndex:9997,
+        transition:"right 0.35s cubic-bezier(0.34,1.56,0.64,1)",
+      }}>
+        <button
+className="ctoggle"
+onClick={()=>setOpen(o=>!o)}
+onMouseDown={handleSwipe}
+onTouchStart={handleSwipe}
+style={{
+  width:"68px",
+  height:"68px",
+  borderRadius:"50%",
+  backgroundColor:"black",
+  border:"2px solid rgba(255,255,255,0.15)",
+  cursor:"pointer",
+  display:"flex",
+  alignItems:"center",
+  justifyContent:"center",
+  position:"relative",
+  overflow:"visible"
+}}
+>
+
+<style dangerouslySetInnerHTML={{__html:`
+
+@keyframes robotGlow{
+0%,100%{filter:drop-shadow(0 0 4px #00eaff)}
+50%{filter:drop-shadow(0 0 14px #00eaff)}
+}
+
+@keyframes robotBlink{
+0%,92%,100%{transform:scaleY(1)}
+95%{transform:scaleY(.1)}
+}
+
+@keyframes auraPulse{
+0%{transform:scale(1);opacity:.6}
+100%{transform:scale(1.8);opacity:0}
+}
+
+.robotGlow{
+animation:robotGlow 2.4s ease-in-out infinite;
+}
+
+.robotEye{
+animation:robotBlink 4s infinite;
+transform-origin:center;
+}
+
+.robotAura{
+position:absolute;
+width:74px;
+height:74px;
+border-radius:50%;
+border:1.5px solid rgba(0,234,255,0.4);
+animation:auraPulse 2.6s infinite;
+pointer-events:none;
+}
+
+.robotAura2{
+animation-delay:1.3s;
+}
+
+@keyframes robotFloat{
+0%,100%{transform:translate(-50%,0)}
+50%{transform:translate(-50%,-8px)}
+}
+
+@keyframes robotBlink{
+0%,92%,100%{transform:scaleY(1)}
+95%{transform:scaleY(.15)}
+}
+
+.robotWrap{
+position:absolute;
+bottom:32px;
+left:50%;
+transform:translateX(-50%);
+animation:robotFloat 2.2s ease-in-out infinite;
+}
+
+.robotEye{
+animation:robotBlink 4s infinite;
+transform-origin:center;
+}
+@keyframes robotTalk {
+0%,100%{d:path("M48 48 Q60 56 72 48")}
+50%{d:path("M46 52 Q60 64 74 52")}
+}
+
+@keyframes eyePulse{
+0%,100%{filter:drop-shadow(0 0 4px #00eaff)}
+50%{filter:drop-shadow(0 0 12px #00eaff)}
+}
+
+.robotTalking path{
+animation:robotTalk 0.6s infinite;
+}
+
+.robotTalking .robotEye{
+animation:eyePulse 1.2s infinite;
+}
+
+`}}/>
+
+{/* ROBOT */}
+<div className="robotWrap">
+
+<svg
+className={`robotGlow ${loading ? "robotTalking" : ""}`}
+width="56"
+height="64"
+viewBox="0 0 120 120"
+>
+
+{/* head */}
+<rect x="25" y="15" width="70" height="45" rx="12" fill="#0b1625"/>
+
+{/* eyes */}
+<g className="robotEye">
+<circle cx="50" cy="38" r="6" fill="#00eaff"/>
+<circle cx="70" cy="38" r="6" fill="#00eaff"/>
+</g>
+
+{/* smile */}
+<path
+className="robotMouth"
+d="M48 48 Q60 56 72 48"
+stroke="#00eaff"
+strokeWidth="2"
+strokeLinecap="round"
+/>
+
+{/* body */}
+<rect x="40" y="65" width="40" height="22" rx="6" fill="#dce2ee"/>
+
+{/* legs */}
+<rect x="45" y="88" width="8" height="10" rx="2" fill="#c8d0de"/>
+<rect x="67" y="88" width="8" height="10" rx="2" fill="#c8d0de"/>
+
+{/* arms */}
+<rect x="20" y="68" width="15" height="7" rx="3" fill="#a8b4c4"/>
+<rect x="85" y="68" width="15" height="7" rx="3" fill="#a8b4c4"/>
+
+</svg>
+
+</div>
+
+{/* CIRCLE ICON */}
+{open ? (
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
+<line x1="18" y1="6" x2="6" y2="18"/>
+<line x1="6" y1="6" x2="18" y2="18"/>
+</svg>
+) : (
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2">
+<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+</svg>
+)}
+
+</button>
+      </div>
+    </>
+  )
+}
   }
 
   async function sendMessage(text?: string) {
