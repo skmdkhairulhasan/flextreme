@@ -19,8 +19,6 @@ export default function CheckoutPage() {
   const [isFlex100, setIsFlex100] = useState(false)
   const [discountChecked, setDiscountChecked] = useState(false)
   const [customerName, setCustomerName] = useState("")
-  const [discountChecked, setDiscountChecked] = useState(false)
-  const [customerName, setCustomerName] = useState("")
 
   useEffect(() => {
     setMounted(true)
