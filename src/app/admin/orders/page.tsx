@@ -256,7 +256,7 @@ export default function AdminOrders() {
       </div>
 
       {/* Filter tabs */}
-      <div style={{ display: "flex", overflowX: "auto", touchAction: "pan-x" as any, overscrollBehaviorX: "contain" as any, WebkitOverflowScrolling: "touch" as any, borderBottom: "2px solid black", marginBottom: "0.875rem", WebkitOverflowScrolling: "touch" as any, }}>
+      <div style={{ display: "flex", overflowX: "auto", touchAction: "pan-x" as any, overscrollBehaviorX: "contain" as any, WebkitOverflowScrolling: "touch" as any, borderBottom: "2px solid black", marginBottom: "0.875rem", }}>
         {[{ id: "all", label: "All (" + orders.length + ")" }, ...allStatuses.map(s => ({ id: s, label: s.charAt(0).toUpperCase() + s.slice(1) + " (" + counts[s] + ")" }))].map(tab => (
           <button key={tab.id} onClick={() => { setFilter(tab.id); setSelected(new Set()) }} style={{ padding: isMobile ? "0.5rem 0.75rem" : "0.6rem 1rem", fontWeight: 700, fontSize: "0.68rem", textTransform: "uppercase", border: "none", borderBottom: filter === tab.id ? "3px solid black" : "3px solid transparent", marginBottom: "-2px", backgroundColor: "transparent", cursor: "pointer", color: filter === tab.id ? "black" : "#999", whiteSpace: "nowrap" }}>
             {tab.label}
