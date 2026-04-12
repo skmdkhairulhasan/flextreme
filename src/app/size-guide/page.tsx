@@ -84,7 +84,7 @@ export default async function SizeGuidePage() {
             )}
 
             {/* Size table */}
-            <p style={{ fontSize: "0.72rem", color: "#999", marginBottom: "0.5rem" }}>← Scroll sideways to see all columns →</p>
+            <style>{".scroll-hint{display:none}@media(max-width:768px){.scroll-hint{display:block}}"}</style><p className="scroll-hint" style={{ fontSize: "0.72rem", color: "#999", marginBottom: "0.5rem" }}>← Scroll sideways to see all columns →</p>
             <div style={{ border: "1px solid #e0e0e0", overflowX: "auto", WebkitOverflowScrolling: "touch" as any }}>
               <table style={{ width: "100%", borderCollapse: "collapse", minWidth: `${(table.columns?.length + 1) * 120}px` }}>
                 <thead>
