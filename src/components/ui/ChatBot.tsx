@@ -18,10 +18,10 @@ const INTENTS = {
   howare: ["how are you","how r u","hows it","how you doing","how do you do","you good","you okay","hru"],
   bmi: ["bmi","body mass","body fat","mbi","bim","calculate me","measure me","check my","my stats","my data","my info","what am i","my numbers","my measurements"],
   calorie: ["calorie","calories","cal","tdee","maintenance","how much should i eat","daily intake","energy intake","how many cal","caloric","kcal","calorie need","calorie goal","calorie calculator","calorie calc","maintanance","maintainance","maintenence","maintanence","maintenace","how much to eat","how much food","calorie deficit","calorie surplus"],
-  diet: ["diet","meal","food","eat","nutrition","what to eat","eating plan","meal plan","food plan","diet plan","diet chart","what should i eat","meal chart","daily food","food guide","recipes","grocery","what food","not vegan","not vegetarian","i eat meat","i eat chicken","halal","change diet","update diet","wrong diet","incorrect diet"],
+  diet: ["diet","meal","food","eat","nutrition","what to eat","eating plan","meal plan","food plan","diet plan","diet chart","what should i eat","meal chart","daily food","food guide","recipes","grocery","what food","not vegan","not vegetarian","i eat meat","i eat chicken","halal","change diet","update diet","wrong diet","incorrect diet","food chart","my diet","change my diet","update my diet"],
   workout: ["workout","exercise","training","gym plan","routine","program","lifting","weights","cardio","push pull","ppl","upper lower","split","sets reps","gym routine","fitness plan","training plan","exercise plan","how to train","train me","my routine","build routine"],
   supplement: ["supplement","protein powder","whey","creatine","pre workout","preworkout","bcaa","vitamin","what to take","supp","supps","what supplement","protein shake","mass gainer","fat burner","what pills"],
-  gymwear: ["what to wear","gym wear","gym gear","gym clothes","gym outfit","workout clothes","outfit","what clothes","dress for gym","gymwear","attire","gym kit","clothing","apparel","cloth","clothes","gym cloth","flextreme cloth","flextreme product","our product","your product","what should i wear","wear to gym","gym dress","active wear","activewear","sportswear"],
+  gymwear: ["what to wear","gym wear","gym gear","gym clothes","gym outfit","workout clothes","outfit","what clothes","dress for gym","gymwear","attire","gym kit","clothing","apparel","what should i wear","wear to gym","gym dress","active wear","activewear","sportswear"],
   size: ["size","sizing","what size","which size","size guide","fit me","my size","size for me","size recommendation","chest measurement","waist measurement","hip measurement","what fits","will it fit","size chart","size help","size?","fit?","my width","my length","width is","length is","width cm","length cm","chest is","my chest","my waist","waist is","i am width","width are","measure","shirt width","shirt length","width","length"],
   motivation: ["motivat","lazy","no motivation","give up","tired","skip","skip workout","hard","difficult","struggle","can't do","cant do","demotivat","no energy","procrastinat","dont want","don't feel like","hate gym","bore","bored gym","quit"],
   injury: ["injur","pain","hurt","knee","my knee","back pain","my back","back injury","shoulder pain","my shoulder","shoulder injury","wrist pain","ankle pain","sprain","strain","ache","pulled muscle","physiotherapy","my wrist","my ankle","i am injured","got injured","injured knee","injured back","injured shoulder","hurt my","hurt knee","hurt back","hurt shoulder","have pain","have injury","i have pain"],
@@ -238,19 +238,6 @@ const [profile] = useState({
   }, delay)
 }
 
-  async function classifyWithNLP(message: string): Promise<string | null> {
-    try {
-      const res = await fetch("/api/nlp-classify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message })
-      })
-      const data = await res.json()
-      if (data.intent && data.score > 0.65) return data.intent
-    } catch {}
-    return null
-  }
-
   function getReply(raw: string): string {
     const msg = smart(raw)
     const p = profileRef.current
@@ -285,7 +272,8 @@ const [profile] = useState({
         }
       }
     }
-    if (isPhone && modeRef.current === "order_lookup") {
+    if (isPhone && (modeRef.current === "order_lookup" || modeRef.current === null)) {
+      if (modeRef.current === null) modeRef.current = "order_lookup"
       // async order lookup — return loading message, then update
       setTimeout(async () => {
         try {
@@ -307,9 +295,10 @@ if (data && data.length > 0) {
     const size = o.size ? "\nSize: " + o.size : ""
     const color = o.color ? "\nColor: " + o.color : ""
 
+    const sEmoji = status==="delivered"?"✅":status==="shipped"?"🚚":status==="confirmed"?"✓":status==="cancelled"?"❌":"⏳"
     orderReply += `ORDER ${i+1}
 Product: ${product}
-🔘 STATUS: ${(status || "pending").toUpperCase()}
+🔘 STATUS: ${sEmoji} ${status.toUpperCase()}
 Quantity: ${qty}${size}${color}`
 
     if (status === "shipped" && o.tracking_url) {
@@ -364,7 +353,11 @@ ${o.tracking_url}
     }
 
     // ── MEMORY QUERIES (always first) ──
-    if (has(msg, "bmi") && !p.step && p.weight && p.height) return showStats(p)
+    if ((has(msg, "bmi") || msg.includes("my bmi") || (msg.includes("calculate") && msg.includes("bmi"))) && !p.step) {
+      if (p.weight && p.height) return showStats(p)
+      setProfile({ ...p, step: "height" })
+      return "Let me calculate your BMI! Height in cm? (e.g. 175)"
+    }
     if (has(msg, "calorie") && !p.step && p.weight && p.height && p.age && p.gender && p.activity) return showStats(p)
     if (msg.includes("my age") || msg.includes("what age") || msg.includes("how old am i")) {
       if (p.age) { modeRef.current = "update_age"; return "You are " + p.age + " years old.\nSend your new age to update it." }
@@ -386,21 +379,20 @@ ${o.tracking_url}
 if (p.step) {
   const step = p.step
 
-  const isOrderEscape =
-    has(msg, "order") ||
-    msg.includes("track") ||
-    msg.includes("where is my order") ||
-    msg.includes("my order") ||
-    /^\d{10,15}$/.test(raw.trim())
+  // Smart escape — any meaningful non-numeric message exits step machine
+  const escapeWords = ["order","track","workout","supplement","injury","pain",
+    "delivery","product","size","help","what","how","when","why","where",
+    "can you","could you","please","would","should","tell me","show me",
+    "love","gym","protein","creatine","bye","thanks","hello","hi","hey",
+    "hurt","back","knee","shoulder","wrist","muscle","cloth","diet","food","eat"]
+  const isEscape = escapeWords.some(w => msg.includes(w)) ||
+    has(msg, "greeting") || has(msg, "bye") || has(msg, "thanks") ||
+    /^\d{10,15}$/.test(raw.trim()) ||
+    (!hasNum && msg.split(" ").length >= 3)
 
-    const isGreetingEscape =
-    has(msg, "greeting") ||
-    has(msg, "bye") ||
-    has(msg, "thanks")
-
-  if (isOrderEscape || isGreetingEscape) {
+  if (isEscape) {
     setProfile({ ...p, step: undefined })
-    if (isGreetingEscape) modeRef.current = null
+    modeRef.current = null
   }
 
   else if (step === "height") {
@@ -529,7 +521,7 @@ if (p.step) {
       /i'm (muslim|hindu|vegetarian|vegan)/.test(msg) ||
       msg.includes("not vegan") || msg.includes("not vegetarian") ||
       msg.includes("i eat meat") || msg.includes("i eat chicken") || msg.includes("i eat beef") ||
-      (msg.includes("change") && (msg.includes("muslim") || msg.includes("hindu") || msg.includes("vegetarian") || msg.includes("vegan") || msg.includes("halal") || msg.includes("diet") && p.religion))
+      (msg.includes("change") && (msg.includes("muslim") || msg.includes("hindu") || msg.includes("vegetarian") || msg.includes("vegan") || msg.includes("halal") || msg.includes("diet")))
     if (isReligionMsg) {
       let newRel = p.religion || "none"
       if (/muslim|halal/.test(msg)) newRel = "muslim"
@@ -537,10 +529,30 @@ if (p.step) {
       else if (/vegan/.test(msg) && !msg.includes("not")) newRel = "vegan"
       else if (/vegetarian|vegeterian|veggie|vegiterian/.test(msg) && !msg.includes("not")) newRel = "vegetarian"
       else if (msg.includes("not vegan") || msg.includes("not vegetarian") || msg.includes("i eat meat") || msg.includes("i eat chicken")) newRel = "none"
+      else if (msg.includes("change") && msg.includes("diet") && !newRel) {
+        modeRef.current = "change_diet"
+        return "What\'s your diet preference? 🥗\n\n1 — Muslim (Halal)\n2 — Hindu (no beef)\n3 — Vegetarian\n4 — Vegan\n5 — None"
+      }
       if (newRel !== (p.religion || "none")) {
         setProfile({ ...p, religion: newRel })
-        return "Got it — updated to " + newRel + " diet! 🥗\nSay \'diet\' for a fresh plan with the right food."
+        const dn = newRel==="muslim"?"Halal":newRel==="hindu"?"Hindu":newRel==="vegetarian"?"Vegetarian":newRel==="vegan"?"Vegan":"Regular"
+        return "Diet updated to " + dn + "! ✅\nSay \'diet\' for your new plan."
       }
+    }
+    if (modeRef.current === "change_diet") {
+      const dietMap: Record<string,string> = {"1":"muslim","2":"hindu","3":"vegetarian","4":"vegan","5":"none"}
+      const chosen = dietMap[msg.trim()] ||
+        (msg.includes("muslim")||msg.includes("halal")?"muslim":msg.includes("hindu")?"hindu":
+         msg.includes("vegetarian")||msg.includes("vegeterian")||msg.includes("veggie")?"vegetarian":
+         (msg.includes("vegan")||msg.includes("vegen"))&&!msg.includes("vegetarian")?"vegan":
+         msg.includes("none")||msg.includes("everything")?"none":null)
+      if (chosen) {
+        modeRef.current = null
+        setProfile({ ...p, religion: chosen })
+        const dn2 = chosen==="muslim"?"Halal":chosen==="hindu"?"Hindu":chosen==="vegetarian"?"Vegetarian":chosen==="vegan"?"Vegan":"Regular"
+        return "Diet updated to " + dn2 + "! ✅\nSay \'diet\' for your new plan."
+      }
+      return "Choose 1-5:\n1 — Muslim\n2 — Hindu\n3 — Vegetarian\n4 — Vegan\n5 — None"
     }
 
     // Workout location update
@@ -583,7 +595,13 @@ if (
       msg.includes("when is my") && (msg.includes("order") || msg.includes("delivery")) ||
       msg.includes("what time") && msg.includes("order") ||
       msg.includes("how much time") && (msg.includes("order") || msg.includes("deliver") || msg.includes("arrive"))
-    if (isOrderTrack || (has(msg, "order") && (msg.includes("track") || msg.includes("status") || msg.includes("where") || msg.includes("find") || msg.includes("check") || msg.includes("lookup")))) {
+    const orderTrackWords = ["track","find","check","where","status","lookup","locate","search","show","update"]
+    const orderRefWords = ["order","parcel","package","shipment"]
+    const hasAnyOrderRef = orderRefWords.some(w => msg.includes(w))
+    const hasAnyAction = orderTrackWords.some(w => msg.includes(w))
+    const hasOrderIntent = isOrderTrack || (hasAnyOrderRef && hasAnyAction) ||
+      msg.includes("my order") || msg.includes("my parcel") || msg.includes("my package")
+    if (hasOrderIntent) {
       modeRef.current = "order_lookup"
       return "Sure! Send me the phone number you used when placing your order and I\'ll check it right away. 📦"
     }
@@ -604,11 +622,6 @@ if (
       if (area === "ankle") return "Ankle issue — no running, jumping, or heavy leg work.\n\nSafe alternatives:\n→ Upper body — chest, back, arms, shoulders\n→ Seated exercises\n→ Swimming\n\nICE + elevate. Don't walk on it if swollen."
       modeRef.current = "injury"
       return "Safety first. Which area — knee, back, shoulder, wrist, or ankle?\n\nTell me and I'll give you a modified plan."
-    }
-
-    // Flextreme product/clothing queries
-    if (msg.includes("flextreme cloth") || msg.includes("flextreme wear") || msg.includes("flextreme product") || msg.includes("your cloth") || msg.includes("your product") || (msg.includes("cloth") && !msg.includes("change"))) {
-      return has(msg, "gymwear") ? "GYM WEAR GUIDE by Flextreme\n\nAll our products are sweat-wicking, 4-way stretch compression fit.\n\nVisit our Products page to see the full collection! 👕\n→ /products" : "Check out our products! 👕\n→ /products\n\nAll Flextreme gear is compression fit, sweat-wicking, 4-way stretch. Built for real athletes."
     }
 
     // Greetings & casual
@@ -767,7 +780,7 @@ if (
     }
 
     // Size — reads from size_tables JSON (admin Size Guide)
-    if (has(msg, "size")) {
+    if (has(msg, "size") || ((msg.includes("chest") || msg.includes("inch")) && /\d/.test(msg))) {
       let tables: any[] = []
       try { if (s.size_tables) tables = JSON.parse(s.size_tables) } catch {}
       if (tables.length === 0) return "Size guide not set up yet. Check our size guide page or WhatsApp us!"
@@ -795,7 +808,9 @@ if (
       const lengthCol = table.columns?.find((c: any) => c.name.toLowerCase().includes("length"))
 
       // Extract ALL numbers from message
-      const nums = [...msg.matchAll(/(\d{2,3}(?:\.\d)?)/g)].map(m => parseFloat(m[1]))
+      const rawNums = [...msg.matchAll(/(\d{2,3}(?:\.\d)?)/g)].map(m => parseFloat(m[1]))
+      const isInches = msg.includes("inch") || msg.includes("inches") || msg.includes('"')
+      const nums = rawNums.map(n => isInches ? Math.round(n * 2.54) : n)
 
       // Detect what measurement type they gave
       const gavWidth = msg.includes("width") || msg.includes("chest") || msg.includes("wide") || msg.includes("bust")
@@ -1258,23 +1273,18 @@ if (
 
   setTimeout(async () => {
 
-    // Try NLP classification first for smarter intent detection
-    let nlpIntent: string | null = null
+    // NLP pre-classification for smarter routing
     try {
       const nlpRes = await fetch("/api/nlp-classify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: userMsg })
       })
       const nlpData = await nlpRes.json()
-      if (nlpData.intent && nlpData.score > 0.65) nlpIntent = nlpData.intent
+      if (nlpData.intent && nlpData.score > 0.65 && !modeRef.current) {
+        if (nlpData.intent === "find_order") modeRef.current = "order_lookup"
+        if (nlpData.intent === "injury_help") modeRef.current = "injury"
+      }
     } catch {}
-
-    // Map NLP intent to set mode before getReply processes
-    if (nlpIntent && !modeRef.current) {
-      if (nlpIntent === "find_order") modeRef.current = "order_lookup"
-      if (nlpIntent === "injury_help") modeRef.current = "injury"
-    }
 
     let reply = getReply(userMsg)
 
@@ -1291,7 +1301,7 @@ if (
       reply = fixedReply
     }
 
-    // NLP handles fallback — no external brain needed
+    // NLP handles intent classification
 
     setMessages(prev => [
       ...prev,
