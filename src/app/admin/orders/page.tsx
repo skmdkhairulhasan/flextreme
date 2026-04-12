@@ -28,6 +28,7 @@ type Order = {
   product_name: string; size: string; color: string
   quantity: number; total_price: number; status: string
   notes: string; created_at: string; product_id: string
+  tracking_url?: string
 }
 
 type EditForm = { name: string; phone: string; address: string; notes: string; total_price: string }
