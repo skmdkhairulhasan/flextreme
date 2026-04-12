@@ -35,7 +35,7 @@ const INTENTS = {
   payment: ["payment","pay","cod","cash on delivery","bkash","nagad","card","advance payment","how to pay","payment method"],
   contact: ["whatsapp","contact","phone","number","reach","call","speak to","talk to","human","agent","support","help line","helpline","customer service"],
   product: ["product","collection","what do you sell","what products","what items","catalogue","catalog","range","available products","your products"],
-  brand: ["about flextreme","brand story","who made","flextreme story","about brand","company","founder","origin","bangladesh brand","who are you brand"],
+  brand: ["about flextreme","brand story","who made","flextreme story","about brand","company","founder","origin","bangladesh brand","who are you brand","flextreme","what is flextreme","tell me about flextreme","flextreme brand","story of flextreme","flextreme info","about the brand","what brand","this brand","your brand","the brand","brand info"],
   discount: ["discount","offer","sale","promo","coupon","deal","voucher","code","any deal","offer available"],
   thanks: ["thank","thanks","thx","ty","thank you","appreciate","helpful","great help","nicely done"],
   bye: ["bye","goodbye","see you","later","cya","take care","peace","signing off","gtg","gotta go"],
@@ -516,9 +516,9 @@ if (p.step) {
     // ── PROFILE UPDATES (must be before greeting/intent matching) ──
     // Religion update — checked first to avoid "i am hindu" matching "hi" greeting
     const isReligionMsg =
-      /i am (muslim|hindu|vegetarian|vegan|halal)/.test(msg) ||
-      /im (muslim|hindu|vegetarian|vegan)/.test(msg) ||
-      /i'm (muslim|hindu|vegetarian|vegan)/.test(msg) ||
+      (msg.includes("i am muslim") || msg.includes("i am hindu") || msg.includes("i am vegan") || msg.includes("i am vegetarian") || msg.includes("i am halal") ||
+       msg.includes("im muslim") || msg.includes("im hindu") || msg.includes("im vegan") || msg.includes("im vegetarian") ||
+       msg.includes("i'm muslim") || msg.includes("i'm hindu") || msg.includes("i'm vegan") || msg.includes("i'm vegetarian")) ||
       msg.includes("not vegan") || msg.includes("not vegetarian") ||
       msg.includes("i eat meat") || msg.includes("i eat chicken") || msg.includes("i eat beef") ||
       (msg.includes("change") && (msg.includes("muslim") || msg.includes("hindu") || msg.includes("vegetarian") || msg.includes("vegan") || msg.includes("halal") || msg.includes("diet")))
@@ -526,7 +526,7 @@ if (p.step) {
       let newRel = p.religion || "none"
       if (/muslim|halal/.test(msg)) newRel = "muslim"
       else if (/hindu/.test(msg)) newRel = "hindu"
-      else if (/vegan/.test(msg) && !msg.includes("not")) newRel = "vegan"
+      else if (msg.includes("vegan") && !msg.includes("not")) newRel = "vegan"
       else if (/vegetarian|vegeterian|veggie|vegiterian/.test(msg) && !msg.includes("not")) newRel = "vegetarian"
       else if (msg.includes("not vegan") || msg.includes("not vegetarian") || msg.includes("i eat meat") || msg.includes("i eat chicken")) newRel = "none"
       else if (msg.includes("change") && msg.includes("diet") && !newRel) {
