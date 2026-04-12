@@ -15,7 +15,7 @@ type Profile = {
 
 // ── INTENT CATEGORIES ──
 const INTENTS = {
-  greeting: ["hi","hello","hey","salaam","hola","yo","sup","howdy","wassup","whats up","good day","greetings","asalamu","wslm"],
+  greeting: ["hi","hello","hey","salaam","hola","sup","howdy","wassup","whats up","good day","greetings","asalamu","wslm"],
   howare: ["how are you","how r u","hows it","how you doing","how do you do","you good","you okay","hru"],
   bmi: ["bmi","body mass","body fat","mbi","bim","calculate me","measure me","check my","my stats","my data","my info","what am i","my numbers","my measurements"],
   calorie: ["calorie","calories","cal","tdee","maintenance","how much should i eat","daily intake","energy intake","how many cal","caloric","kcal","calorie need","calorie goal","calorie calculator","calorie calc","maintanance","maintainance","maintenence","maintanence","maintenace","how much to eat","how much food","calorie deficit","calorie surplus"],
@@ -561,6 +561,33 @@ if (
   const isVeg = p.religion === "vegetarian" || p.religion === "vegan"
   return getSupplements(p.goal || "general", isVeg)
 }
+
+    // ── ORDER TRACKING ──
+    // Detect track/status/order lookup intent
+    const isOrderTrack =
+      msg.includes("track") || msg.includes("where is my order") || msg.includes("my order") ||
+      msg.includes("order status") || msg.includes("status of my order") || msg.includes("check order") ||
+      msg.includes("find my order") || msg.includes("find my order") ||
+      msg.includes("when will") && (msg.includes("order") || msg.includes("package") || msg.includes("parcel") || msg.includes("product") || msg.includes("item") || msg.includes("delivery") || msg.includes("arrive") || msg.includes("get my") || msg.includes("come")) ||
+      msg.includes("when will i get") || msg.includes("when will it arrive") || msg.includes("where is my package") ||
+      msg.includes("where is my parcel") || msg.includes("how long will") && msg.includes("deliver") ||
+      msg.includes("when is my") && (msg.includes("order") || msg.includes("delivery")) ||
+      msg.includes("what time") && msg.includes("order") ||
+      msg.includes("how much time") && (msg.includes("order") || msg.includes("deliver") || msg.includes("arrive"))
+    // Smart order detection — scan ENTIRE message for any trigger combo
+    const orderTrackWords = ["track", "find", "check", "where", "status", "lookup", "locate", "search", "show", "update", "look up", "look for"]
+    const orderRefWords = ["order", "parcel", "package", "purchase", "delivery", "shipment"]
+    // Check if message contains ANY order-related word AND ANY action word
+    const hasAnyOrderRef = orderRefWords.some(w => msg.includes(w))
+    const hasAnyAction = orderTrackWords.some(w => msg.includes(w))
+    const hasOrderIntent = isOrderTrack || 
+      (hasAnyOrderRef && hasAnyAction) ||
+      msg.includes("my order") || msg.includes("my parcel") || msg.includes("my package") || msg.includes("my shipment")
+    if (hasOrderIntent) {
+      modeRef.current = "order_lookup"
+      return "Sure! Send me the phone number you used when placing your order and I\'ll check it right away. 📦"
+    }
+
 
     // Greetings & casual
     if (has(msg, "greeting")) {
@@ -1119,31 +1146,6 @@ if (
       return "Here's what we have:\n\n" + lines + "\n\nAll sweat-wicking, 4-way stretch, compression fit. 🔥"
     }
 
-    // ── ORDER TRACKING ──
-    // Detect track/status/order lookup intent
-    const isOrderTrack =
-      msg.includes("track") || msg.includes("where is my order") || msg.includes("my order") ||
-      msg.includes("order status") || msg.includes("status of my order") || msg.includes("check order") ||
-      msg.includes("find my order") || msg.includes("find my order") ||
-      msg.includes("when will") && (msg.includes("order") || msg.includes("package") || msg.includes("parcel") || msg.includes("product") || msg.includes("item") || msg.includes("delivery") || msg.includes("arrive") || msg.includes("get my") || msg.includes("come")) ||
-      msg.includes("when will i get") || msg.includes("when will it arrive") || msg.includes("where is my package") ||
-      msg.includes("where is my parcel") || msg.includes("how long will") && msg.includes("deliver") ||
-      msg.includes("when is my") && (msg.includes("order") || msg.includes("delivery")) ||
-      msg.includes("what time") && msg.includes("order") ||
-      msg.includes("how much time") && (msg.includes("order") || msg.includes("deliver") || msg.includes("arrive"))
-    // Smart order detection — scan ENTIRE message for any trigger combo
-    const orderTrackWords = ["track", "find", "check", "where", "status", "lookup", "locate", "search", "show", "update", "look up", "look for"]
-    const orderRefWords = ["order", "parcel", "package", "purchase", "delivery", "shipment"]
-    // Check if message contains ANY order-related word AND ANY action word
-    const hasAnyOrderRef = orderRefWords.some(w => msg.includes(w))
-    const hasAnyAction = orderTrackWords.some(w => msg.includes(w))
-    const hasOrderIntent = isOrderTrack || 
-      (hasAnyOrderRef && hasAnyAction) ||
-      msg.includes("my order") || msg.includes("my parcel") || msg.includes("my package") || msg.includes("my shipment")
-    if (hasOrderIntent) {
-      modeRef.current = "order_lookup"
-      return "Sure! Send me the phone number you used when placing your order and I\'ll check it right away. 📦"
-    }
 
     // General order info (how to order)
     if (has(msg, "order")) return "HOW TO ORDER:\n\n1. Products page\n2. Choose item\n3. Pick size + color\n4. Enter name, phone, address\n5. Order Now\n\nCOD — pay on delivery. Confirmed via WhatsApp.\n\nAlready placed an order? Say 'track my order' and I'll look it up! 📦"
