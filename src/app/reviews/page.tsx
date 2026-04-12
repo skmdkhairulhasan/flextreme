@@ -26,6 +26,11 @@ export default async function ReviewsPage({ searchParams }: { searchParams: Prom
       <div style={{ backgroundColor: "black", color: "white", padding: "4rem 1.5rem", textAlign: "center" }}>
         <p style={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.3em", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", marginBottom: "0.75rem" }}>Real Athletes</p>
         <h1 style={{ fontSize: "clamp(2.5rem, 6vw, 5rem)", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.03em", lineHeight: 1 }}>Customer Reviews</h1>
+        <div style={{ marginTop: "1.5rem", marginBottom: "0.5rem" }}>
+          <a href="/reviews/write" style={{ display: "inline-block", backgroundColor: "white", color: "black", padding: "0.875rem 2.5rem", fontWeight: 800, fontSize: "0.82rem", letterSpacing: "0.12em", textTransform: "uppercase", textDecoration: "none", transition: "all 0.2s" }}>
+            ✍️ Write a Review
+          </a>
+        </div>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.75rem", marginTop: "1rem" }}>
           <span style={{ color: "#f0a500", fontSize: "1.5rem" }}>{"★".repeat(Math.round(Number(avgRating)))}</span>
           <span style={{ color: "white", fontSize: "1.25rem", fontWeight: 900 }}>{avgRating}</span>

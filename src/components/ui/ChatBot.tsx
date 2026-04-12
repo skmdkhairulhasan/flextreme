@@ -176,6 +176,8 @@ function getSupplements(goal: string, isVeg: boolean): string {
 
 export default function ChatBot({ fullPage = false }: { fullPage?: boolean } = {}) {
   const [open, setOpen] = useState(false)
+  // Auto-open when fullPage mode
+  useEffect(() => { if (fullPage) setOpen(true) }, [fullPage])
   // Hide to side — swipe left/right on button to hide, tap to show
   const [hidden, setHidden] = useState(false)
   const pathname = usePathname()
@@ -1498,36 +1500,24 @@ strokeLinecap="round"
       {!open && hidden && !fullPage && (
         <>
           <style dangerouslySetInnerHTML={{__html:`
-            @keyframes peekTilt { 0%,100% { transform: rotate(-15deg) translateY(0); } 50% { transform: rotate(-20deg) translateY(-4px); } }
-            @keyframes peekWave { 0%,100% { transform: rotate(0deg); } 50% { transform: rotate(20deg); } }
-            .peek-robot { animation: peekTilt 2s ease-in-out infinite; transform-origin: bottom right; }
-            .peek-arm { animation: peekWave 1s ease-in-out infinite; transform-origin: 85px 68px; }
+            @keyframes peekIn { 0% { transform: rotate(-90deg) translateX(40px); opacity:0; } 100% { transform: rotate(-25deg); opacity:1; } }
+            @keyframes peekBob { 0%,100% { transform: rotate(-25deg) translateY(0); } 50% { transform: rotate(-20deg) translateY(-5px); } }
+            .peek-container { animation: peekIn 0.4s ease-out forwards, peekBob 2s ease-in-out 0.4s infinite; transform-origin: bottom right; }
           `}}/>
-          <div style={{ position:"fixed", bottom:0, right:-8, zIndex:9995, cursor:"pointer" }} onClick={()=>{ const el=document.querySelector("[data-swipe-handle]") as HTMLElement; if(el) el.click() }}>
-            <svg className="peek-robot" width="52" height="60" viewBox="0 0 120 120">
-              {/* head */}
+          <div className="peek-container" style={{ position:"fixed", bottom:16, right:0, zIndex:9995, cursor:"pointer", transformOrigin:"bottom right" }}
+            onClick={()=>{ /* clicking peek opens chatbot */ setOpen(true) }}>
+            <svg className="robotGlow" width="56" height="64" viewBox="0 0 120 120" style={{display:"block"}}>
               <rect x="25" y="15" width="70" height="45" rx="12" fill="#0b1625"/>
-              {/* eyes */}
-              <circle cx="50" cy="38" r="6" fill="#00eaff"/>
-              <circle cx="70" cy="38" r="6" fill="#00eaff"/>
-              <circle cx="50" cy="38" r="3" fill="#0b1625"/>
-              <circle cx="70" cy="38" r="3" fill="#0b1625"/>
-              {/* smile */}
-              <path d="M48 48 Q60 56 72 48" stroke="#00eaff" strokeWidth="2" strokeLinecap="round" fill="none"/>
-              {/* antenna */}
-              <line x1="60" y1="15" x2="60" y2="6" stroke="#00eaff" strokeWidth="2.5"/>
-              <circle cx="60" cy="4" r="3" fill="#00eaff"/>
-              {/* body */}
-              <rect x="40" y="65" width="40" height="22" rx="6" fill="#dce2ee"/>
-              {/* waving arm */}
-              <g className="peek-arm">
-                <rect x="85" y="68" width="15" height="7" rx="3" fill="#a8b4c4"/>
+              <g className="robotEye">
+                <circle cx="50" cy="38" r="6" fill="#00eaff"/>
+                <circle cx="70" cy="38" r="6" fill="#00eaff"/>
               </g>
-              {/* other arm */}
-              <rect x="20" y="68" width="15" height="7" rx="3" fill="#a8b4c4"/>
-              {/* legs */}
+              <path d="M48 48 Q60 56 72 48" stroke="#00eaff" strokeWidth="2" strokeLinecap="round" fill="none"/>
+              <rect x="40" y="65" width="40" height="22" rx="6" fill="#dce2ee"/>
               <rect x="45" y="88" width="8" height="10" rx="2" fill="#c8d0de"/>
               <rect x="67" y="88" width="8" height="10" rx="2" fill="#c8d0de"/>
+              <rect x="20" y="68" width="15" height="7" rx="3" fill="#a8b4c4"/>
+              <rect x="85" y="68" width="15" height="7" rx="3" fill="#a8b4c4"/>
             </svg>
           </div>
         </>
