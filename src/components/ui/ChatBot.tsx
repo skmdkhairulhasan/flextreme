@@ -2361,28 +2361,7 @@ if (
 
     // Injury
     // Injury — also catch standalone body part words
-    // Injury check — runs before greeting to catch "i have knee pain. can you suggest anything?"
-    const bodyParts = ["knee", "back", "shoulder", "wrist", "ankle", "elbow", "hip", "neck"]
-    const painWords = ["pain", "injury", "hurt", "sore", "injur", "ache", "sprain", "strain", "pulled", "torn"]
-    const hasBodyPart = bodyParts.some(b => msg.includes(b))
-    const hasPainWord = painWords.some(p => msg.includes(p))
-    const isInjuryMsg = modeRef.current !== "awaiting_delivery_city" && modeRef.current !== "order_lookup" && (
-      (hasBodyPart && hasPainWord) ||
-      has(msg, "injury") ||
-      msg.includes("i am injured") || msg.includes("got injured") || msg.includes("hurt my") ||
-      msg.includes("my knee") || msg.includes("my back") || msg.includes("my shoulder") ||
-      modeRef.current === "injury"
-    )
-    if (isInjuryMsg) {
-      const area = msg.includes("knee") ? "knee" : msg.includes("back") ? "back" : msg.includes("shoulder") ? "shoulder" : msg.includes("wrist") ? "wrist" : msg.includes("ankle") ? "ankle" : null
-      if (area === "knee") return "Knee injury — avoid squats, lunges, leg press for now.\n\nSafe alternatives:\n→ Upper body focus (chest, back, arms)\n→ Swimming or cycling (low impact)\n→ Seated leg extensions (light weight only)\n→ Hip thrusts (no knee stress)\n\nIce 15min after training. See a physio if pain is sharp."
-      if (area === "back") return "Back injury — no deadlifts, no heavy squats, no rowing.\n\nSafe alternatives:\n→ Chest, arms, shoulders (seated/lying)\n→ Light walking\n→ Gentle stretching (cat-cow, child's pose)\n→ Core bracing exercises (not crunches)\n\nDon't push through back pain — it can get serious. See a physio."
-      if (area === "shoulder") return "Shoulder injury — avoid overhead press, lateral raises, bench press.\n\nSafe alternatives:\n→ Legs, core, cardio\n→ Resistance band external rotations\n→ Light cable face pulls (if painless)\n\nRest, ice, physio. Shoulder injuries get worse if ignored."
-      if (area === "wrist") return "Wrist issue — avoid barbell pressing, push-ups, heavy grip work.\n\nSafe alternatives:\n→ Legs (squats, leg press)\n→ Cardio (bike, treadmill)\n→ Cable pushdowns with rope (neutral grip)\n\nWrist wraps help. Let it rest."
-      if (area === "ankle") return "Ankle issue — no running, jumping, or heavy leg work.\n\nSafe alternatives:\n→ Upper body — chest, back, arms, shoulders\n→ Seated exercises\n→ Swimming\n\nICE + elevate. Don't walk on it if swollen."
-      modeRef.current = "injury"
-      return "Safety first. Which area — knee, back, shoulder, wrist, or ankle?\n\nTell me and I'll give you a modified plan."
-    }
+
 
     // Full plan
     if (has(msg, "fullplan")) {
