@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server"
 
+export const dynamic = "force-dynamic"
 export const metadata = { title: "Delivery Info | Flextreme" }
 
 type DeliveryZone = { id: string; name: string; charge: string; days: string }
@@ -67,6 +68,22 @@ export default async function DeliveryPage() {
             <h2 style={{ fontSize: "clamp(1.5rem, 4vw, 2rem)", fontWeight: 900, color: "#15803d", marginBottom: "0.75rem", textTransform: "uppercase", letterSpacing: "-0.02em" }}>Free Delivery Nationwide</h2>
             <p style={{ fontSize: "1rem", color: "#166534", lineHeight: 1.7, maxWidth: "500px", margin: "0 auto 0.75rem" }}>We offer <strong>FREE delivery</strong> across all of Bangladesh — no minimum order, no hidden charges, no surprises.</p>
             <p style={{ fontSize: "0.9rem", color: "#16a34a", fontWeight: 700 }}>✓ Cash on Delivery &nbsp;·&nbsp; ✓ Pay when it arrives &nbsp;·&nbsp; ✓ Zero advance payment</p>
+            <div style={{ display: "flex", justifyContent: "center", gap: "2rem", marginTop: "1.25rem", flexWrap: "wrap" }}>
+              <div style={{ textAlign: "center" }}>
+                <p style={{ fontWeight: 900, fontSize: "1.25rem", color: "#15803d" }}>1-2</p>
+                <p style={{ fontSize: "0.75rem", color: "#166534", fontWeight: 600 }}>Days · Khulna City</p>
+              </div>
+              <div style={{ width: "1px", backgroundColor: "#bbf7d0" }} />
+              <div style={{ textAlign: "center" }}>
+                <p style={{ fontWeight: 900, fontSize: "1.25rem", color: "#15803d" }}>2-3</p>
+                <p style={{ fontSize: "0.75rem", color: "#166534", fontWeight: 600 }}>Days · Nearby Districts</p>
+              </div>
+              <div style={{ width: "1px", backgroundColor: "#bbf7d0" }} />
+              <div style={{ textAlign: "center" }}>
+                <p style={{ fontWeight: 900, fontSize: "1.25rem", color: "#15803d" }}>3-5</p>
+                <p style={{ fontSize: "0.75rem", color: "#166534", fontWeight: 600 }}>Days · All Over Bangladesh</p>
+              </div>
+            </div>
           </div>
         ) : (
           <>

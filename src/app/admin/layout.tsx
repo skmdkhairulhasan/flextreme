@@ -14,11 +14,33 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   useEffect(() => {
     const supabase = createClient()
+
+    // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) setAuthenticated(true)
       else if (!isLoginPage) router.push("/admin/login")
       setLoading(false)
     })
+
+    // Listen for auth changes (handles session refresh after navigation)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) {
+        setAuthenticated(true)
+        setLoading(false)
+      } else if (!isLoginPage) {
+        setAuthenticated(false)
+        setLoading(false)
+        router.push("/admin/login")
+      }
+    })
+
+    // Safety timeout — never show loading forever
+    const timeout = setTimeout(() => setLoading(false), 3000)
+
+    return () => {
+      subscription.unsubscribe()
+      clearTimeout(timeout)
+    }
   }, [isLoginPage, router])
 
   useEffect(() => { setMenuOpen(false) }, [pathname])
@@ -43,7 +65,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { href: "/admin/orders", label: "Orders", icon: "📦" },
     { href: "/admin/products", label: "Products", icon: "👕" },
     { href: "/admin/stock", label: "Stock", icon: "📋" },
-    { href: "/admin/customers", label: "Customers", icon: "👥" },
     { href: "/admin/logistics", label: "Logistics", icon: "🚚" },
     { href: "/admin/finance", label: "Finance", icon: "💰" },
     { href: "/admin/reviews", label: "Reviews", icon: "⭐" },
