@@ -318,6 +318,18 @@ export default function AdminOrders() {
                   {allStatuses.map(s => <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
                 </select>
               </div>
+              <input
+                type="text"
+                placeholder="Add tracking URL..."
+                defaultValue={order.tracking_url || ""}
+                onBlur={async e => {
+                  const url = e.target.value.trim()
+                  if (url === (order.tracking_url || "")) return
+                  const supabase = createClient()
+                  await supabase.from("orders").update({ tracking_url: url }).eq("id", order.id)
+                }}
+                style={{ width: "100%", border: "1px solid #e0e0e0", padding: "0.35rem 0.5rem", fontSize: "0.72rem", outline: "none", marginBottom: "0.4rem", boxSizing: "border-box" as const }}
+              />
               <div style={{ display: "flex", gap: "0.4rem" }}>
                 <button onClick={() => startEdit(order)} style={{ flex: 1, padding: "0.45rem", fontSize: "0.72rem", fontWeight: 700, backgroundColor: "black", color: "white", border: "none", cursor: "pointer", textTransform: "uppercase" }}>✏️ Edit</button>
                 <button onClick={() => setDeleteTarget({ id: order.id, label: order.name + " — " + order.product_name })} style={{ padding: "0.45rem 0.75rem", fontSize: "0.72rem", fontWeight: 700, backgroundColor: "#fff0f0", border: "1px solid #ffcccc", color: "#cc0000", cursor: "pointer" }}>🗑</button>
@@ -353,6 +365,18 @@ export default function AdminOrders() {
                   <select value={order.status} onChange={e => updateStatus(order.id, e.target.value)} disabled={updating === order.id} style={{ padding: "0.35rem 0.5rem", fontSize: "0.75rem", border: "1px solid #e0e0e0", outline: "none", backgroundColor: "white" }}>
                     {allStatuses.map(s => <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
                   </select>
+                  <input
+                    type="text"
+                    placeholder="Tracking URL..."
+                    defaultValue={order.tracking_url || ""}
+                    onBlur={async e => {
+                      const url = e.target.value.trim()
+                      if (url === (order.tracking_url || "")) return
+                      const supabase = createClient()
+                      await supabase.from("orders").update({ tracking_url: url }).eq("id", order.id)
+                    }}
+                    style={{ border: "1px solid #e0e0e0", padding: "0.3rem 0.5rem", fontSize: "0.65rem", outline: "none", width: "100%", boxSizing: "border-box" as const }}
+                  />
                   <div style={{ display: "flex", gap: "0.35rem" }}>
                     <button onClick={() => startEdit(order)} style={{ flex: 1, padding: "0.3rem 0.5rem", fontSize: "0.65rem", fontWeight: 700, backgroundColor: "black", color: "white", border: "none", cursor: "pointer", textTransform: "uppercase" }}>Edit</button>
                     <button onClick={() => setDeleteTarget({ id: order.id, label: order.name + " — " + order.product_name })} style={{ padding: "0.3rem 0.6rem", fontSize: "0.65rem", fontWeight: 700, backgroundColor: "#fff0f0", border: "1px solid #ffcccc", color: "#cc0000", cursor: "pointer" }}>Del</button>

@@ -121,7 +121,6 @@ export default function DumbbellCursorOnly() {
       z-index: 2147483647;
       transform: ${t};
       will-change: left, top;
-      mix-blend-mode: exclusion;
       transition: opacity 0.08s;
     }
     .db-cur.clicking { animation: dbClick 0.3s cubic-bezier(0.36,0.07,0.19,0.97) forwards; }

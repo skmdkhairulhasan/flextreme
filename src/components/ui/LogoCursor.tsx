@@ -109,7 +109,6 @@ export default function LogoCursor() {
       z-index: 2147483647;
       transform: translate(-50%, -50%);
       will-change: left, top;
-      mix-blend-mode: exclusion;
       transition: opacity 0.08s;
     }
     .logo-cur.clicking { animation: logoClick 0.3s cubic-bezier(0.36,0.07,0.19,0.97) forwards; }

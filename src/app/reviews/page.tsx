@@ -33,8 +33,15 @@ export default async function ReviewsPage({ searchParams }: { searchParams: Prom
         </div>
       </div>
 
+      <style>{`
+        @media (max-width: 768px) {
+          .reviews-layout { grid-template-columns: 1fr !important; }
+          .reviews-sidebar { display: none; }
+          .reviews-grid { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
       <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "3rem 1.5rem" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "240px 1fr", gap: "3rem", alignItems: "start" }}>
+        <div className="reviews-layout" style={{ display: "grid", gridTemplateColumns: "240px 1fr", gap: "3rem", alignItems: "start" }}>
 
           {/* Sidebar */}
           <div style={{ position: "sticky", top: "90px" }}>
@@ -87,7 +94,7 @@ export default async function ReviewsPage({ searchParams }: { searchParams: Prom
                 <Link href="/products" style={{ display: "inline-block", marginTop: "1rem", backgroundColor: "black", color: "white", padding: "0.75rem 2rem", fontWeight: 700, fontSize: "0.8rem", textTransform: "uppercase", textDecoration: "none" }}>Shop Now</Link>
               </div>
             ) : (
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "1.5rem" }}>
+              <div className="reviews-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "1.5rem", justifyItems: "stretch" }}>
                 {reviews.map((review: any) => (
                   <div key={review.id} style={{ border: "1px solid #e0e0e0", padding: "1.5rem" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.75rem" }}>

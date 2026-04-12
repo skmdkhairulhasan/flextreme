@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react"
 import { useCart } from "@/components/ui/Cart"
 import { createClient } from "@/lib/supabase/client"
+import { upsertCustomer } from "@/lib/upsertCustomer"
 import Link from "next/link"
 import { fbEvent } from "@/components/ui/FacebookPixel"
 
@@ -15,6 +16,8 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState("")
+  const [isFlex100, setIsFlex100] = useState(false)
+  const [discountChecked, setDiscountChecked] = useState(false)
 
   useEffect(() => {
     setMounted(true)
@@ -57,12 +60,14 @@ export default function CheckoutPage() {
         size: item.size,
         color: item.color,
         quantity: item.quantity,
-        total_price: item.price * item.quantity,
+        total_price: isFlex100 ? Math.round(item.price * item.quantity * 0.9) : item.price * item.quantity,
         notes: notes.trim(),
         status: "pending",
       }))
       const { error: dbError } = await supabase.from("orders").insert(orderRows)
       if (dbError) throw dbError
+      // Auto-create/update customer record
+      await upsertCustomer(supabase, { name: name.trim(), phone: phone.trim(), totalPrice: total })
       fbEvent.purchase({
         value: total,
         order_id: "order_" + Date.now(),
@@ -159,8 +164,23 @@ export default function CheckoutPage() {
             </div>
             <div style={{ marginBottom: "1.25rem" }}>
               <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 700, marginBottom: "0.4rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Phone Number *</label>
-              <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="01XXXXXXXXX" style={{ width: "100%", border: "1px solid #e0e0e0", padding: "0.875rem 1rem", fontSize: "0.95rem", outline: "none", boxSizing: "border-box" as const }} />
+              <input type="tel" value={phone} onChange={e => { setPhone(e.target.value); setDiscountChecked(false); setIsFlex100(false) }}
+                onBlur={async e => {
+                  const ph = e.target.value.trim()
+                  if (!ph) return
+                  const supabase = createClient()
+                  const { data } = await supabase.from("customers").select("flex100").eq("phone", ph).single()
+                  setIsFlex100(data?.flex100 === true)
+                  setDiscountChecked(true)
+                }}
+                placeholder="01XXXXXXXXX" style={{ width: "100%", border: "1px solid #e0e0e0", padding: "0.875rem 1rem", fontSize: "0.95rem", outline: "none", boxSizing: "border-box" as const }} />
               <p style={{ fontSize: "0.72rem", color: "#999", marginTop: "0.3rem" }}>We will call this number to confirm your order</p>
+              {discountChecked && isFlex100 && (
+                <div style={{ backgroundColor: "#fef3c7", border: "1px solid #fbbf24", padding: "0.6rem 0.875rem", marginTop: "0.5rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                  <span>🥇</span>
+                  <p style={{ fontSize: "0.78rem", color: "#92400e", fontWeight: 700 }}>FLEX100 Member — 10% discount applied!</p>
+                </div>
+              )}
             </div>
             <div style={{ marginBottom: "1.25rem" }}>
               <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 700, marginBottom: "0.4rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Delivery Address *</label>
@@ -191,7 +211,7 @@ export default function CheckoutPage() {
               disabled={loading}
               style={{ width: "100%", backgroundColor: loading ? "#444" : "black", color: "white", padding: "1.1rem", fontWeight: 700, fontSize: "0.9rem", letterSpacing: "0.1em", textTransform: "uppercase", border: "none", cursor: loading ? "not-allowed" : "pointer", marginBottom: "0.75rem" }}
             >
-              {loading ? "Placing Order..." : "Place Order — BDT " + total.toLocaleString()}
+              {loading ? "Placing Order..." : "Place Order — BDT " + (isFlex100 ? Math.round(total * 0.9) : total).toLocaleString()}
             </button>
 
             <a
@@ -233,9 +253,15 @@ export default function CheckoutPage() {
                 <span style={{ fontSize: "0.85rem", color: "#666" }}>Delivery</span>
                 <span style={{ fontSize: "0.85rem", color: "#16a34a", fontWeight: 600 }}>Calculated at delivery</span>
               </div>
+              {isFlex100 && (
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
+                  <span style={{ fontSize: "0.85rem", color: "#16a34a", fontWeight: 700 }}>🥇 FLEX100 Discount (10%)</span>
+                  <span style={{ fontSize: "0.85rem", color: "#16a34a", fontWeight: 700 }}>-BDT {Math.round(total * 0.1).toLocaleString()}</span>
+                </div>
+              )}
               <div style={{ display: "flex", justifyContent: "space-between", padding: "1rem 0", borderTop: "2px solid black" }}>
                 <span style={{ fontWeight: 900, fontSize: "1rem", textTransform: "uppercase" }}>Total</span>
-                <span style={{ fontWeight: 900, fontSize: "1.25rem" }}>BDT {total.toLocaleString()}</span>
+                <span style={{ fontWeight: 900, fontSize: "1.25rem" }}>BDT {(isFlex100 ? Math.round(total * 0.9) : total).toLocaleString()}</span>
               </div>
             </div>
 

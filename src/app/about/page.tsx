@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/server"
 
+export const dynamic = "force-dynamic"
 export const metadata = { title: "About Us | Flextreme" }
 
 export default async function AboutPage() {
@@ -111,9 +112,10 @@ export default async function AboutPage() {
               {storyBody3 && <p style={{ color: "#555", lineHeight: 1.8, marginBottom: "2rem" }}>{renderText(storyBody3)}</p>}
               <Link href="/products" style={{ display: "inline-block", backgroundColor: "black", color: "white", padding: "1rem 2.5rem", fontWeight: 700, fontSize: "0.8rem", letterSpacing: "0.15em", textTransform: "uppercase", textDecoration: "none" }}>Shop The Collection</Link>
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem" }}>
+            <style>{`.stats-grid { grid-template-columns: 1fr 1fr !important; } @media(max-width:480px){ .stats-grid { grid-template-columns: 1fr 1fr !important; max-width: 100%; overflow: hidden; } .stats-grid > div { padding: 1rem !important; } }`}</style>
+            <div className="stats-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
               {stats.map((stat, i) => (
-                <div key={i} style={{ border: "1px solid #e0e0e0", padding: "2rem", textAlign: "center" }}>
+                <div key={i} style={{ border: "1px solid #e0e0e0", padding: "1.5rem 1rem", textAlign: "center", minWidth: 0 }}>
                   <p style={{ fontSize: "2.5rem", fontWeight: 900, letterSpacing: "-0.03em", marginBottom: "0.5rem" }}>{stat.number}</p>
                   <p style={{ fontSize: "0.75rem", color: "#999", textTransform: "uppercase", letterSpacing: "0.1em" }}>{stat.label}</p>
                 </div>
