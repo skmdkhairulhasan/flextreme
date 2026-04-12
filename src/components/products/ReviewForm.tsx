@@ -16,7 +16,7 @@ export default function ReviewForm({ productId, productName }: { productId: stri
     if (!name.trim()) { setError("Please enter your name"); return }
     if (rating === 0) { setError("Please select a star rating"); return }
     if (!text.trim()) { setError("Please write your review"); return }
-    if (text.trim().length < 20) { setError("Review must be at least 20 characters"); return }
+    if (text.trim().length < 3) { setError("Review must be at least 3 characters"); return }
     setLoading(true)
     setError("")
     try {
@@ -85,8 +85,8 @@ export default function ReviewForm({ productId, productName }: { productId: stri
 
       <div style={{ marginBottom: "1.25rem" }}>
         <label style={{ display: "block", fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.4rem", color: "#555" }}>Your Review *</label>
-        <textarea value={text} onChange={e => setText(e.target.value)} placeholder="Tell others about your experience... (minimum 20 characters)" rows={4} style={{ width: "100%", border: "1px solid #e0e0e0", padding: "0.65rem 0.875rem", fontSize: "0.9rem", outline: "none", resize: "vertical", fontFamily: "inherit", boxSizing: "border-box" }} />
-        <p style={{ fontSize: "0.7rem", color: text.length < 20 ? "#999" : "#16a34a", marginTop: "0.25rem" }}>{text.length} / 20 minimum characters</p>
+        <textarea value={text} onChange={e => setText(e.target.value)} placeholder="Tell others about your experience..." rows={4} style={{ width: "100%", border: "1px solid #e0e0e0", padding: "0.65rem 0.875rem", fontSize: "0.9rem", outline: "none", resize: "vertical", fontFamily: "inherit", boxSizing: "border-box" }} />
+        <p style={{ fontSize: "0.7rem", color: "#999", marginTop: "0.25rem" }}>{text.length} characters</p>
       </div>
 
       {error && (
