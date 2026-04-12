@@ -20,17 +20,24 @@ export default function OrderForm({ product }: { product: Product & { stock_matr
   const [cartAdded, setCartAdded] = useState(false)
   const [isFlex100, setIsFlex100] = useState(false)
   const [discountChecked, setDiscountChecked] = useState(false)
+  const [remainingMatrix, setRemainingMatrix] = useState<Record<string, number> | null>(null)
   const { addItem } = useCart()
 
   useEffect(() => {
     fbEvent.viewContent({ content_name: product.name, content_ids: [product.id], value: product.price })
+    // Fetch live remaining stock (stock - sold confirmed orders)
+    fetch("/api/stock-remaining?id=" + product.id)
+      .then(r => r.json())
+      .then(d => { if (d.matrix) setRemainingMatrix(d.matrix) })
+      .catch(() => {})
   }, [product.id])
 
   const basePrice = product.price * quantity
   const totalPrice = isFlex100 ? Math.round(basePrice * 0.9) : basePrice
 
   function getVariantStock(): number | null {
-    const matrix = product.stock_matrix
+    // Use remainingMatrix (stock - sold) if available, else fall back to raw stock_matrix
+    const matrix = remainingMatrix || product.stock_matrix
     if (!matrix || !selectedSize || !selectedColor) return null
     const rawKey = selectedSize.trim() + "_" + selectedColor.trim()
     const matchedKey = Object.keys(matrix).find(
@@ -277,6 +284,7 @@ export default function OrderForm({ product }: { product: Product & { stock_matr
         <div>
           <p style={{ fontWeight: 700, fontSize: "0.875rem", marginBottom: "0.2rem" }}>Cash on Delivery</p>
           <p style={{ fontSize: "0.8rem", color: "#666", lineHeight: 1.5 }}>Pay when your order arrives. No advance payment needed.</p>
+          <a href="/delivery" style={{ fontSize: "0.78rem", color: "#111", fontWeight: 700, textDecoration: "underline" }}>View delivery charges & times →</a>
         </div>
       </div>
 

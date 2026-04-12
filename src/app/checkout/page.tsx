@@ -268,7 +268,7 @@ export default function CheckoutPage() {
             </div>
 
             <div style={{ backgroundColor: "#f9f9f9", padding: "1rem", fontSize: "0.78rem", color: "#666", lineHeight: 1.7 }}>
-              📦 Dhaka City: 1-2 days · Other cities: 3-5 days<br/>
+              📦 Delivery info available on our <a href="/delivery" style={{ color: "#111", fontWeight: 700 }}>Delivery page</a><br/>
               💚 Cash on Delivery — pay on arrival
             </div>
           </div>
