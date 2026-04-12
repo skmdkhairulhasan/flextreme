@@ -35,7 +35,7 @@ const INTENTS = {
   payment: ["payment","pay","cod","cash on delivery","bkash","nagad","card","advance payment","how to pay","payment method"],
   contact: ["whatsapp","contact","phone","number","reach","call","speak to","talk to","human","agent","support","help line","helpline","customer service"],
   product: ["product","collection","what do you sell","what products","what items","catalogue","catalog","range","available products","your products"],
-  brand: ["about flextreme","brand story","who made","flextreme story","about brand","company","founder","origin","bangladesh brand","who are you brand","flextreme","what is flextreme","tell me about flextreme","flextreme brand","story of flextreme","flextreme info","about the brand","what brand","this brand","your brand","the brand","brand info"],
+  brand: ["about flextreme","brand story","who made","flextreme story","about brand","company","founder","origin","bangladesh brand","who are you brand"],
   discount: ["discount","offer","sale","promo","coupon","deal","voucher","code","any deal","offer available"],
   thanks: ["thank","thanks","thx","ty","thank you","appreciate","helpful","great help","nicely done"],
   bye: ["bye","goodbye","see you","later","cya","take care","peace","signing off","gtg","gotta go"],
@@ -174,7 +174,7 @@ function getSupplements(goal: string, isVeg: boolean): string {
   return "SUPPLEMENT GUIDE\n\nESSENTIAL (worth every taka):\n" + prot + " — 25-30g post workout\nCreatine Monohydrate — 5g daily, any time. #1 proven supplement.\nMultivitamin — with breakfast\n" + omega + " — 2-3g daily with food\n" + extras + "\n\nSKIP THESE:\nFat burners — mostly caffeine + marketing\nTestosterone boosters — almost never work\nBCAA — useless if taking protein\n\nTruth: Sleep + food > every supplement. Fix those first."
 }
 
-export default function ChatBot() {
+export default function ChatBot({ fullPage = false }: { fullPage?: boolean } = {}) {
   const [open, setOpen] = useState(false)
   // Hide to side — swipe left/right on button to hide, tap to show
   const [hidden, setHidden] = useState(false)
@@ -379,20 +379,21 @@ ${o.tracking_url}
 if (p.step) {
   const step = p.step
 
-  // Smart escape — any meaningful non-numeric message exits step machine
-  const escapeWords = ["order","track","workout","supplement","injury","pain",
-    "delivery","product","size","help","what","how","when","why","where",
-    "can you","could you","please","would","should","tell me","show me",
-    "love","gym","protein","creatine","bye","thanks","hello","hi","hey",
-    "hurt","back","knee","shoulder","wrist","muscle","cloth","diet","food","eat"]
-  const isEscape = escapeWords.some(w => msg.includes(w)) ||
-    has(msg, "greeting") || has(msg, "bye") || has(msg, "thanks") ||
-    /^\d{10,15}$/.test(raw.trim()) ||
-    (!hasNum && msg.split(" ").length >= 3)
+  const isOrderEscape =
+    has(msg, "order") ||
+    msg.includes("track") ||
+    msg.includes("where is my order") ||
+    msg.includes("my order") ||
+    /^\d{10,15}$/.test(raw.trim())
 
-  if (isEscape) {
+    const isGreetingEscape =
+    has(msg, "greeting") ||
+    has(msg, "bye") ||
+    has(msg, "thanks")
+
+  if (isOrderEscape || isGreetingEscape) {
     setProfile({ ...p, step: undefined })
-    modeRef.current = null
+    if (isGreetingEscape) modeRef.current = null
   }
 
   else if (step === "height") {
@@ -516,7 +517,7 @@ if (p.step) {
     // ── PROFILE UPDATES (must be before greeting/intent matching) ──
     // Religion update — checked first to avoid "i am hindu" matching "hi" greeting
     const isReligionMsg =
-      (msg.includes("i am muslim") || msg.includes("i am hindu") || msg.includes("i am vegan") || msg.includes("i am vegetarian") || msg.includes("i am halal") ||
+      (msg.includes("i am muslim") || msg.includes("i am hindu") || msg.includes("i am vegan") || msg.includes("i am vegetarian") ||
        msg.includes("im muslim") || msg.includes("im hindu") || msg.includes("im vegan") || msg.includes("im vegetarian") ||
        msg.includes("i'm muslim") || msg.includes("i'm hindu") || msg.includes("i'm vegan") || msg.includes("i'm vegetarian")) ||
       msg.includes("not vegan") || msg.includes("not vegetarian") ||
@@ -524,11 +525,10 @@ if (p.step) {
       (msg.includes("change") && (msg.includes("muslim") || msg.includes("hindu") || msg.includes("vegetarian") || msg.includes("vegan") || msg.includes("halal") || msg.includes("diet")))
     if (isReligionMsg) {
       let newRel = p.religion || "none"
-      // Check vegan FIRST (before vegetarian to avoid vegetarian overriding vegan)
-      if (msg.includes("vegan") && !msg.includes("not vegan") && !msg.includes("vegetarian")) newRel = "vegan"
-      else if (/vegetarian|vegeterian|veggie|vegiterian/.test(msg) && !msg.includes("not")) newRel = "vegetarian"
-      else if (/muslim|halal/.test(msg)) newRel = "muslim"
+      if (/muslim|halal/.test(msg)) newRel = "muslim"
       else if (/hindu/.test(msg)) newRel = "hindu"
+      else if (msg.includes("vegan") && !msg.includes("not vegan") && !msg.includes("vegetarian")) newRel = "vegan"
+      else if (/vegetarian|vegeterian|veggie|vegiterian/.test(msg) && !msg.includes("not")) newRel = "vegetarian"
       else if (msg.includes("not vegan") || msg.includes("not vegetarian") || msg.includes("i eat meat") || msg.includes("i eat chicken")) newRel = "none"
       else if (msg.includes("change") && msg.includes("diet") && !newRel) {
         modeRef.current = "change_diet"
@@ -584,56 +584,6 @@ if (
   return getSupplements(p.goal || "general", isVeg)
 }
 
-    // ── ORDER TRACKING ──
-    // Detect track/status/order lookup intent
-    const isOrderTrack =
-      msg.includes("track") || msg.includes("where is my order") || msg.includes("my order") ||
-      msg.includes("order status") || msg.includes("status of my order") || msg.includes("check order") ||
-      msg.includes("find my order") || msg.includes("find my order") ||
-      msg.includes("when will") && (msg.includes("order") || msg.includes("package") || msg.includes("parcel") || msg.includes("product") || msg.includes("item") || msg.includes("delivery") || msg.includes("arrive") || msg.includes("get my") || msg.includes("come")) ||
-      msg.includes("when will i get") || msg.includes("when will it arrive") || msg.includes("where is my package") ||
-      msg.includes("where is my parcel") || msg.includes("how long will") && msg.includes("deliver") ||
-      msg.includes("when is my") && (msg.includes("order") || msg.includes("delivery")) ||
-      msg.includes("what time") && msg.includes("order") ||
-      msg.includes("how much time") && (msg.includes("order") || msg.includes("deliver") || msg.includes("arrive"))
-    const orderTrackWords = ["track","find","check","where","status","lookup","locate","search","show","update"]
-    const orderRefWords = ["order","parcel","package","shipment"]
-    const hasAnyOrderRef = orderRefWords.some(w => msg.includes(w))
-    const hasAnyAction = orderTrackWords.some(w => msg.includes(w))
-    const hasOrderIntent = isOrderTrack || (hasAnyOrderRef && hasAnyAction) ||
-      msg.includes("my order") || msg.includes("my parcel") || msg.includes("my package")
-    if (hasOrderIntent) {
-      modeRef.current = "order_lookup"
-      return "Sure! Send me the phone number you used when placing your order and I\'ll check it right away. 📦"
-    }
-
-
-    // Skip injury check if waiting for delivery city
-    const isInjuryMsg = modeRef.current !== "awaiting_delivery_city" && (has(msg, "injury") ||
-      (msg.includes("knee") && (msg.includes("injury") || msg.includes("pain") || msg.includes("hurt") || msg.includes("sore") || msg.includes("injur") || modeRef.current === "injury")) ||
-      (msg.includes("back") && (msg.includes("injury") || msg.includes("pain") || msg.includes("hurt") || msg.includes("injur") || modeRef.current === "injury")) ||
-      (msg.includes("shoulder") && (msg.includes("injury") || msg.includes("pain") || msg.includes("hurt") || modeRef.current === "injury")) ||
-      msg.includes("i am injured") || msg.includes("got injured") || msg.includes("hurt my"))
-    if (isInjuryMsg) {
-      const area = msg.includes("knee") ? "knee" : msg.includes("back") ? "back" : msg.includes("shoulder") ? "shoulder" : msg.includes("wrist") ? "wrist" : msg.includes("ankle") ? "ankle" : null
-      if (area === "knee") return "Knee injury — avoid squats, lunges, leg press for now.\n\nSafe alternatives:\n→ Upper body focus (chest, back, arms)\n→ Swimming or cycling (low impact)\n→ Seated leg extensions (light weight only)\n→ Hip thrusts (no knee stress)\n\nIce 15min after training. See a physio if pain is sharp."
-      if (area === "back") return "Back injury — no deadlifts, no heavy squats, no rowing.\n\nSafe alternatives:\n→ Chest, arms, shoulders (seated/lying)\n→ Light walking\n→ Gentle stretching (cat-cow, child's pose)\n→ Core bracing exercises (not crunches)\n\nDon't push through back pain — it can get serious. See a physio."
-      if (area === "shoulder") return "Shoulder injury — avoid overhead press, lateral raises, bench press.\n\nSafe alternatives:\n→ Legs, core, cardio\n→ Resistance band external rotations\n→ Light cable face pulls (if painless)\n\nRest, ice, physio. Shoulder injuries get worse if ignored."
-      if (area === "wrist") return "Wrist issue — avoid barbell pressing, push-ups, heavy grip work.\n\nSafe alternatives:\n→ Legs (squats, leg press)\n→ Cardio (bike, treadmill)\n→ Cable pushdowns with rope (neutral grip)\n\nWrist wraps help. Let it rest."
-      if (area === "ankle") return "Ankle issue — no running, jumping, or heavy leg work.\n\nSafe alternatives:\n→ Upper body — chest, back, arms, shoulders\n→ Seated exercises\n→ Swimming\n\nICE + elevate. Don't walk on it if swollen."
-      modeRef.current = "injury"
-      return "Safety first. Which area — knee, back, shoulder, wrist, or ankle?\n\nTell me and I'll give you a modified plan."
-    }
-
-    // Flextreme brand queries — catch standalone "flextreme" and variations
-    if (msg === "flextreme" || msg === "flex" || msg.includes("what is flextreme") || 
-        msg.includes("tell me about flextreme") || msg.includes("about flextreme") ||
-        msg.includes("flextreme brand") || msg.includes("story of flextreme") ||
-        msg.includes("flextreme story") || msg.includes("who is flextreme") ||
-        (msg.includes("flextreme") && (msg.includes("what") || msg.includes("who") || msg.includes("tell") || msg.includes("about") || msg.includes("brand") || msg.includes("story") || msg.length < 15))) {
-      return (s.about_story || "Flextreme is a premium gym wear brand from Bangladesh, built by athletes for athletes. We create compression gear that performs as good as it looks.") + "\n\nWork Hard. Flex Extreme. 🔥\n\nWant to see our products? → /products"
-    }
-
     // Greetings & casual
     if (has(msg, "greeting")) {
       const greetings = [
@@ -682,7 +632,22 @@ if (
 
     // Injury
     // Injury — also catch standalone body part words
-
+    // Skip injury check if waiting for delivery city
+    const isInjuryMsg = modeRef.current !== "awaiting_delivery_city" && (has(msg, "injury") ||
+      (msg.includes("knee") && (msg.includes("injury") || msg.includes("pain") || msg.includes("hurt") || msg.includes("sore") || msg.includes("injur") || modeRef.current === "injury")) ||
+      (msg.includes("back") && (msg.includes("injury") || msg.includes("pain") || msg.includes("hurt") || msg.includes("injur") || modeRef.current === "injury")) ||
+      (msg.includes("shoulder") && (msg.includes("injury") || msg.includes("pain") || msg.includes("hurt") || modeRef.current === "injury")) ||
+      msg.includes("i am injured") || msg.includes("got injured") || msg.includes("hurt my"))
+    if (isInjuryMsg) {
+      const area = msg.includes("knee") ? "knee" : msg.includes("back") ? "back" : msg.includes("shoulder") ? "shoulder" : msg.includes("wrist") ? "wrist" : msg.includes("ankle") ? "ankle" : null
+      if (area === "knee") return "Knee injury — avoid squats, lunges, leg press for now.\n\nSafe alternatives:\n→ Upper body focus (chest, back, arms)\n→ Swimming or cycling (low impact)\n→ Seated leg extensions (light weight only)\n→ Hip thrusts (no knee stress)\n\nIce 15min after training. See a physio if pain is sharp."
+      if (area === "back") return "Back injury — no deadlifts, no heavy squats, no rowing.\n\nSafe alternatives:\n→ Chest, arms, shoulders (seated/lying)\n→ Light walking\n→ Gentle stretching (cat-cow, child's pose)\n→ Core bracing exercises (not crunches)\n\nDon't push through back pain — it can get serious. See a physio."
+      if (area === "shoulder") return "Shoulder injury — avoid overhead press, lateral raises, bench press.\n\nSafe alternatives:\n→ Legs, core, cardio\n→ Resistance band external rotations\n→ Light cable face pulls (if painless)\n\nRest, ice, physio. Shoulder injuries get worse if ignored."
+      if (area === "wrist") return "Wrist issue — avoid barbell pressing, push-ups, heavy grip work.\n\nSafe alternatives:\n→ Legs (squats, leg press)\n→ Cardio (bike, treadmill)\n→ Cable pushdowns with rope (neutral grip)\n\nWrist wraps help. Let it rest."
+      if (area === "ankle") return "Ankle issue — no running, jumping, or heavy leg work.\n\nSafe alternatives:\n→ Upper body — chest, back, arms, shoulders\n→ Seated exercises\n→ Swimming\n\nICE + elevate. Don't walk on it if swollen."
+      modeRef.current = "injury"
+      return "Safety first. Which area — knee, back, shoulder, wrist, or ankle?\n\nTell me and I'll give you a modified plan."
+    }
 
     // Full plan
     if (has(msg, "fullplan")) {
@@ -790,7 +755,7 @@ if (
     }
 
     // Size — reads from size_tables JSON (admin Size Guide)
-    if (has(msg, "size") || ((msg.includes("chest") || msg.includes("inch")) && /\d/.test(msg))) {
+    if (has(msg, "size")) {
       let tables: any[] = []
       try { if (s.size_tables) tables = JSON.parse(s.size_tables) } catch {}
       if (tables.length === 0) return "Size guide not set up yet. Check our size guide page or WhatsApp us!"
@@ -818,9 +783,7 @@ if (
       const lengthCol = table.columns?.find((c: any) => c.name.toLowerCase().includes("length"))
 
       // Extract ALL numbers from message
-      const rawNums = [...msg.matchAll(/(\d{2,3}(?:\.\d)?)/g)].map(m => parseFloat(m[1]))
-      const isInches = msg.includes("inch") || msg.includes("inches") || msg.includes('"')
-      const nums = rawNums.map(n => isInches ? Math.round(n * 2.54) : n)
+      const nums = [...msg.matchAll(/(\d{2,3}(?:\.\d)?)/g)].map(m => parseFloat(m[1]))
 
       // Detect what measurement type they gave
       const gavWidth = msg.includes("width") || msg.includes("chest") || msg.includes("wide") || msg.includes("bust")
@@ -1178,6 +1141,28 @@ if (
       return "Here's what we have:\n\n" + lines + "\n\nAll sweat-wicking, 4-way stretch, compression fit. 🔥"
     }
 
+    // ── ORDER TRACKING ──
+    // Detect track/status/order lookup intent
+    const isOrderTrack =
+      msg.includes("track") || msg.includes("where is my order") || msg.includes("my order") ||
+      msg.includes("order status") || msg.includes("status of my order") || msg.includes("check order") ||
+      msg.includes("find my order") || msg.includes("find my order") ||
+      msg.includes("when will") && (msg.includes("order") || msg.includes("package") || msg.includes("parcel") || msg.includes("product") || msg.includes("item") || msg.includes("delivery") || msg.includes("arrive") || msg.includes("get my") || msg.includes("come")) ||
+      msg.includes("when will i get") || msg.includes("when will it arrive") || msg.includes("where is my package") ||
+      msg.includes("where is my parcel") || msg.includes("how long will") && msg.includes("deliver") ||
+      msg.includes("when is my") && (msg.includes("order") || msg.includes("delivery")) ||
+      msg.includes("what time") && msg.includes("order") ||
+      msg.includes("how much time") && (msg.includes("order") || msg.includes("deliver") || msg.includes("arrive"))
+    const orderTrackWords = ["track","find","check","where","status","lookup","locate","search","show","update"]
+    const orderRefWords = ["order","parcel","package","shipment"]
+    const hasAnyOrderRef = orderRefWords.some(w => msg.includes(w))
+    const hasAnyAction = orderTrackWords.some(w => msg.includes(w))
+    const hasOrderIntent = isOrderTrack || (hasAnyOrderRef && hasAnyAction) ||
+      msg.includes("my order") || msg.includes("my parcel") || msg.includes("my package")
+    if (hasOrderIntent) {
+      modeRef.current = "order_lookup"
+      return "Sure! Send me the phone number you used when placing your order and I\'ll check it right away. 📦"
+    }
 
     // General order info (how to order)
     if (has(msg, "order")) return "HOW TO ORDER:\n\n1. Products page\n2. Choose item\n3. Pick size + color\n4. Enter name, phone, address\n5. Order Now\n\nCOD — pay on delivery. Confirmed via WhatsApp.\n\nAlready placed an order? Say 'track my order' and I'll look it up! 📦"
@@ -1191,7 +1176,14 @@ if (
     // Product
     if (has(msg, "product")) return "Flextreme makes premium compression wear:\n\nCompression Tops\nCompression Shorts + Leggings\nAccessories\n\nAll: Sweat-wicking. 4-way stretch. Compression fit. Muscle-definition cut.\n\nSee Products page for full collection."
 
-    // Brand
+    // Brand / Flextreme standalone
+    if (msg === "flextreme" || msg === "flex" || 
+        msg.includes("what is flextreme") || msg.includes("tell me about flextreme") ||
+        msg.includes("about flextreme") || msg.includes("flextreme brand") ||
+        msg.includes("story of flextreme") || msg.includes("who is flextreme") ||
+        (msg.includes("flextreme") && msg.split(" ").length <= 3)) {
+      return (s.about_story || "Flextreme is a premium gym wear brand from Bangladesh, built by athletes for athletes.") + "\n\nWork Hard. Flex Extreme. 🔥\n\nSee our products: /products"
+    }
     if (has(msg, "brand")) return (s.about_story || "Flextreme — premium gym wear from Bangladesh. Built by athletes, for athletes.") + "\n\nWork Hard. Flex Extreme."
 
     // Discount
@@ -1283,19 +1275,6 @@ if (
 
   setTimeout(async () => {
 
-    // NLP pre-classification for smarter routing
-    try {
-      const nlpRes = await fetch("/api/nlp-classify", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: userMsg })
-      })
-      const nlpData = await nlpRes.json()
-      if (nlpData.intent && nlpData.score > 0.65 && !modeRef.current) {
-        if (nlpData.intent === "find_order") modeRef.current = "order_lookup"
-        if (nlpData.intent === "injury_help") modeRef.current = "injury"
-      }
-    } catch {}
-
     let reply = getReply(userMsg)
 
     // Phone lookup is async — getReply returns sentinel and handles its own async + setLoading
@@ -1384,8 +1363,8 @@ return (
         .msgs::-webkit-scrollbar-thumb{background:#e0e0e0;border-radius:4px}
       `}}/>
 
-      {open && (
-        <div className="cwin" data-chatbox="true" style={{position:"fixed",bottom:"1.5rem",right:"2rem",width:"340px",height:"540px",backgroundColor:"white",border:"1px solid #e0e0e0",boxShadow:"0 20px 60px rgba(0,0,0,0.2)",zIndex:9998,display:"flex",flexDirection:"column",overflow:"hidden"}}>
+      {(open || fullPage) && (
+        <div className="cwin" data-chatbox="true" style={fullPage ? {position:"fixed",top:0,left:0,right:0,bottom:0,width:"100%",height:"100%",backgroundColor:"white",border:"none",boxShadow:"none",zIndex:10,display:"flex",flexDirection:"column",overflow:"hidden"} : {position:"fixed",bottom:"1.5rem",right:"2rem",width:"340px",height:"540px",backgroundColor:"white",border:"1px solid #e0e0e0",boxShadow:"0 20px 60px rgba(0,0,0,0.2)",zIndex:9998,display:"flex",flexDirection:"column",overflow:"hidden"}}>
           <div style={{background:"black",padding:"0.875rem 1rem",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0}}>
             <div style={{display:"flex",alignItems:"center",gap:"0.65rem"}}>
               <div style={{position:"relative",width:"50px"}}>
@@ -1446,7 +1425,7 @@ strokeLinecap="round"
                 </div>
               </div>
             </div>
-            <button onClick={()=>setOpen(false)} style={{background:"none",border:"none",color:"rgba(255,255,255,0.5)",fontSize:"1.2rem",cursor:"var(--chat-cursor,auto)",padding:"0.2rem",lineHeight:1}}>✕</button>
+            {!fullPage && <button onClick={()=>setOpen(false)} style={{background:"none",border:"none",color:"rgba(255,255,255,0.5)",fontSize:"1.2rem",cursor:"var(--chat-cursor,auto)",padding:"0.2rem",lineHeight:1}}>✕</button>}
           </div>
           <div style={{backgroundColor:"#fafafa",borderBottom:"1px solid #eee",padding:"0.35rem 1rem",display:"flex",alignItems:"center",gap:"0.5rem"}}>
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
@@ -1500,7 +1479,7 @@ strokeLinecap="round"
       )}
 
       {/* LABEL */}
-      {!open && !hidden && (
+      {!open && !hidden && !fullPage && (
         <div className="clabel" style={{
           position:"fixed", bottom:28, right:80, zIndex:9996,
           backgroundColor:"black", color:"white",
@@ -1515,67 +1494,47 @@ strokeLinecap="round"
         </div>
       )}
 
-      {/* MOBILE PEEK — robot peeks from bottom right when closed */}
-      {!open && !hidden && (
-        <style>{`
-          .flex-peek { display: none; }
-          @media (max-width: 768px) {
-            .flex-peek { display: block; }
-            @keyframes peekUp { 0%,100% { transform: translateY(0) rotate(-5deg); } 50% { transform: translateY(-8px) rotate(5deg); } }
-            @keyframes waveHand { 0%,100% { transform: rotate(0deg); transform-origin: bottom center; } 25% { transform: rotate(25deg); transform-origin: bottom center; } 75% { transform: rotate(-15deg); transform-origin: bottom center; } }
-            @keyframes peekBlink { 0%,90%,100% { transform: scaleY(1); } 95% { transform: scaleY(0.1); } }
-          }
-        `}</style>
-      )}
-      {!open && !hidden && (
-        <div className="flex-peek" style={{
-          position:"fixed", bottom:90, right:8, zIndex:9995,
-          animation:"peekUp 3s ease-in-out infinite",
-          pointerEvents:"none",
-        }}>
-          {/* Speech bubble */}
-          <div style={{
-            position:"absolute", bottom:"100%", right:0, marginBottom:"6px",
-            backgroundColor:"black", color:"white", padding:"0.35rem 0.6rem",
-            borderRadius:"10px 10px 2px 10px", fontSize:"0.65rem", fontWeight:700,
-            whiteSpace:"nowrap", boxShadow:"0 2px 8px rgba(0,0,0,0.3)",
-            animation:"peekUp 2s ease-in-out infinite 0.5s",
-          }}>
-            💬 Ask me anything!
-            <div style={{position:"absolute",bottom:"-5px",right:"8px",width:0,height:0,borderLeft:"5px solid transparent",borderRight:"5px solid transparent",borderTop:"5px solid black"}}/>
+      {/* MOBILE PEEK — same robot tilts/peeks when circle is hidden */}
+      {!open && hidden && !fullPage && (
+        <>
+          <style dangerouslySetInnerHTML={{__html:`
+            @keyframes peekTilt { 0%,100% { transform: rotate(-15deg) translateY(0); } 50% { transform: rotate(-20deg) translateY(-4px); } }
+            @keyframes peekWave { 0%,100% { transform: rotate(0deg); } 50% { transform: rotate(20deg); } }
+            .peek-robot { animation: peekTilt 2s ease-in-out infinite; transform-origin: bottom right; }
+            .peek-arm { animation: peekWave 1s ease-in-out infinite; transform-origin: 85px 68px; }
+          `}}/>
+          <div style={{ position:"fixed", bottom:0, right:-8, zIndex:9995, cursor:"pointer" }} onClick={()=>{ const el=document.querySelector("[data-swipe-handle]") as HTMLElement; if(el) el.click() }}>
+            <svg className="peek-robot" width="52" height="60" viewBox="0 0 120 120">
+              {/* head */}
+              <rect x="25" y="15" width="70" height="45" rx="12" fill="#0b1625"/>
+              {/* eyes */}
+              <circle cx="50" cy="38" r="6" fill="#00eaff"/>
+              <circle cx="70" cy="38" r="6" fill="#00eaff"/>
+              <circle cx="50" cy="38" r="3" fill="#0b1625"/>
+              <circle cx="70" cy="38" r="3" fill="#0b1625"/>
+              {/* smile */}
+              <path d="M48 48 Q60 56 72 48" stroke="#00eaff" strokeWidth="2" strokeLinecap="round" fill="none"/>
+              {/* antenna */}
+              <line x1="60" y1="15" x2="60" y2="6" stroke="#00eaff" strokeWidth="2.5"/>
+              <circle cx="60" cy="4" r="3" fill="#00eaff"/>
+              {/* body */}
+              <rect x="40" y="65" width="40" height="22" rx="6" fill="#dce2ee"/>
+              {/* waving arm */}
+              <g className="peek-arm">
+                <rect x="85" y="68" width="15" height="7" rx="3" fill="#a8b4c4"/>
+              </g>
+              {/* other arm */}
+              <rect x="20" y="68" width="15" height="7" rx="3" fill="#a8b4c4"/>
+              {/* legs */}
+              <rect x="45" y="88" width="8" height="10" rx="2" fill="#c8d0de"/>
+              <rect x="67" y="88" width="8" height="10" rx="2" fill="#c8d0de"/>
+            </svg>
           </div>
-          {/* Mini waving robot */}
-          <svg width="44" height="44" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-            {/* Body */}
-            <rect x="28" y="45" width="44" height="38" rx="8" fill="black" stroke="white" strokeWidth="3"/>
-            {/* Head */}
-            <rect x="30" y="18" width="40" height="30" rx="8" fill="black" stroke="white" strokeWidth="3"/>
-            {/* Eyes */}
-            <ellipse cx="43" cy="33" rx="5" ry="5" fill="white" style={{animation:"peekBlink 3s infinite"}}/>
-            <ellipse cx="57" cy="33" rx="5" ry="5" fill="white" style={{animation:"peekBlink 3s infinite 0.1s"}}/>
-            <ellipse cx="43" cy="33" rx="2.5" ry="2.5" fill="black"/>
-            <ellipse cx="57" cy="33" rx="2.5" ry="2.5" fill="black"/>
-            {/* Antenna */}
-            <line x1="50" y1="18" x2="50" y2="10" stroke="white" strokeWidth="2.5"/>
-            <circle cx="50" cy="8" r="3" fill="white"/>
-            {/* Mouth smile */}
-            <path d="M42 42 Q50 48 58 42" stroke="white" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
-            {/* Waving arm */}
-            <g style={{animation:"waveHand 1.2s ease-in-out infinite"}}>
-              <rect x="72" y="50" width="14" height="8" rx="4" fill="black" stroke="white" strokeWidth="2.5"/>
-              <circle cx="86" cy="54" r="5" fill="black" stroke="white" strokeWidth="2.5"/>
-            </g>
-            {/* Other arm */}
-            <rect x="14" y="50" width="14" height="8" rx="4" fill="black" stroke="white" strokeWidth="2.5"/>
-            {/* Legs */}
-            <rect x="35" y="83" width="10" height="12" rx="4" fill="black" stroke="white" strokeWidth="2.5"/>
-            <rect x="55" y="83" width="10" height="12" rx="4" fill="black" stroke="white" strokeWidth="2.5"/>
-          </svg>
-        </div>
+        </>
       )}
 
       {/* BUTTON — slides right to hide, tap to restore */}
-      <div style={{
+      {!fullPage && <div style={{
         position:"fixed",
         bottom:20,
         right: hidden ? -52 : 4,
@@ -1740,7 +1699,7 @@ strokeLinecap="round"
 )}
 
 </button>
-      </div>
+      </div>}
     </>
   )
 }

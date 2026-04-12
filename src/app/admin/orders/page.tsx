@@ -185,7 +185,7 @@ export default function AdminOrders() {
 
       {/* Delete confirmation modal — portal to escape overflow:hidden */}
       {deleteTarget && typeof document !== "undefined" && createPortal(
-        <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.6)", zIndex: 99999, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.6)", zIndex: 99999, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem", overflow: "hidden" }}>
           <div style={{ backgroundColor: "white", padding: "1.75rem", maxWidth: "400px", width: "100%", border: "1px solid #e0e0e0", borderRadius: "4px" }}>
             <div style={{ fontSize: "2rem", marginBottom: "0.75rem" }}>🗑️</div>
             <h3 style={{ fontWeight: 900, fontSize: "1rem", marginBottom: "0.5rem" }}>Delete Order?</h3>
@@ -206,8 +206,8 @@ export default function AdminOrders() {
 
       {/* Edit order modal */}
       {editingId && (
-        <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.6)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
-          <div style={{ backgroundColor: "white", padding: "1.75rem", maxWidth: "480px", width: "100%", maxHeight: "90vh", overflowY: "auto" }}>
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.6)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem", overflow: "hidden" }}>
+          <div style={{ backgroundColor: "white", padding: "1.75rem", maxWidth: "480px", width: "100%", maxHeight: "80vh", overflowY: "auto", position: "relative" }}>
             <h3 style={{ fontWeight: 900, fontSize: "1rem", textTransform: "uppercase", marginBottom: "1.25rem", paddingBottom: "0.75rem", borderBottom: "2px solid black" }}>Edit Order Details</h3>
             <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
               <div>
