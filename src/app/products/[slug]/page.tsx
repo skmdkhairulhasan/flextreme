@@ -36,7 +36,7 @@ const remainingStock = Object.values(matrix).reduce(
 )
   return (
     <div style={{ paddingTop: "72px", minHeight: "100vh", backgroundColor: "white" }}>
-      <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "3rem 1.5rem" }}>
+      <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "3rem 1.5rem", overflow: "hidden" }}>
         <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", marginBottom: "2rem", fontSize: "0.8rem", color: "#999" }}>
           <a href="/" style={{ color: "#999", textDecoration: "none" }}>Home</a>
           <span>/</span>
@@ -47,6 +47,7 @@ const remainingStock = Object.values(matrix).reduce(
         <style>{`
           @media (max-width: 768px) {
             .product-layout { grid-template-columns: 1fr !important; gap: 2rem !important; }
+            .product-layout > div { max-width: 100% !important; overflow: hidden !important; }
           }
         `}</style>
         <div className="product-layout" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "4rem", alignItems: "start" }}>

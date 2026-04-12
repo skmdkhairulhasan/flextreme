@@ -149,7 +149,7 @@ export default function ImageGallery({ images, productName }: { images: string[]
           document.documentElement.removeAttribute("data-hovering-image")
           setLens({ show: false, x: 0, y: 0, w: 0, h: 0 })
         }}
-        style={{ position: "relative", backgroundColor: "#f5f5f5", aspectRatio: "3/4", overflow: "hidden", marginBottom: "0.75rem", width: "100%", maxWidth: "100%", boxSizing: "border-box" as const }}
+        style={{ position: "relative", backgroundColor: "#f5f5f5", aspectRatio: "3/4", overflow: "hidden", marginBottom: "0.75rem", width: "100%", maxWidth: "100%", boxSizing: "border-box" as const, display: "block" }}
       >
         <img src={images[current]} alt={productName} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
 
@@ -178,7 +178,7 @@ export default function ImageGallery({ images, productName }: { images: string[]
       </div>
 
       {images.length > 1 && (
-        <div style={{ display: "flex", gap: "0.5rem", overflowX: "auto", paddingBottom: "0.25rem", maxWidth: "100%", boxSizing: "border-box" as const }}>
+        <div style={{ display: "flex", gap: "0.5rem", overflowX: "auto", paddingBottom: "0.25rem", maxWidth: "100%", boxSizing: "border-box" as const, flexWrap: "nowrap" }}>
           {images.map((img, i) => (
             <div key={i} onClick={() => setCurrent(i)} style={{ flexShrink: 0, width: "68px", height: "68px", overflow: "hidden", cursor: "none", border: current === i ? "2px solid black" : "2px solid transparent", opacity: current === i ? 1 : 0.5, transition: "all 0.2s", backgroundColor: "#f5f5f5" }}>
               <img src={img} alt={"thumb " + i} style={{ width: "100%", height: "100%", objectFit: "cover" }} />

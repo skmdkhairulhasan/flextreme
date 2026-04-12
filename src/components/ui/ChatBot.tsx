@@ -524,10 +524,11 @@ if (p.step) {
       (msg.includes("change") && (msg.includes("muslim") || msg.includes("hindu") || msg.includes("vegetarian") || msg.includes("vegan") || msg.includes("halal") || msg.includes("diet")))
     if (isReligionMsg) {
       let newRel = p.religion || "none"
-      if (/muslim|halal/.test(msg)) newRel = "muslim"
-      else if (/hindu/.test(msg)) newRel = "hindu"
-      else if (msg.includes("vegan") && !msg.includes("not")) newRel = "vegan"
+      // Check vegan FIRST (before vegetarian to avoid vegetarian overriding vegan)
+      if (msg.includes("vegan") && !msg.includes("not vegan") && !msg.includes("vegetarian")) newRel = "vegan"
       else if (/vegetarian|vegeterian|veggie|vegiterian/.test(msg) && !msg.includes("not")) newRel = "vegetarian"
+      else if (/muslim|halal/.test(msg)) newRel = "muslim"
+      else if (/hindu/.test(msg)) newRel = "hindu"
       else if (msg.includes("not vegan") || msg.includes("not vegetarian") || msg.includes("i eat meat") || msg.includes("i eat chicken")) newRel = "none"
       else if (msg.includes("change") && msg.includes("diet") && !newRel) {
         modeRef.current = "change_diet"
@@ -622,6 +623,19 @@ if (
       if (area === "ankle") return "Ankle issue — no running, jumping, or heavy leg work.\n\nSafe alternatives:\n→ Upper body — chest, back, arms, shoulders\n→ Seated exercises\n→ Swimming\n\nICE + elevate. Don't walk on it if swollen."
       modeRef.current = "injury"
       return "Safety first. Which area — knee, back, shoulder, wrist, or ankle?\n\nTell me and I'll give you a modified plan."
+    }
+
+    // Flextreme brand queries — catch standalone "flextreme" and variations
+    if (msg === "flextreme" || msg === "flex" || msg.includes("what is flextreme") || 
+        msg.includes("tell me about flextreme") || msg.includes("about flextreme") ||
+        msg.includes("flextreme brand") || msg.includes("story of flextreme") ||
+        msg.includes("flextreme story") || msg.includes("who is flextreme") ||
+        (msg.includes("flextreme") && (msg.includes("what") || msg.includes("who") || msg.includes("tell") || msg.includes("about") || msg.includes("brand") || msg.includes("story") || msg.length < 15))) {
+      return (s.about_story || "Flextreme is a premium gym wear brand from Bangladesh, built by athletes for athletes. We create compression gear that performs as good as it looks.") + "
+
+Work Hard. Flex Extreme. 🔥
+
+Want to see our products? → /products"
     }
 
     // Greetings & casual
