@@ -1,5 +1,5 @@
 "use client"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Product } from "@/types"
 import { createClient } from "@/lib/supabase/client"
 import { upsertCustomer } from "@/lib/upsertCustomer"
@@ -17,27 +17,29 @@ export default function OrderForm({ product }: { product: Product & { stock_matr
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState("")
+  const [fieldErrors, setFieldErrors] = useState<Record<string,string>>({})
+  
+  function setFieldError(field: string, msg: string) {
+    setFieldErrors(prev => ({ ...prev, [field]: msg }))
+  }
+  function clearFieldError(field: string) {
+    setFieldErrors(prev => { const next = {...prev}; delete next[field]; return next })
+  }
   const [cartAdded, setCartAdded] = useState(false)
   const [isFlex100, setIsFlex100] = useState(false)
+  const lookupTimer = useRef<NodeJS.Timeout | null>(null)
   const [discountChecked, setDiscountChecked] = useState(false)
-  const [remainingMatrix, setRemainingMatrix] = useState<Record<string, number> | null>(null)
   const { addItem } = useCart()
 
   useEffect(() => {
     fbEvent.viewContent({ content_name: product.name, content_ids: [product.id], value: product.price })
-    // Fetch live remaining stock (stock - sold confirmed orders)
-    fetch("/api/stock-remaining?id=" + product.id)
-      .then(r => r.json())
-      .then(d => { if (d.matrix) setRemainingMatrix(d.matrix) })
-      .catch(() => {})
   }, [product.id])
 
   const basePrice = product.price * quantity
   const totalPrice = isFlex100 ? Math.round(basePrice * 0.9) : basePrice
 
   function getVariantStock(): number | null {
-    // Use remainingMatrix (stock - sold) if available, else fall back to raw stock_matrix
-    const matrix = remainingMatrix || product.stock_matrix
+    const matrix = product.stock_matrix
     if (!matrix || !selectedSize || !selectedColor) return null
     const rawKey = selectedSize.trim() + "_" + selectedColor.trim()
     const matchedKey = Object.keys(matrix).find(
@@ -77,12 +79,23 @@ export default function OrderForm({ product }: { product: Product & { stock_matr
   }
 
   async function handleSubmit() {
-    if (!selectedSize) { setError("Please select a size"); return }
-    if (!selectedColor) { setError("Please select a color"); return }
-    if (isVariantOut) { setError("Sorry, this size/color combination is out of stock"); return }
-    if (!name.trim()) { setError("Please enter your name"); return }
-    if (!phone.trim()) { setError("Please enter your phone number"); return }
-    if (!address.trim()) { setError("Please enter your address"); return }
+    // Validate all fields and show inline errors
+    const errs: Record<string,string> = {}
+    if (!selectedSize) errs.size = "Please select a size"
+    if (!selectedColor) errs.color = "Please select a color"
+    if (isVariantOut) errs.color = "This size/color is out of stock"
+    if (!name.trim()) errs.name = "Please enter your full name"
+    if (!phone.trim()) errs.phone = "Please enter your phone number"
+    else if (!/^(\+?88)?0[1][3-9]\d{8}$/.test(phone.replace(/\s/g, ""))) errs.phone = "Enter a valid Bangladesh phone number (e.g. 01712345678)"
+    if (!address.trim()) errs.address = "Please enter your delivery address"
+    setFieldErrors(errs)
+    if (Object.keys(errs).length > 0) {
+      // Scroll to first error
+      const firstField = Object.keys(errs)[0]
+      const el = document.getElementById("field-" + firstField)
+      el?.scrollIntoView({ behavior: "smooth", block: "center" })
+      return
+    }
     setLoading(true)
     setError("")
     try {
@@ -136,11 +149,12 @@ export default function OrderForm({ product }: { product: Product & { stock_matr
           <p style={{ fontSize: "0.75rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase" }}>Size {selectedSize && "— " + selectedSize}</p>
           <a href="/size-guide" style={{ fontSize: "0.75rem", color: "#999", textDecoration: "underline" }}>Size Guide</a>
         </div>
-        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+        <div id="field-size" style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
           {product.sizes.map(size => (
-            <button key={size} onClick={() => setSelectedSize(size)} style={{ width: "52px", height: "52px", border: selectedSize === size ? "2px solid black" : "1px solid #e0e0e0", backgroundColor: selectedSize === size ? "black" : "white", color: selectedSize === size ? "white" : "black", fontWeight: 700, fontSize: "0.8rem", cursor: "pointer" }}>{size}</button>
+            <button key={size} onClick={() => { setSelectedSize(size); clearFieldError("size") }} style={{ width: "52px", height: "52px", border: selectedSize === size ? "2px solid black" : "1px solid #e0e0e0", backgroundColor: selectedSize === size ? "black" : "white", color: selectedSize === size ? "white" : "black", fontWeight: 700, fontSize: "0.8rem", cursor: "pointer" }}>{size}</button>
           ))}
         </div>
+        {fieldErrors.size && <p style={{ color:"#ef4444", fontSize:"0.75rem", marginTop:"0.4rem", fontWeight:600 }}>⚠️ {fieldErrors.size}</p>}
       </div>
 
       {/* Color */}
@@ -148,9 +162,10 @@ export default function OrderForm({ product }: { product: Product & { stock_matr
         <p style={{ fontSize: "0.75rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "0.75rem" }}>Color {selectedColor && "— " + selectedColor}</p>
         <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
           {product.colors.map(color => (
-            <button key={color} onClick={() => setSelectedColor(color)} style={{ padding: "0.5rem 1.25rem", border: selectedColor === color ? "2px solid black" : "1px solid #e0e0e0", backgroundColor: selectedColor === color ? "black" : "white", color: selectedColor === color ? "white" : "black", fontWeight: 600, fontSize: "0.8rem", cursor: "pointer" }}>{color}</button>
+            <button key={color} onClick={() => { setSelectedColor(color); clearFieldError("color") }} style={{ padding: "0.5rem 1.25rem", border: selectedColor === color ? "2px solid black" : "1px solid #e0e0e0", backgroundColor: selectedColor === color ? "black" : "white", color: selectedColor === color ? "white" : "black", fontWeight: 600, fontSize: "0.8rem", cursor: "pointer" }}>{color}</button>
           ))}
         </div>
+        {fieldErrors.color && <p style={{ color:"#ef4444", fontSize:"0.75rem", marginTop:"0.4rem", fontWeight:600 }}>⚠️ {fieldErrors.color}</p>}
       </div>
 
       {/* Stock badge — shows after both selected */}
@@ -232,6 +247,15 @@ export default function OrderForm({ product }: { product: Product & { stock_matr
         </button>
       </div>
 
+      {/* Validation error — visible right below buttons */}
+      {error && (
+        <div style={{ display:"flex", alignItems:"center", gap:"0.5rem", padding:"0.65rem 0.875rem", backgroundColor:"#fff0f0", border:"1px solid #fca5a5", borderRadius:"8px", marginTop:"0.5rem", animation:"shake 0.3s ease" }}>
+          <span style={{ fontSize:"1rem", flexShrink:0 }}>⚠️</span>
+          <span style={{ fontSize:"0.82rem", color:"#dc2626", fontWeight:600 }}>{error}</span>
+        </div>
+      )}
+      <style>{`@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-4px)}40%,80%{transform:translateX(4px)}}`}</style>
+
       {/* Divider */}
       <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1.5rem" }}>
         <div style={{ flex: 1, height: "1px", backgroundColor: "#e0e0e0" }} />
@@ -244,22 +268,40 @@ export default function OrderForm({ product }: { product: Product & { stock_matr
         <p style={{ fontSize: "0.75rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "1rem", color: "#999" }}>Delivery Information</p>
         <div style={{ marginBottom: "1rem" }}>
           <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, marginBottom: "0.4rem", textTransform: "uppercase" }}>Full Name *</label>
-          <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Your full name" style={{ width: "100%", border: "1px solid #e0e0e0", padding: "0.75rem 1rem", fontSize: "0.95rem", outline: "none", boxSizing: "border-box" as const }} />
+          <input type="text" id="field-name" value={name} onChange={e => { setName(e.target.value); clearFieldError("name") }} placeholder="Your full name" style={{ width: "100%", border: fieldErrors.name ? "1.5px solid #ef4444" : "1px solid #e0e0e0", padding: "0.75rem 1rem", fontSize: "0.95rem", outline: "none", boxSizing: "border-box" as const }} />
+          {fieldErrors.name && <p style={{ color:"#ef4444", fontSize:"0.75rem", marginTop:"0.3rem", fontWeight:600 }}>⚠️ {fieldErrors.name}</p>}
         </div>
         <div style={{ marginBottom: "1rem" }}>
           <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, marginBottom: "0.4rem", textTransform: "uppercase" }}>Phone Number *</label>
           <input type="tel" value={phone}
-            onChange={e => { setPhone(e.target.value); setDiscountChecked(false); setIsFlex100(false) }}
-            onBlur={async e => {
-              const ph = e.target.value.trim()
-              if (!ph) return
-              const supabase = createClient()
-              const { data } = await supabase.from("customers").select("flex100, name").eq("phone", ph).single()
-              setIsFlex100(data?.flex100 === true)
-              setDiscountChecked(true)
-              if (data?.name && !name) setName(data.name)
+            onChange={e => {
+              const v = e.target.value.replace(/[^0-9+]/g, "")
+              setPhone(v)
+              setDiscountChecked(false)
+              setIsFlex100(false)
+              // Debounced lookup when phone reaches valid length
+              if (lookupTimer.current) clearTimeout(lookupTimer.current)
+              if (v.replace(/\D/g,"").length >= 11) {
+                lookupTimer.current = setTimeout(async () => {
+                  const supabase = createClient()
+                  const ph = v.trim()
+                  // Try exact match first, then with/without country code
+                  const local = ph.startsWith("0") ? ph : "0" + ph.slice(-10)
+                  const { data } = await supabase.from("customers")
+                    .select("flex100, name").eq("phone", local).single()
+                  if (data) {
+                    setIsFlex100(data.flex100 === true)
+                    setDiscountChecked(true)
+                    if (data.name) setName(data.name) // Always use DB name
+                  } else {
+                    setIsFlex100(false)
+                    setDiscountChecked(false)
+                  }
+                }, 600)
+              }
             }}
-            placeholder="01XXXXXXXXX" style={{ width: "100%", border: "1px solid #e0e0e0", padding: "0.75rem 1rem", fontSize: "0.95rem", outline: "none", boxSizing: "border-box" as const }} />
+            placeholder="01XXXXXXXXX" style={{ width: "100%", border: fieldErrors.phone ? "1.5px solid #ef4444" : "1px solid #e0e0e0", padding: "0.75rem 1rem", fontSize: "0.95rem", outline: "none", boxSizing: "border-box" as const }} id="field-phone" />
+          {fieldErrors.phone && <p style={{ color:"#ef4444", fontSize:"0.75rem", marginTop:"0.3rem", fontWeight:600 }}>⚠️ {fieldErrors.phone}</p>}
           {discountChecked && isFlex100 && (
             <div style={{ backgroundColor: "#fef3c7", border: "1px solid #fbbf24", padding: "0.75rem 0.875rem", marginTop: "0.5rem" }}>
               <p style={{ fontSize: "0.85rem", color: "#92400e", fontWeight: 900, marginBottom: "0.2rem" }}>🥇 Welcome back{name ? ", " + name : ""}!</p>
@@ -269,7 +311,8 @@ export default function OrderForm({ product }: { product: Product & { stock_matr
         </div>
         <div style={{ marginBottom: "1rem" }}>
           <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, marginBottom: "0.4rem", textTransform: "uppercase" }}>Delivery Address *</label>
-          <textarea value={address} onChange={e => setAddress(e.target.value)} placeholder="House/Flat, Road, Area, District" rows={3} style={{ width: "100%", border: "1px solid #e0e0e0", padding: "0.75rem 1rem", fontSize: "0.95rem", outline: "none", resize: "vertical" as const, boxSizing: "border-box" as const, fontFamily: "inherit" }} />
+          <textarea id="field-address" value={address} onChange={e => { setAddress(e.target.value); clearFieldError("address") }} placeholder="House/Flat, Road, Area, District" rows={3} style={{ width: "100%", border: fieldErrors.address ? "1.5px solid #ef4444" : "1px solid #e0e0e0", padding: "0.75rem 1rem", fontSize: "0.95rem", outline: "none", resize: "vertical" as const, boxSizing: "border-box" as const, fontFamily: "inherit" }} />
+          {fieldErrors.address && <p style={{ color:"#ef4444", fontSize:"0.75rem", marginTop:"0.3rem", fontWeight:600 }}>⚠️ {fieldErrors.address}</p>}
         </div>
         <div style={{ marginBottom: "1.5rem" }}>
           <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, marginBottom: "0.4rem", textTransform: "uppercase" }}>Notes (Optional)</label>
@@ -277,14 +320,13 @@ export default function OrderForm({ product }: { product: Product & { stock_matr
         </div>
       </div>
 
-      {error && <div style={{ backgroundColor: "#fff0f0", border: "1px solid #ffcccc", padding: "0.75rem 1rem", marginBottom: "1rem", fontSize: "0.875rem", color: "#cc0000" }}>{error}</div>}
+
 
       <div style={{ backgroundColor: "#f5f5f5", padding: "1rem", marginBottom: "1.5rem", display: "flex", gap: "0.75rem", alignItems: "flex-start" }}>
         <span style={{ fontSize: "1.25rem", flexShrink: 0 }}>🚚</span>
         <div>
           <p style={{ fontWeight: 700, fontSize: "0.875rem", marginBottom: "0.2rem" }}>Cash on Delivery</p>
           <p style={{ fontSize: "0.8rem", color: "#666", lineHeight: 1.5 }}>Pay when your order arrives. No advance payment needed.</p>
-          <a href="/delivery" style={{ fontSize: "0.78rem", color: "#111", fontWeight: 700, textDecoration: "underline" }}>View delivery charges & times →</a>
         </div>
       </div>
 

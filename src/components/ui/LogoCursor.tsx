@@ -4,10 +4,12 @@ import { createPortal } from "react-dom"
 
 export default function LogoCursor() {
   const [pos, setPos] = useState({ x: -200, y: -200 })
+  const lastPos = useRef({ x: -200, y: -200 })
   const [visible, setVisible] = useState(false)
   const [scrollbarHeld, setScrollbarHeld] = useState(false)
   const [clicked, setClicked] = useState(false)
   const [rapidClick, setRapidClick] = useState(false)
+  const [hovering, setHovering] = useState(false)
   const [particles, setParticles] = useState<{ id: number; x: number; y: number; dx: number; dy: number }[]>([])
   const [mounted, setMounted] = useState(false)
   const clickCount = useRef(0)
@@ -18,15 +20,45 @@ export default function LogoCursor() {
   useEffect(() => { setMounted(true) }, [])
 
   // Small resting, big on click
-  const size = rapidClick ? 48 : clicked ? 42 : 20
+  const size = rapidClick ? 48 : clicked ? 42 : hovering ? 34 : 20
 
   useEffect(() => {
     function isScrollbarClick(e: MouseEvent) {
       return e.clientX >= document.documentElement.clientWidth
     }
+    function isInteractive(el: Element | null): boolean {
+      if (!el) return false
+      const tag = el.tagName.toLowerCase()
+      if (['a','button','input','select','textarea','label'].includes(tag)) return true
+      const style = window.getComputedStyle(el)
+      if (style.cursor === 'pointer') return true
+      if ((el as HTMLElement).getAttribute('role') === 'button') return true
+      // Check if any ancestor within 4 levels is clickable (catches img inside <a>)
+      let parent = el.parentElement
+      for (let i = 0; i < 4 && parent; i++) {
+        const pt = parent.tagName.toLowerCase()
+        if (['a','button'].includes(pt)) return true
+        if (window.getComputedStyle(parent).cursor === 'pointer') return true
+        parent = parent.parentElement
+      }
+      return false
+    }
+    function onPointerMove(e: PointerEvent) {
+      // Update cursor position even during scrollbar drag
+      setPos({ x: e.clientX, y: e.clientY })
+    }
     function onMove(e: MouseEvent) {
+      lastPos.current = { x: e.clientX, y: e.clientY }
       setPos({ x: e.clientX, y: e.clientY })
       if (!isScrollbarClick(e) && !scrollbarHeld) setVisible(true)
+      const el = document.elementFromPoint(e.clientX, e.clientY)
+      setHovering(isInteractive(el) || isInteractive(el?.parentElement || null))
+    }
+    function onScroll() {
+      const { x, y } = lastPos.current
+      if (x < 0) return
+      const el = document.elementFromPoint(x, y)
+      setHovering(isInteractive(el) || isInteractive(el?.parentElement || null))
     }
     function onDown(e: MouseEvent) {
       if (isScrollbarClick(e)) { setScrollbarHeld(true); setVisible(false); return }
@@ -63,12 +95,16 @@ export default function LogoCursor() {
     function onEnter() { setVisible(true) }
 
     window.addEventListener("mousemove", onMove, { passive: true })
+    window.addEventListener("pointermove", onPointerMove, { passive: true })
+    window.addEventListener("scroll", onScroll, { passive: true, capture: true })
     window.addEventListener("mousedown", onDown, { passive: true })
     window.addEventListener("mouseup", onUp, { passive: true })
     document.documentElement.addEventListener("mouseleave", onLeave)
     document.documentElement.addEventListener("mouseenter", onEnter)
     return () => {
       window.removeEventListener("mousemove", onMove)
+      window.removeEventListener("pointermove", onPointerMove)
+      window.removeEventListener("scroll", onScroll, { capture: true } as any)
       window.removeEventListener("mousedown", onDown)
       window.removeEventListener("mouseup", onUp)
       document.documentElement.removeEventListener("mouseleave", onLeave)
@@ -80,6 +116,8 @@ export default function LogoCursor() {
 
   const css = `
     *, *::before, *::after { cursor: none !important; }
+    ::-webkit-scrollbar-thumb { cursor: grab !important; }
+    ::-webkit-scrollbar-thumb:active { cursor: grabbing !important; }
 
     @keyframes logoClick {
       0%   { transform: translate(-50%, -50%) scale(1); }
@@ -173,7 +211,7 @@ export default function LogoCursor() {
             width: size + "px",
             height: size + "px",
             objectFit: "contain",
-            filter: "invert(1) drop-shadow(0 0 2px rgba(0,0,0,0.8))",
+            filter: hovering ? "invert(1) sepia(1) saturate(10) hue-rotate(160deg) drop-shadow(0 0 8px #00eaff) brightness(1.3)" : "invert(1) drop-shadow(0 0 2px rgba(0,0,0,0.8))",
             display: "block",
             transition: "width 0.15s ease, height 0.15s ease",
           }}

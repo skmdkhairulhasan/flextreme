@@ -22,7 +22,7 @@ const INTENTS = {
   workout: ["workout","exercise","training","gym plan","routine","program","lifting","weights","cardio","push pull","ppl","upper lower","split","sets reps","gym routine","fitness plan","training plan","exercise plan","how to train","train me","my routine","build routine"],
   supplement: ["supplement","protein powder","whey","creatine","pre workout","preworkout","bcaa","vitamin","what to take","supp","supps","what supplement","protein shake","mass gainer","fat burner","what pills"],
   gymwear: ["what to wear","gym wear","gym gear","gym clothes","gym outfit","workout clothes","outfit","what clothes","dress for gym","gymwear","attire","gym kit","clothing","apparel","what should i wear","wear to gym","gym dress","active wear","activewear","sportswear"],
-  size: ["size","sizing","what size","which size","size guide","fit me","my size","size for me","size recommendation","chest measurement","waist measurement","hip measurement","what fits","will it fit","size chart","size help","size?","fit?","my width","my length","width is","length is","width cm","length cm","chest is","my chest","my waist","waist is","i am width","width are","measure","shirt width","shirt length","width","length"],
+  size: ["size","sizing","what size","which size","size guide","fit me","my size","size for me","size recommendation","chest measurement","waist measurement","hip measurement","what fits","will it fit","size chart","size help","size?","fit?","my width","my length","width is","length is","width cm","length cm","chest is","my chest","my waist","waist is","i am width","width are","measure","shirt width","shirt length","width","length","inch","inches","in cm","in inch","measurement"],
   motivation: ["motivat","lazy","no motivation","give up","tired","skip","skip workout","hard","difficult","struggle","can't do","cant do","demotivat","no energy","procrastinat","dont want","don't feel like","hate gym","bore","bored gym","quit"],
   injury: ["injur","pain","hurt","knee","my knee","back pain","my back","back injury","shoulder pain","my shoulder","shoulder injury","wrist pain","ankle pain","sprain","strain","ache","pulled muscle","physiotherapy","my wrist","my ankle","i am injured","got injured","injured knee","injured back","injured shoulder","hurt my","hurt knee","hurt back","hurt shoulder","have pain","have injury","i have pain"],
   protein: ["protein","how much protein","protein intake","daily protein","protein goal","protein need","how much protein","protein target"],
@@ -192,9 +192,24 @@ export default function ChatBot({ fullPage = false }: { fullPage?: boolean } = {
   const modeRef = useRef<string | null>(null) // tracks chatbot mode: null | "order_lookup"
   const productsCacheRef = useRef<any[]>([])
   const [, forceUpdate] = useState(0)
-  const [messages, setMessages] = useState<Message[]>([
-    { role: "assistant", content: "Hey! I'm Flex — your AI fitness & shopping assistant.\n\n🚚 Track your order\n🚛 Delivery charges & info\n👕 Browse & shop products\n📏 Size recommendation\n💪 Workout plans\n🥗 Diet charts\n📊 BMI calculator\n💊 Supplements\n\nWhat do you need? 💪" }
-  ])
+  const STORAGE_KEY = "flex_chat_v1"
+  const PROFILE_KEY = "flex_profile_v1"
+
+  const [messages, setMessagesRaw] = useState<Message[]>(() => {
+    if (typeof window === "undefined") return [{ role: "assistant" as const, content: "Hey! I'm Flex — your AI fitness & shopping assistant.\n\n🚚 Track your order\n🚛 Delivery charges & info\n👕 Browse & shop products\n📏 Size recommendation\n💪 Workout plans\n🥗 Diet charts\n📊 BMI calculator\n💊 Supplements\n\nWhat do you need? 💪" }]
+    try {
+      const saved = localStorage.getItem("flex_chat_v1")
+      if (saved) return JSON.parse(saved)
+    } catch {}
+    return [{ role: "assistant" as const, content: "Hey! I'm Flex — your AI fitness & shopping assistant.\n\n🚚 Track your order\n🚛 Delivery charges & info\n👕 Browse & shop products\n📏 Size recommendation\n💪 Workout plans\n🥗 Diet charts\n📊 BMI calculator\n💊 Supplements\n\nWhat do you need? 💪" }]
+  })
+  function setMessages(updater: Message[] | ((prev: Message[]) => Message[])) {
+    setMessagesRaw(prev => {
+      const next = typeof updater === "function" ? updater(prev) : updater
+      try { localStorage.setItem("flex_chat_v1", JSON.stringify(next)) } catch {}
+      return next
+    })
+  }
   const [step, setStep] = useState<string | null>(null)
 
 const [profile] = useState({
@@ -209,7 +224,43 @@ const [profile] = useState({
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  function setProfile(p: Profile) { profileRef.current = p; forceUpdate(n => n + 1) }
+  function setProfile(p: Profile) {
+    profileRef.current = p
+    forceUpdate(n => n + 1)
+    try { localStorage.setItem("flex_profile_v1", JSON.stringify(p)) } catch {}
+  }
+
+  function saveMessages(msgs: Message[]) {
+    try { localStorage.setItem("flex_chat_v1", JSON.stringify(msgs)) } catch {}
+  }
+
+  // Load profile from localStorage
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("flex_profile_v1")
+      if (saved) { profileRef.current = JSON.parse(saved); forceUpdate(n => n + 1) }
+    } catch {}
+  }, [])
+
+  // SYNC: Listen for storage changes from Flex AI page (cross-component sync)
+  useEffect(() => {
+    function onStorage(e: StorageEvent) {
+      if (e.key === "flex_chat_v1" && e.newValue) {
+        try {
+          const msgs = JSON.parse(e.newValue)
+          setMessagesRaw(msgs)
+        } catch {}
+      }
+      if (e.key === "flex_profile_v1" && e.newValue) {
+        try {
+          profileRef.current = JSON.parse(e.newValue)
+          forceUpdate(n => n + 1)
+        } catch {}
+      }
+    }
+    window.addEventListener("storage", onStorage)
+    return () => window.removeEventListener("storage", onStorage)
+  }, [])
 
   useEffect(() => {
     async function load() {
@@ -518,29 +569,44 @@ if (p.step) {
 
     // ── PROFILE UPDATES (must be before greeting/intent matching) ──
     // Religion update — checked first to avoid "i am hindu" matching "hi" greeting
-    const isReligionMsg =
-      (msg.includes("i am muslim") || msg.includes("i am hindu") || msg.includes("i am vegan") || msg.includes("i am vegetarian") ||
-       msg.includes("im muslim") || msg.includes("im hindu") || msg.includes("im vegan") || msg.includes("im vegetarian") ||
-       msg.includes("i'm muslim") || msg.includes("i'm hindu") || msg.includes("i'm vegan") || msg.includes("i'm vegetarian")) ||
+    // Religion words (with typo tolerance)
+    const hasMuslim = /muslim|muslil|muslm|halal|halaal/.test(msg)
+    const hasHindu = /hindu|hindo/.test(msg)
+    const hasVegan = (msg.includes("vegan") || msg.includes("vegen") || msg.includes("vegn")) && !msg.includes("not vegan")
+    const hasVeg = (/vegetarian|vegeterian|veggie|vegiterian|vegetarien/.test(msg)) && !msg.includes("not")
+    const hasReligionWord = hasMuslim || hasHindu || hasVegan || hasVeg ||
       msg.includes("not vegan") || msg.includes("not vegetarian") ||
-      msg.includes("i eat meat") || msg.includes("i eat chicken") || msg.includes("i eat beef") ||
-      (msg.includes("change") && (msg.includes("muslim") || msg.includes("hindu") || msg.includes("vegetarian") || msg.includes("vegan") || msg.includes("halal") || msg.includes("diet")))
+      msg.includes("i eat meat") || msg.includes("i eat chicken") || msg.includes("i eat beef")
+    const wantsDietChange = msg.includes("change") || msg.includes("update") || msg.includes("switch") || 
+      msg.includes("new diet") || msg.includes("different diet") || msg.includes("change the diet")
+    const isReligionMsg = hasReligionWord ||
+      (wantsDietChange && msg.includes("diet"))
     if (isReligionMsg) {
       let newRel = p.religion || "none"
-      if (/muslim|halal/.test(msg)) newRel = "muslim"
-      else if (/hindu/.test(msg)) newRel = "hindu"
-      else if (msg.includes("vegan") && !msg.includes("not vegan") && !msg.includes("vegetarian")) newRel = "vegan"
-      else if (/vegetarian|vegeterian|veggie|vegiterian/.test(msg) && !msg.includes("not")) newRel = "vegetarian"
+      if (hasMuslim) newRel = "muslim"
+      else if (hasHindu) newRel = "hindu"
+      else if (hasVegan) newRel = "vegan"
+      else if (hasVeg) newRel = "vegetarian"
       else if (msg.includes("not vegan") || msg.includes("not vegetarian") || msg.includes("i eat meat") || msg.includes("i eat chicken")) newRel = "none"
       else if (msg.includes("change") && msg.includes("diet") && !newRel) {
         modeRef.current = "change_diet"
         return "What\'s your diet preference? 🥗\n\n1 — Muslim (Halal)\n2 — Hindu (no beef)\n3 — Vegetarian\n4 — Vegan\n5 — None"
       }
-      if (newRel !== (p.religion || "none")) {
-        setProfile({ ...p, religion: newRel })
-        const dn = newRel==="muslim"?"Halal":newRel==="hindu"?"Hindu":newRel==="vegetarian"?"Vegetarian":newRel==="vegan"?"Vegan":"Regular"
-        return "Diet updated to " + dn + "! ✅\nSay \'diet\' for your new plan."
+      const currentRel = p.religion || "none"
+      // If same religion + wants change = user is confused, offer options
+      if (newRel === currentRel && wantsDietChange && newRel !== "none") {
+        const dn = newRel==="muslim"?"Halal (Muslim)":newRel==="hindu"?"Hindu (no beef)":newRel==="vegetarian"?"Vegetarian":newRel==="vegan"?"Vegan":"Regular"
+        modeRef.current = "change_diet"
+        return "You\'re already on **" + dn + "** diet. Want to switch?\n\n1 — Muslim (Halal)\n2 — Hindu (no beef)\n3 — Vegetarian\n4 — Vegan\n5 — None"
       }
+      // Update and immediately show new plan
+      const updatedProfile = { ...p, religion: newRel }
+      setProfile(updatedProfile)
+      if (updatedProfile.height && updatedProfile.weight) {
+        return getDietPlan(updatedProfile, calcTDEE(updatedProfile.weight!, updatedProfile.height!, updatedProfile.age!, updatedProfile.gender!, updatedProfile.activity!))
+      }
+      const dn = newRel==="muslim"?"Halal":newRel==="hindu"?"Hindu":newRel==="vegetarian"?"Vegetarian":newRel==="vegan"?"Vegan":"Regular"
+      return "Diet updated to " + dn + "! ✅\nSay \'diet\' for your personalized plan."
     }
     if (modeRef.current === "change_diet") {
       const dietMap: Record<string,string> = {"1":"muslim","2":"hindu","3":"vegetarian","4":"vegan","5":"none"}
@@ -553,7 +619,11 @@ if (p.step) {
         modeRef.current = null
         setProfile({ ...p, religion: chosen })
         const dn2 = chosen==="muslim"?"Halal":chosen==="hindu"?"Hindu":chosen==="vegetarian"?"Vegetarian":chosen==="vegan"?"Vegan":"Regular"
-        return "Diet updated to " + dn2 + "! ✅\nSay \'diet\' for your new plan."
+        const updatedP2 = { ...p, religion: chosen }
+        if (updatedP2.height && updatedP2.weight) {
+          return getDietPlan(updatedP2, calcTDEE(updatedP2.weight!, updatedP2.height!, updatedP2.age!, updatedP2.gender!, updatedP2.activity!))
+        }
+        return "Diet updated to " + dn2 + "! ✅\nSay \'diet\' for your personalized plan."
       }
       return "Choose 1-5:\n1 — Muslim\n2 — Hindu\n3 — Vegetarian\n4 — Vegan\n5 — None"
     }
@@ -641,7 +711,7 @@ if (
       (msg.includes("shoulder") && (msg.includes("injury") || msg.includes("pain") || msg.includes("hurt") || modeRef.current === "injury")) ||
       msg.includes("i am injured") || msg.includes("got injured") || msg.includes("hurt my"))
     if (isInjuryMsg) {
-      const area = msg.includes("knee") ? "knee" : msg.includes("back") ? "back" : msg.includes("shoulder") ? "shoulder" : msg.includes("wrist") ? "wrist" : msg.includes("ankle") ? "ankle" : null
+      const area = (msg.includes("knee") || msg.includes("kne") || msg.includes("nee")) ? "knee" : (msg.includes("back") || msg.includes("bak") || msg.includes("spine")) ? "back" : (msg.includes("shoulder") || msg.includes("shoul")) ? "shoulder" : (msg.includes("wrist") || msg.includes("writ")) ? "wrist" : (msg.includes("ankle") || msg.includes("ankl")) ? "ankle" : null
       if (area === "knee") return "Knee injury — avoid squats, lunges, leg press for now.\n\nSafe alternatives:\n→ Upper body focus (chest, back, arms)\n→ Swimming or cycling (low impact)\n→ Seated leg extensions (light weight only)\n→ Hip thrusts (no knee stress)\n\nIce 15min after training. See a physio if pain is sharp."
       if (area === "back") return "Back injury — no deadlifts, no heavy squats, no rowing.\n\nSafe alternatives:\n→ Chest, arms, shoulders (seated/lying)\n→ Light walking\n→ Gentle stretching (cat-cow, child's pose)\n→ Core bracing exercises (not crunches)\n\nDon't push through back pain — it can get serious. See a physio."
       if (area === "shoulder") return "Shoulder injury — avoid overhead press, lateral raises, bench press.\n\nSafe alternatives:\n→ Legs, core, cardio\n→ Resistance band external rotations\n→ Light cable face pulls (if painless)\n\nRest, ice, physio. Shoulder injuries get worse if ignored."
@@ -804,11 +874,18 @@ if (
 
       // User gave a width/chest measurement
       if (gavWidth && nums.length > 0 && widthCol) {
-        const userWidth = nums[0]
-        const fullChest = Math.round(userWidth * 2)
+        let userWidth = nums[0]
+        // If they say "full chest" or "chest circumference", it's full chest - divide by 2 for shirt width
+        const isFullChest = msg.includes("full chest") || msg.includes("chest circumference") || msg.includes("chest is") || msg.includes("chest size")
+        // Convert inches to cm if needed
+        const isInch = msg.includes("inch") || msg.includes('"') || msg.includes(" in ")
+        if (isInch) userWidth = Math.round(userWidth * 2.54)
+        if (isFullChest) userWidth = Math.round(userWidth / 2)
+        const fullChest = isFullChest ? nums[0] : Math.round(userWidth * 2)
         const { row: exactRow, index: exactIdx } = findSize(widthCol.id, userWidth, false)
         const specs = (r: any) => table.columns.map((c: any) => c.name + " " + (r.values?.[c.id] || "—") + unit).join(" | ")
-        let reply = "Shirt width " + userWidth + unit + " → Full chest ~" + fullChest + unit + "\n\n"
+        const displayInput = isFullChest ? ("Full chest " + (isInch ? nums[0]+"in" : nums[0]+"cm")) : ("Shirt width " + userWidth + unit + " → Full chest ~" + fullChest + unit)
+        let reply = displayInput + "\n\n"
         if (isCompression) {
           // For compression: recommend 3-5cm smaller (skin-tight fit)
           // Find size where width is 3-5cm less than user measurement
@@ -1258,51 +1335,30 @@ if (
   }
 
   async function sendMessage(text?: string) {
-
   const userMsg = (text ?? input).trim()
-   if (userMsg.toLowerCase().includes("talk to human")) {
-  window.open("https://wa.me/8801935962421?text=Hi%20Flextreme!", "_blank")
-  return
-}
+  if (userMsg.toLowerCase().includes("talk to human")) {
+    window.open("https://wa.me/8801935962421?text=Hi%20Flextreme!", "_blank")
+    return
+  }
   if (!userMsg || loading) return
-
   setInput("")
-
-  setMessages(prev => [
-    ...prev,
-    { role: "user", content: userMsg }
-  ])
-
+  setMessages(prev => [...prev, { role: "user", content: userMsg }])
   setLoading(true)
 
+  // Use client-side getReply - the original perfect brain
   setTimeout(async () => {
-
     let reply = getReply(userMsg)
-
-    // Phone lookup is async — getReply returns sentinel and handles its own async + setLoading
     if (reply === "__ASYNC__") return
-
-    // Auto-corrected phone number
     if (reply.startsWith("__PHONE_LOOKUP__:")) {
       const fixedPhone = reply.replace("__PHONE_LOOKUP__:", "")
       modeRef.current = "order_lookup"
-      // Recurse with fixed number
       const fixedReply = getReply(fixedPhone)
       if (fixedReply === "__ASYNC__") return
       reply = fixedReply
     }
-
-    // NLP handles intent classification
-
-    setMessages(prev => [
-      ...prev,
-      { role: "assistant", content: reply }
-    ])
-
+    setMessages(prev => [...prev, { role: "assistant", content: reply }])
     setLoading(false)
-
   }, 300 + Math.random() * 200)
-
 }
 
   const quick = [
@@ -1366,15 +1422,20 @@ return (
         .ctoggle:hover{transform:scale(1.08)!important;transition:transform 0.2s!important;}
         .qbtn:hover{background:#f0f0f0!important;}
         .cinput:focus{outline:none;border-color:#aaa!important;}
-        .msgs::-webkit-scrollbar{width:4px}
-        .msgs::-webkit-scrollbar-thumb{background:#e0e0e0;border-radius:4px}
+        .msgs::-webkit-scrollbar{width:8px}
+        .msgs::-webkit-scrollbar-track{background:#f5f5f5}
+        .msgs::-webkit-scrollbar-thumb{background:#ccc;border-radius:4px}
+        .msgs::-webkit-scrollbar-thumb:hover{background:#999}
+        .cwin::-webkit-scrollbar{width:8px}
+        .cwin::-webkit-scrollbar-track{background:#f5f5f5}
+        .cwin::-webkit-scrollbar-thumb{background:#ccc;border-radius:4px}
       `}}/>
 
       {(open || fullPage) && (
         <div className="cwin" data-chatbox="true" style={fullPage ? {display:"flex",flexDirection:"column",flex:1,height:"100%",minHeight:0,width:"100%",backgroundColor:"#0a0a0a",border:"none",boxShadow:"none",zIndex:10,overflow:"hidden"} : {position:"fixed",bottom:"1.5rem",right:"2rem",width:"340px",height:"540px",backgroundColor:"white",border:"1px solid #e0e0e0",boxShadow:"0 20px 60px rgba(0,0,0,0.2)",zIndex:9998,display:"flex",flexDirection:"column",overflow:"hidden"}}>
-          <div style={{background:fullPage?"#111":"black",padding:"0.875rem 1rem",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0,borderBottom:fullPage?"1px solid rgba(255,255,255,0.08)":"none"}}>
+          <div style={{background:fullPage?"#111":"black",padding:"0.875rem 1rem",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0,borderBottom:fullPage?"1px solid rgba(255,255,255,0.08)":"none",overflow:"visible",position:"relative",zIndex:2}}>
             <div style={{display:"flex",alignItems:"center",gap:"0.65rem"}}>
-              <div style={{position:"relative",width:"50px"}}>
+              <div style={{position:"relative",width:"50px",overflow:"visible"}}>
 
 <style dangerouslySetInnerHTML={{__html:`
 
@@ -1388,6 +1449,25 @@ position:absolute;
 top:-32px;
 left:-6px;
 animation:robotFloat 2.5s ease-in-out infinite;
+}
+
+@keyframes robotGlowH{
+0%,100%{filter:drop-shadow(0 0 4px #00eaff)}
+50%{filter:drop-shadow(0 0 14px #00eaff)}
+}
+
+@keyframes robotBlinkH{
+0%,92%,100%{transform:scaleY(1)}
+95%{transform:scaleY(.1)}
+}
+
+.robotGlow{
+animation:robotGlowH 2.4s ease-in-out infinite;
+}
+
+.robotEye{
+animation:robotBlinkH 4s infinite;
+transform-origin:center;
 }
 
 `}}/>
@@ -1442,8 +1522,8 @@ strokeLinecap="round"
             {messages.map((msg,i)=>(
               <div key={i} className="cmsg" style={{display:"flex",justifyContent:msg.role==="user"?"flex-end":"flex-start",alignItems:"flex-end",gap:"0.35rem"}}>
                 {msg.role==="assistant"&&(
-                  <div style={{width:"26px",height:"26px",backgroundColor:"black",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-                    <img src="/logo-transparent.png" alt="" style={{width:"15px",height:"15px",objectFit:"contain",filter:"invert(1)"}}/>
+                  <div style={{width:"26px",height:"26px",backgroundColor:"black",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,overflow:"visible"}}>
+                    <svg width="16" height="18" viewBox="0 0 120 120" className="robotGlow"><rect x="25" y="15" width="70" height="45" rx="12" fill="#0b1625"/><g className="robotEye"><circle cx="50" cy="38" r="6" fill="#00eaff"/><circle cx="70" cy="38" r="6" fill="#00eaff"/></g><path d="M48 48 Q60 56 72 48" stroke="#00eaff" strokeWidth="2" strokeLinecap="round" fill="none"/><rect x="40" y="65" width="40" height="22" rx="6" fill="#dce2ee"/><rect x="45" y="88" width="8" height="10" rx="2" fill="#c8d0de"/><rect x="67" y="88" width="8" height="10" rx="2" fill="#c8d0de"/><rect x="20" y="68" width="15" height="7" rx="3" fill="#a8b4c4"/><rect x="85" y="68" width="15" height="7" rx="3" fill="#a8b4c4"/></svg>
                   </div>
                 )}
                 <div style={{maxWidth:"83%",padding:"0.55rem 0.85rem",fontSize:"0.81rem",lineHeight:1.6,whiteSpace:"pre-line",borderRadius:msg.role==="user"?"16px 16px 4px 16px":"16px 16px 16px 4px",backgroundColor:msg.role==="user"?(fullPage?"white":"black"):(fullPage?"#1a1a1a":"#f0f0f0"),color:msg.role==="user"?(fullPage?"black":"white"):(fullPage?"white":"#1a1a1a")}}>
@@ -1457,8 +1537,8 @@ strokeLinecap="round"
             ))}
             {loading&&(
               <div className="cmsg" style={{display:"flex",alignItems:"flex-end",gap:"0.35rem"}}>
-                <div style={{width:"26px",height:"26px",backgroundColor:"black",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-                  <img src="/logo-transparent.png" alt="" style={{width:"15px",height:"15px",objectFit:"contain",filter:"invert(1)"}}/>
+                <div style={{width:"26px",height:"26px",backgroundColor:"black",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,overflow:"visible"}}>
+                  <svg width="16" height="18" viewBox="0 0 120 120" className="robotGlow"><rect x="25" y="15" width="70" height="45" rx="12" fill="#0b1625"/><g className="robotEye"><circle cx="50" cy="38" r="6" fill="#00eaff"/><circle cx="70" cy="38" r="6" fill="#00eaff"/></g><path d="M48 48 Q60 56 72 48" stroke="#00eaff" strokeWidth="2" strokeLinecap="round" fill="none"/><rect x="40" y="65" width="40" height="22" rx="6" fill="#dce2ee"/><rect x="45" y="88" width="8" height="10" rx="2" fill="#c8d0de"/><rect x="67" y="88" width="8" height="10" rx="2" fill="#c8d0de"/><rect x="20" y="68" width="15" height="7" rx="3" fill="#a8b4c4"/><rect x="85" y="68" width="15" height="7" rx="3" fill="#a8b4c4"/></svg>
                 </div>
                 <div style={{backgroundColor:"#f0f0f0",padding:"0.65rem 0.875rem",borderRadius:"16px 16px 16px 4px",display:"flex",gap:"0.3rem",alignItems:"center"}}>
                   <div className="d1" style={{width:"6px",height:"6px",borderRadius:"50%",backgroundColor:"#999"}}/>
@@ -1614,8 +1694,8 @@ animation:eyePulse 1.2s infinite;
 
 `}}/>
 
-{/* ROBOT — hidden when open */}
-<div className="robotWrap" style={{display:open?"none":"block"}}>
+{/* ROBOT */}
+<div className="robotWrap">
 
 <svg
 className={`robotGlow ${loading ? "robotTalking" : ""}`}
@@ -1657,11 +1737,15 @@ strokeLinecap="round"
 
 </div>
 
-{/* X icon when open only - robot shows when closed */}
-{open && (
-<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.8)" strokeWidth="2.5">
+{/* CIRCLE ICON */}
+{open ? (
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
 <line x1="18" y1="6" x2="6" y2="18"/>
 <line x1="6" y1="6" x2="18" y2="18"/>
+</svg>
+) : (
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2">
+<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
 </svg>
 )}
 

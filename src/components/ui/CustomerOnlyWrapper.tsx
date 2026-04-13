@@ -18,6 +18,7 @@ export default function CustomerOnlyWrapper({ children }: { children: React.Reac
     <CartProvider>
       <Suspense fallback={null}><FacebookPixelPageView /></Suspense>
       {children}
+      <CartDrawer />
     </CartProvider>
   )
 

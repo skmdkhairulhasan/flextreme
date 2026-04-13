@@ -4,10 +4,12 @@ import { createPortal } from "react-dom"
 
 export default function DumbbellCursorOnly() {
   const [pos, setPos] = useState({ x: -200, y: -200 })
+  const lastClientPos = useRef({ x: -200, y: -200 })
   const [visible, setVisible] = useState(false)
   const [scrollbarHeld, setScrollbarHeld] = useState(false)
   const [clicked, setClicked] = useState(false)
   const [rapidClick, setRapidClick] = useState(false)
+  const [hovering, setHovering] = useState(false)
   const [particles, setParticles] = useState<{ id: number; x: number; y: number; dx: number; dy: number }[]>([])
   const [mounted, setMounted] = useState(false)
   const clickCount = useRef(0)
@@ -18,7 +20,7 @@ export default function DumbbellCursorOnly() {
   useEffect(() => { setMounted(true) }, [])
 
   // Tweak these 3 numbers to change size
-  const size = rapidClick ? 48 : clicked ? 42 : 32
+  const size = rapidClick ? 48 : clicked ? 42 : hovering ? 38 : 32
 
   // ── TILT SETTINGS ──
   // Change TILT_DEG to adjust the angle (e.g. 30, 45, -20)
@@ -32,9 +34,40 @@ export default function DumbbellCursorOnly() {
     function isScrollbarClick(e: MouseEvent) {
       return e.clientX >= document.documentElement.clientWidth
     }
+    function isInteractive(el: Element | null): boolean {
+      if (!el) return false
+      const tag = el.tagName.toLowerCase()
+      if (['a','button','input','select','textarea','label'].includes(tag)) return true
+      if ((el as HTMLElement).onclick) return true
+      const style = window.getComputedStyle(el)
+      if (style.cursor === 'pointer') return true
+      if ((el as HTMLElement).getAttribute('role') === 'button') return true
+      // Walk up 4 levels to catch img inside <a>, div inside <button> etc
+      let p = el.parentElement
+      for (let i = 0; i < 4 && p; i++) {
+        if (['a','button'].includes(p.tagName.toLowerCase())) return true
+        if (window.getComputedStyle(p).cursor === 'pointer') return true
+        p = p.parentElement
+      }
+      return false
+    }
+    function onPointerMove(e: PointerEvent) {
+      // Update cursor position even during scrollbar drag
+      setPos({ x: e.clientX, y: e.clientY })
+    }
     function onMove(e: MouseEvent) {
+      lastClientPos.current = { x: e.clientX, y: e.clientY }
       setPos({ x: e.clientX, y: e.clientY })
       if (!isScrollbarClick(e) && !scrollbarHeld) setVisible(true)
+      const el = document.elementFromPoint(e.clientX, e.clientY)
+      setHovering(isInteractive(el) || isInteractive(el?.parentElement || null))
+    }
+    // During scroll: update hover state since element under cursor may change
+    function onScroll() {
+      const { x, y } = lastClientPos.current
+      if (x < 0) return
+      const el = document.elementFromPoint(x, y)
+      setHovering(isInteractive(el) || isInteractive(el?.parentElement || null))
     }
     function onDown(e: MouseEvent) {
       if (isScrollbarClick(e)) { setScrollbarHeld(true); setVisible(false); return }
@@ -71,14 +104,18 @@ export default function DumbbellCursorOnly() {
     function onEnter() { setVisible(true) }
 
     window.addEventListener("mousemove", onMove, { passive: true })
+    window.addEventListener("pointermove", onPointerMove, { passive: true })
     window.addEventListener("mousedown", onDown, { passive: true })
     window.addEventListener("mouseup", onUp, { passive: true })
+    window.addEventListener("scroll", onScroll, { passive: true, capture: true })
     document.documentElement.addEventListener("mouseleave", onLeave)
     document.documentElement.addEventListener("mouseenter", onEnter)
     return () => {
       window.removeEventListener("mousemove", onMove)
+      window.removeEventListener("pointermove", onPointerMove)
       window.removeEventListener("mousedown", onDown)
       window.removeEventListener("mouseup", onUp)
+      window.removeEventListener("scroll", onScroll, { capture: true } as any)
       document.documentElement.removeEventListener("mouseleave", onLeave)
       document.documentElement.removeEventListener("mouseenter", onEnter)
       if (clickTimer.current) clearTimeout(clickTimer.current)
@@ -92,6 +129,8 @@ export default function DumbbellCursorOnly() {
 
   const css = `
     *, *::before, *::after { cursor: none !important; }
+    ::-webkit-scrollbar-thumb { cursor: grab !important; }
+    ::-webkit-scrollbar-thumb:active { cursor: grabbing !important; }
 
     @keyframes dbClick {
       0%   { transform: ${t} scale(1); }
@@ -124,6 +163,7 @@ export default function DumbbellCursorOnly() {
       transition: opacity 0.08s;
     }
     .db-cur.clicking { animation: dbClick 0.3s cubic-bezier(0.36,0.07,0.19,0.97) forwards; }
+    .db-cur.hovering { filter: drop-shadow(0 0 10px #00eaff) drop-shadow(0 0 20px #00eaff) !important; }
     .db-cur.raging   { animation: dbRage 0.25s ease-in-out infinite; }
 
     .db-particle {
@@ -174,7 +214,7 @@ export default function DumbbellCursorOnly() {
       ))}
 
       <div
-        className={"db-cur " + (rapidClick ? "raging" : clicked ? "clicking" : "")}
+        className={"db-cur " + (rapidClick ? "raging" : clicked ? "clicking" : hovering ? "hovering" : "")}
         style={{ left: pos.x, top: pos.y, opacity: visible ? 1 : 0 }}
       >
         <svg width={size} height={size} viewBox="0 0 48 48" style={{ display: "block", transition: "width 0.15s ease, height 0.15s ease", filter: "drop-shadow(0 0 2px rgba(0,0,0,0.8))" }}>

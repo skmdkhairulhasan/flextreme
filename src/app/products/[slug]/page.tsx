@@ -105,7 +105,7 @@ const remainingStock = Object.values(matrix).reduce(
                 ))}
               </div>
             </div>
-            <OrderForm product={p} />
+            <OrderForm product={{ ...p, stock_matrix: matrix }} />
             <ReviewForm productId={p.id} productName={p.name} />
           </div>
         </div>
