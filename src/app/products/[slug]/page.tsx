@@ -12,6 +12,31 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const { data: product } = await supabase.from("products").select("*").eq("slug", slug).single()
   if (!product) notFound()
   const p = product as Product
+
+  // Fetch sold orders to compute remaining stock
+  const { data: soldOrders } = await supabase
+    .from("orders")
+    .select("size, color, quantity")
+    .eq("product_id", p.id)
+    .in("status", ["confirmed", "processing", "shipped", "delivered"])
+
+  // Subtract sold quantities from stock_matrix
+  let computedMatrix: Record<string, number> | null = null
+  if (p.stock_matrix && soldOrders) {
+    computedMatrix = { ...p.stock_matrix }
+    for (const order of soldOrders) {
+      if (!order.size || !order.color) continue
+      const key = order.size.trim() + "_" + order.color.trim()
+      const matchedKey = Object.keys(computedMatrix).find(
+        k => k.toLowerCase() === key.toLowerCase()
+      ) || key
+      if (matchedKey in computedMatrix) {
+        computedMatrix[matchedKey] = Math.max(0, (computedMatrix[matchedKey] || 0) - (order.quantity || 1))
+      }
+    }
+  }
+
+  const productWithStock = { ...p, stock_matrix: computedMatrix || p.stock_matrix }
   return (
     <div style={{ paddingTop: "72px", minHeight: "100vh", backgroundColor: "var(--theme-bg, white)" }}>
       <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "3rem 1.5rem" }}>
@@ -70,7 +95,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 ))}
               </div>
             </div>
-            <OrderForm product={p} />
+            <OrderForm product={productWithStock} />
             <ReviewForm productId={p.id} productName={p.name} />
           </div>
         </div>
