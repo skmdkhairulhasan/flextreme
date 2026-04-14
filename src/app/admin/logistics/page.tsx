@@ -41,7 +41,8 @@ export default function LogisticsPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState<string | null>(null)
   const [saved, setSaved] = useState<string | null>(null)
-  const [filter, setFilter] = useState<"all" | "delivered" | "pending_cost">("delivered")
+  const [filter, setFilter] = useState<"all" | "delivered" | "pending_cost">("pending_cost")
+  const [editingOrders, setEditingOrders] = useState<Set<string>>(new Set())
   const [expandedPhone, setExpandedPhone] = useState<string | null>(null)
 
   useEffect(() => { fetchData() }, [])
@@ -69,10 +70,18 @@ export default function LogisticsPage() {
       ...entry,
       order_id: orderId,
     }
-    await supabase.from("logistics_costs").upsert(updated, { onConflict: "order_id" })
-    setLogistics(prev => ({ ...prev, [orderId]: updated }))
+    const allEmpty = !updated.delivery_charge && !updated.travel_cost && !updated.cod_tax && !updated.notes
+    if (allEmpty) {
+      // All fields cleared — delete record so order goes back to Missing Costs
+      await supabase.from("logistics_costs").delete().eq("order_id", orderId)
+      setLogistics(prev => { const n = { ...prev }; delete n[orderId]; return n })
+    } else {
+      await supabase.from("logistics_costs").upsert(updated, { onConflict: "order_id" })
+      setLogistics(prev => ({ ...prev, [orderId]: updated }))
+    }
     setSaving(null)
     setSaved(orderId)
+    setEditingOrders(prev => { const s = new Set(prev); s.delete(orderId); return s })
     setTimeout(() => setSaved(null), 2000)
   }
 
@@ -90,11 +99,11 @@ export default function LogisticsPage() {
   }
 
   // Filter orders
-  const activeStatuses = ["confirmed", "processing", "shipped", "delivered"]
+  const activeStatuses = ["confirmed", "processing", "shipped"]
   const filteredOrders = orders.filter(o => {
     if (filter === "delivered") return o.status === "delivered"
-    if (filter === "pending_cost") return activeStatuses.includes(o.status) && totalCost(o.id) === 0
-    return activeStatuses.includes(o.status)
+    if (filter === "pending_cost") return activeStatuses.includes(o.status) && (!logistics[o.id] || editingOrders.has(o.id))
+    return activeStatuses.includes(o.status) // "all" = active only, not delivered
   })
 
   // Group by customer phone
@@ -142,7 +151,7 @@ export default function LogisticsPage() {
         {[
           { id: "delivered", label: "Delivered Orders" },
           { id: "all", label: "All Active Orders" },
-          { id: "pending_cost", label: "Missing Costs (" + allActiveOrders.filter(o => totalCost(o.id) === 0).length + ")" },
+          { id: "pending_cost", label: "Missing Costs (" + allActiveOrders.filter(o => !logistics[o.id]).length + ")" },
         ].map(tab => (
           <button key={tab.id} onClick={() => setFilter(tab.id as any)} style={{ padding: "0.6rem 1.1rem", fontWeight: 700, fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.05em", border: "none", borderBottom: filter === tab.id ? "3px solid black" : "3px solid transparent", marginBottom: "-2px", backgroundColor: "transparent", cursor: "pointer", color: filter === tab.id ? "black" : "#999", whiteSpace: "nowrap" }}>
             {tab.label}
@@ -231,25 +240,25 @@ export default function LogisticsPage() {
                       label="Delivery Charge"
                       hint="Courier fee paid"
                       value={l.delivery_charge}
-                      onChange={v => setLogistics(prev => ({ ...prev, [order.id]: { ...getLogisticsForOrder(order.id), delivery_charge: v } }))}
+                      onChange={v => { setEditingOrders(prev => new Set(prev).add(order.id)); setLogistics(prev => ({ ...prev, [order.id]: { ...getLogisticsForOrder(order.id), delivery_charge: v } })) }}
                     />
                     <CostInput
                       label="Travel Cost"
                       hint="Your cost to reach courier"
                       value={l.travel_cost}
-                      onChange={v => setLogistics(prev => ({ ...prev, [order.id]: { ...getLogisticsForOrder(order.id), travel_cost: v } }))}
+                      onChange={v => { setEditingOrders(prev => new Set(prev).add(order.id)); setLogistics(prev => ({ ...prev, [order.id]: { ...getLogisticsForOrder(order.id), travel_cost: v } })) }}
                     />
                     <CostInput
                       label="COD Tax / Fee"
                       hint="Cash collection fee"
                       value={l.cod_tax}
-                      onChange={v => setLogistics(prev => ({ ...prev, [order.id]: { ...getLogisticsForOrder(order.id), cod_tax: v } }))}
+                      onChange={v => { setEditingOrders(prev => new Set(prev).add(order.id)); setLogistics(prev => ({ ...prev, [order.id]: { ...getLogisticsForOrder(order.id), cod_tax: v } })) }}
                     />
                     <div>
                       <label style={{ display: "block", fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "0.3rem", color: "#555" }}>Notes</label>
                       <input
                         value={l.notes || ""}
-                        onChange={e => setLogistics(prev => ({ ...prev, [order.id]: { ...getLogisticsForOrder(order.id), notes: e.target.value } }))}
+                        onChange={e => { setEditingOrders(prev => new Set(prev).add(order.id)); setLogistics(prev => ({ ...prev, [order.id]: { ...getLogisticsForOrder(order.id), notes: e.target.value } })) }}
                         placeholder="Any notes..."
                         style={{ width: "100%", border: "1px solid #e0e0e0", padding: "0.45rem 0.6rem", fontSize: "0.82rem", outline: "none", boxSizing: "border-box" as const }}
                       />
