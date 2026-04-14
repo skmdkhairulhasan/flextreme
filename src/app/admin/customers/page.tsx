@@ -478,7 +478,7 @@ export default function AdminCustomers() {
                         ? <p style={{ color: "#888", fontSize: "0.78rem", margin: 0 }}>✉️ {emailVal}</p>
                         : <p style={{ color: "#bbb", fontSize: "0.75rem", margin: 0, fontStyle: "italic" }}>No email</p>
                     })()}
-                    <button onClick={() => { setEditingField("email"); setEditValue((selected as any).email || ordersOf(selected.phone).find((o: any) => o.email)?.email || "") }}
+                    <button onClick={() => { setEditingField("email"); setEditValue((selected as any).email || (ordersOf(selected.phone) as any[]).find((o: any) => o.email)?.email || "") }}
                       style={{ background: "none", border: "none", cursor: "pointer", fontSize: "0.7rem", color: "#999", padding: "0 0.2rem" }}>✏️</button>
                   </div>
                 )}
