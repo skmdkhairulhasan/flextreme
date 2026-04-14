@@ -24,15 +24,16 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   let computedMatrix: Record<string, number> | null = null
   const pAny = p as any
   if (pAny.stock_matrix && soldOrders) {
-    computedMatrix = { ...pAny.stock_matrix }
+    computedMatrix = { ...pAny.stock_matrix } as Record<string, number>
     for (const order of soldOrders) {
       if (!order.size || !order.color) continue
       const key = order.size.trim() + "_" + order.color.trim()
-      const matchedKey = Object.keys(computedMatrix).find(
+      const matrix = computedMatrix as Record<string, number>
+      const matchedKey = Object.keys(matrix).find(
         k => k.toLowerCase() === key.toLowerCase()
       ) || key
-      if (matchedKey in computedMatrix) {
-        computedMatrix[matchedKey] = Math.max(0, (computedMatrix[matchedKey] || 0) - (order.quantity || 1))
+      if (matchedKey in matrix) {
+        matrix[matchedKey] = Math.max(0, (matrix[matchedKey] || 0) - (order.quantity || 1))
       }
     }
   }
