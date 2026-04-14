@@ -35,6 +35,26 @@ export default function HeroImageEditor({ imageUrl, onSave, initialScale = 1, in
 
   function handleMouseUp() { setDragging(false) }
 
+  function handleTouchStart(e: React.TouchEvent) {
+    e.preventDefault()
+    const t = e.touches[0]
+    setDragging(true)
+    setDragStart({ x: t.clientX, y: t.clientY, posX, posY })
+  }
+
+  function handleTouchMove(e: React.TouchEvent) {
+    if (!dragging || !containerRef.current) return
+    e.preventDefault()
+    const t = e.touches[0]
+    const rect = containerRef.current.getBoundingClientRect()
+    const dx = ((t.clientX - dragStart.x) / rect.width) * 100 / scale
+    const dy = ((t.clientY - dragStart.y) / rect.height) * 100 / scale
+    setPosX(Math.min(100, Math.max(0, dragStart.posX - dx)))
+    setPosY(Math.min(100, Math.max(0, dragStart.posY - dy)))
+  }
+
+  function handleTouchEnd() { setDragging(false) }
+
   function handleSave() {
     onSave(scale, posX, posY)
     setSaved(true)
@@ -60,6 +80,9 @@ export default function HeroImageEditor({ imageUrl, onSave, initialScale = 1, in
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
         style={{
           position: "relative",
           width: "100%",
