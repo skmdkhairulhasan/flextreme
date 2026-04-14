@@ -849,6 +849,7 @@ export default function AdminSettings() {
   function ColorThemeEditor() {
     const presets = [
       { name: "Classic Black", primary: "#000000", accent: "#ffffff", bg: "#ffffff", text: "#000000", btnBg: "#000000", btnText: "#ffffff" },
+      { name: "🎊 Shubho Noboborsho", primary: "#c0392b", accent: "#f39c12", bg: "#fff9f0", text: "#2c1a0e", btnBg: "#c0392b", btnText: "#ffffff" },
       { name: "Deep Navy", primary: "#0f172a", accent: "#3b82f6", bg: "#f8fafc", text: "#0f172a", btnBg: "#0f172a", btnText: "#ffffff" },
       { name: "Forest Green", primary: "#14532d", accent: "#16a34a", bg: "#f0fdf4", text: "#14532d", btnBg: "#15803d", btnText: "#ffffff" },
       { name: "Crimson Red", primary: "#7f1d1d", accent: "#dc2626", bg: "#fff5f5", text: "#1a1a1a", btnBg: "#dc2626", btnText: "#ffffff" },
@@ -1209,9 +1210,10 @@ export default function AdminSettings() {
               <div>
                 <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", marginBottom: "0.4rem" }}>Preview</label>
                 <div style={{ backgroundColor: settings.banner_bg || "#000000", height: "36px", overflow: "hidden", display: "flex", alignItems: "center", borderRadius: "4px" }}>
-                  <marquee style={{ color: settings.banner_color || "#ffffff", fontSize: "0.75rem", fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase" }}>
-                    {[...Array(4)].map((_, i) => <span key={i}>{settings.banner_text}&nbsp;&nbsp;&nbsp;·&nbsp;&nbsp;&nbsp;</span>)}
-                  </marquee>
+                  <style>{`@keyframes prev-marquee{0%{transform:translateX(100%)}100%{transform:translateX(-100%)}}.prev-banner{display:inline-flex;gap:40px;white-space:nowrap;animation:prev-marquee 20s linear infinite;}`}</style>
+                  <div className="prev-banner">
+                    {[...Array(4)].map((_, i) => <span key={i} style={{ color: settings.banner_color || "#ffffff", fontSize: "0.75rem", fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase" as const }}>{settings.banner_text} · </span>)}
+                  </div>
                 </div>
               </div>
             )}
