@@ -287,7 +287,7 @@ export default function AdminOrders() {
                   <div>
                     <p style={{ fontWeight: 700, fontSize: "0.88rem" }}>{order.name}</p>
                     <p style={{ fontSize: "0.72rem", color: "#888" }}>{order.phone}</p>
-                    {order.email && <p style={{ fontSize: "0.7rem", color: "#888" }}>✉️ {order.email}</p>}
+                    {(order as any).email && <p style={{ fontSize: "0.7rem", color: "#888" }}>✉️ {(order as any).email}</p>}
                   </div>
                 </div>
                 <div style={{ textAlign: "right" }}>
@@ -334,7 +334,7 @@ export default function AdminOrders() {
                 <div>
                   <p style={{ fontWeight: 700, fontSize: "0.9rem" }}>{order.name}</p>
                   <p style={{ fontSize: "0.75rem", color: "#888" }}>{order.phone}</p>
-                  {order.email && <p style={{ fontSize: "0.7rem", color: "#888" }}>✉️ {order.email}</p>}
+                  {(order as any).email && <p style={{ fontSize: "0.7rem", color: "#888" }}>✉️ {(order as any).email}</p>}
                   <p style={{ fontSize: "0.7rem", color: "#bbb" }}>{new Date(order.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</p>
                 </div>
                 <div>
