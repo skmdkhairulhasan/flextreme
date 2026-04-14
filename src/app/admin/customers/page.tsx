@@ -473,7 +473,7 @@ export default function AdminCustomers() {
                 ) : (
                   <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", marginTop: "0.2rem" }}>
                     {(() => {
-                      const emailVal = (selected as any).email || ordersOf(selected.phone).find((o: any) => o.email)?.email
+                      const emailVal = (selected as any).email || (ordersOf(selected.phone) as any[]).find((o: any) => o.email)?.email
                       return emailVal
                         ? <p style={{ color: "#888", fontSize: "0.78rem", margin: 0 }}>✉️ {emailVal}</p>
                         : <p style={{ color: "#bbb", fontSize: "0.75rem", margin: 0, fontStyle: "italic" }}>No email</p>
