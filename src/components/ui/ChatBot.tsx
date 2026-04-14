@@ -97,9 +97,10 @@ function showStats(p: Profile): string {
   parts.push("BMI: " + b.toFixed(1) + " — " + info.icon + " " + info.cat)
   if (p.age && p.gender && p.activity) {
     const tdee = calcTDEE(p.weight, p.height, p.age, p.gender, p.activity)
-    const goalCal = p.goal === "lose" ? tdee - 400 : p.goal === "gain" ? tdee + 400 : tdee
+    const normGoal = p.goal === "cut" ? "lose" : p.goal === "bulk" ? "gain" : p.goal
+  const goalCal = normGoal === "lose" ? tdee - 400 : normGoal === "gain" ? tdee + 400 : tdee
     parts.push("Maintenance (TDEE): " + tdee + " kcal/day")
-    parts.push("Goal calories (" + (p.goal || "maintain") + "): " + goalCal + " kcal/day")
+    parts.push("Goal calories (" + (normGoal || "maintain") + "): " + goalCal + " kcal/day")
     parts.push("Protein target: " + Math.round(p.weight * 1.8) + "g/day")
   }
   if (p.goal) parts.push("Goal: " + p.goal)
@@ -146,7 +147,9 @@ function getWorkoutPlan(p: Profile): string {
 }
 
 function getDietPlan(p: Profile, tdee: number): string {
-  const goal = p.goal || "maintain"
+  const rawGoal = p.goal || "maintain"
+  // Normalize goal values (cut/lose = fat loss, bulk/gain = muscle building)
+  const goal = rawGoal === "cut" ? "lose" : rawGoal === "bulk" ? "gain" : rawGoal === "lose fat" ? "lose" : rawGoal === "build muscle" ? "gain" : rawGoal
   const target = goal === "lose" ? tdee - 400 : goal === "gain" ? tdee + 400 : tdee
   const protein = Math.round((p.weight || 70) * (goal === "gain" ? 2.2 : 1.8))
   const carbs = Math.round((target * 0.45) / 4)
@@ -166,7 +169,7 @@ function getDietPlan(p: Profile, tdee: number): string {
 function getSupplements(goal: string, isVeg: boolean): string {
   const prot = isVeg ? "Plant Protein" : "Whey Protein"
   const omega = isVeg ? "Algae Oil Omega-3" : "Fish Oil Omega-3"
-  const extras = goal === "lose"
+  const extras = goal === "lose" || goal === "cut"
     ? "\nFAT LOSS EXTRAS:\nCaffeine — 200mg pre-workout (free from coffee)\nL-Carnitine — 1-2g before cardio\nGreen Tea Extract — mild thermogenic"
     : goal === "gain"
     ? "\nMUSCLE GAIN EXTRAS:\nBeta-Alanine — 3.2g/day (tingling = normal)\nZMA — before bed, boosts recovery + testosterone\nVitamin D3+K2 — hormone health"
@@ -278,7 +281,15 @@ const [profile] = useState({
     load()
   }, [])
 
-  useEffect(() => { if (open) { setUnread(0); setTimeout(() => inputRef.current?.focus(), 150) } }, [open])
+  useEffect(() => { 
+    if (open) { 
+      setUnread(0)
+      setTimeout(() => {
+        inputRef.current?.focus()
+        messagesEndRef.current?.scrollIntoView({ behavior: "instant" })
+      }, 150) 
+    } 
+  }, [open])
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }) }, [messages, loading])
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }) }, [messages, loading])
 
@@ -360,7 +371,7 @@ orderReply += `
 
 🚚 Track your shipment
 Click here:
-${o.tracking_url}
+${o.tracking_url.startsWith("http") ? o.tracking_url : "https://" + o.tracking_url}
 
 `
 }
@@ -378,7 +389,17 @@ ${o.tracking_url}
   "\n\nCheck the number or WhatsApp us: +8801935962421"
 }
           modeRef.current = null
-          setMessages(prev => [...prev, { role: "assistant", content: orderReply }])
+          setLoading(false)
+          let displayedO = ""
+          setMessages(prev => [...prev, { role: "assistant", content: "" }])
+          let oi = 0
+          function typeOrder() {
+            if (oi >= orderReply.length) return
+            displayedO += orderReply.slice(oi, oi+2); oi+=2
+            setMessages(prev => { const u=[...prev]; u[u.length-1]={role:"assistant",content:displayedO}; return u })
+            if (oi < orderReply.length) setTimeout(typeOrder, 10)
+          }
+          setTimeout(typeOrder, 0)
         } catch {
           setMessages(prev => [...prev, { role: "assistant", content: "Couldn't reach our servers. Please try again or WhatsApp: +8801935962421" }])
         }
@@ -609,6 +630,12 @@ if (p.step) {
       return "Diet updated to " + dn + "! ✅\nSay \'diet\' for your personalized plan."
     }
     if (modeRef.current === "change_diet") {
+      // Exit mode on clearly non-diet messages
+      if (has(msg, "workout") || has(msg, "greeting") || has(msg, "order") || has(msg, "product") || has(msg, "bmi") || has(msg, "supplement") ||
+          msg.includes("goal") || msg.includes("my goal") || msg.includes("size") || msg.includes("injury")) {
+        modeRef.current = null
+        // Fall through to handle normally
+      } else {
       const dietMap: Record<string,string> = {"1":"muslim","2":"hindu","3":"vegetarian","4":"vegan","5":"none"}
       const chosen = dietMap[msg.trim()] ||
         (msg.includes("muslim")||msg.includes("halal")?"muslim":msg.includes("hindu")?"hindu":
@@ -626,6 +653,7 @@ if (p.step) {
         return "Diet updated to " + dn2 + "! ✅\nSay \'diet\' for your personalized plan."
       }
       return "Choose 1-5:\n1 — Muslim\n2 — Hindu\n3 — Vegetarian\n4 — Vegan\n5 — None"
+      }
     }
 
     // Workout location update
@@ -758,6 +786,74 @@ if (
       const typeLabel = newType === "home" ? "home/bodyweight" : newType === "both" ? "gym + home" : "gym"
       return "Got it — updated your workout to " + typeLabel + "! 💪\n\nSay 'workout' for a fresh plan tailored to your setup."
     }
+
+    // ── CHANGE GOAL ──
+    if ((msg.includes("change") || msg.includes("update") || msg.includes("switch")) && msg.includes("goal") && p.weight) {
+      modeRef.current = "change_goal"
+      return "What\'s your new goal?\n\n1 — Lose fat\n2 — Build muscle\n3 — Maintain"
+    }
+
+    // ── CHANGE REQUESTS ──
+    const isChangeWorkout = (msg.includes("change") || msg.includes("different") || msg.includes("new plan") || msg.includes("another") || msg.includes("redo") || msg === "change it") &&
+      (msg.includes("workout") || msg.includes("exercise") || msg.includes("plan") || msg.includes("routine") || msg.includes("program") || msg === "change it")
+    const isChangeDiet = (msg.includes("change") || msg.includes("different") || msg.includes("update") || msg.includes("redo")) &&
+      (msg.includes("diet") || msg.includes("meal") || msg.includes("food") || msg.includes("eating"))
+    if (isChangeWorkout && p.weight) {
+      // Check if they specified gym/home in the message
+      if (msg.includes("home") || msg.includes("calisthenics") || msg.includes("bodyweight") || msg.includes("no gym") || msg.includes("no equipment")) {
+        const updated = { ...p, workoutType: "home" }
+        setProfile(updated)
+        return getWorkoutPlan(updated)
+      }
+      if (msg.includes("gym") || msg.includes("weights") || msg.includes("barbell") || msg.includes("dumbbell")) {
+        const updated = { ...p, workoutType: "gym" }
+        setProfile(updated)
+        return getWorkoutPlan(updated)
+      }
+      // Ask preference
+      modeRef.current = "change_workout"
+      return "Sure! Where do you train? 🏋️\n\n1 — Gym (weights + machines)\n2 — Home (bodyweight / minimal equipment)\n3 — Both"
+    }
+    // Override goal if mentioned alongside diet request
+    if (msg.includes("muscle") || msg.includes("bulk") || msg.includes("build") || msg.includes("gain")) {
+      if (p.goal !== "bulk") { setProfile({ ...p, goal: "bulk" }) }
+    } else if ((msg.includes("lose") || msg.includes("fat") || msg.includes("cut")) && !msg.includes("fat loss")) {
+      if (p.goal !== "cut") { setProfile({ ...p, goal: "cut" }) }
+    }
+
+    if (isChangeDiet && p.weight && p.height && p.age && p.gender && p.activity) {
+      // Check if religion mentioned in message
+      let updatedP = p
+      let religionMentioned = false
+      if (/muslim|halal/.test(msg)) { updatedP = { ...p, religion: "muslim" }; religionMentioned = true }
+      else if (/hindu/.test(msg)) { updatedP = { ...p, religion: "hindu" }; religionMentioned = true }
+      else if ((msg.includes("vegan") || msg.includes("vegen")) && !msg.includes("vegetarian")) { updatedP = { ...p, religion: "vegan" }; religionMentioned = true }
+      else if (/vegetarian|veggie|vegeterian/.test(msg)) { updatedP = { ...p, religion: "vegetarian" }; religionMentioned = true }
+      else if (/not vegan|not vegetarian|i eat meat|i eat chicken/.test(msg)) { updatedP = { ...p, religion: "none" }; religionMentioned = true }
+      
+      if (religionMentioned) {
+        setProfile(updatedP)
+        return getDietPlan(updatedP, calcTDEE(updatedP.weight!, updatedP.height!, updatedP.age!, updatedP.gender!, updatedP.activity!))
+      }
+      // No religion specified - ask what they want
+      modeRef.current = "change_diet"
+      return "What diet preference? 🥗\n\n1 — Muslim (Halal)\n2 — Hindu (no beef)\n3 — Vegetarian\n4 — Vegan\n5 — None / No restriction"
+    }
+
+    // Change workout mode
+    if (modeRef.current === "change_workout") {
+      const gymMap: Record<string,string> = {"1":"gym","2":"home","3":"both"}
+      let chosen = gymMap[msg.trim()] || 
+        (msg.includes("gym") ? "gym" : msg.includes("home") || msg.includes("bodyweight") ? "home" : msg.includes("both") ? "both" : null)
+      if (chosen) {
+        modeRef.current = null
+        const updated = { ...p, workoutType: chosen }
+        setProfile(updated)
+        return getWorkoutPlan(updated)
+      }
+      return "Reply 1 (Gym), 2 (Home), or 3 (Both)"
+    }
+
 
     if (has(msg, "workout")) {
 
@@ -1280,27 +1376,17 @@ if (
       return "Weight " + num + "kg. BMI: " + b.toFixed(1) + " — " + info.cat + "\n\nAge?"
     }
 
-    // ── CHANGE REQUESTS ──
-    const isChangeWorkout = (msg.includes("change") || msg.includes("different") || msg.includes("new plan") || msg.includes("another") || msg.includes("redo") || msg === "change it") &&
-      (msg.includes("workout") || msg.includes("exercise") || msg.includes("plan") || msg.includes("routine") || msg.includes("program") || msg === "change it")
-    const isChangeDiet = (msg.includes("change") || msg.includes("different") || msg.includes("update") || msg.includes("redo")) &&
-      (msg.includes("diet") || msg.includes("meal") || msg.includes("food") || msg.includes("eating"))
-    if (isChangeWorkout && p.weight) {
-      const alt = (p.workoutType === "gym") ? "home" : "gym"
-      const altProfile = { ...p, workoutType: alt }
-      setProfile(altProfile)
-      return getWorkoutPlan(altProfile) + "\n\n(Switched to " + alt + " version)"
-    }
-    if (isChangeDiet && p.weight && p.height && p.age && p.gender && p.activity) {
-      // Also update religion if mentioned in same message
-      let updatedP = p
-      if (/muslim|halal/.test(msg)) updatedP = { ...p, religion: "muslim" }
-      else if (/hindu/.test(msg)) updatedP = { ...p, religion: "hindu" }
-      else if (/\bvegan\b/.test(msg)) updatedP = { ...p, religion: "vegan" }
-      else if (/vegetarian|veggie|vegeterian/.test(msg)) updatedP = { ...p, religion: "vegetarian" }
-      else if (/not vegan|not vegetarian|i eat meat/.test(msg)) updatedP = { ...p, religion: "none" }
-      if (updatedP.religion !== p.religion) setProfile(updatedP)
-      return getDietPlan(updatedP, calcTDEE(updatedP.weight!, updatedP.height!, updatedP.age!, updatedP.gender!, updatedP.activity!))
+    // Change goal mode
+    if (modeRef.current === "change_goal") {
+      const goalMap: Record<string,string> = {"1":"cut","2":"bulk","3":"maintain","lose":"cut","fat":"cut","build":"bulk","muscle":"bulk","gain":"bulk","maintain":"maintain","tone":"maintain"}
+      const chosen = goalMap[msg.trim()] || Object.entries(goalMap).find(([k]) => msg.includes(k))?.[1] || null
+      if (chosen) {
+        modeRef.current = null
+        setProfile({ ...p, goal: chosen })
+        const goalName = chosen==="cut"?"Fat Loss":chosen==="bulk"?"Muscle Building":"Maintenance"
+        return "Goal updated to **" + goalName + "**! ✅\nSay \'workout\' or \'diet\' for your updated plan."
+      }
+      return "Reply 1 (Lose fat), 2 (Build muscle), or 3 (Maintain)"
     }
 
     // Gym alone
@@ -1356,8 +1442,29 @@ if (
       if (fixedReply === "__ASYNC__") return
       reply = fixedReply
     }
-    setMessages(prev => [...prev, { role: "assistant", content: reply }])
+    // Typewriter effect - stream characters
     setLoading(false)
+    let displayed = ""
+    // Add empty message first
+    setMessages(prev => [...prev, { role: "assistant", content: "" }])
+    const chars = reply.split("")
+    // Vary speed: faster for short messages, slightly slower for long
+    const baseDelay = 2
+    let i = 0
+    function typeNext() {
+      if (i >= chars.length) return
+      // Type 2-3 chars at once for speed
+      const chunk = chars.slice(i, i + (reply.length > 200 ? 6 : 4)).join("")
+      displayed += chunk
+      i += chunk.length
+      setMessages(prev => {
+        const updated = [...prev]
+        updated[updated.length - 1] = { role: "assistant", content: displayed }
+        return updated
+      })
+      if (i < chars.length) setTimeout(typeNext, 2)
+    }
+    setTimeout(typeNext, 0)
   }, 300 + Math.random() * 200)
 }
 
@@ -1527,8 +1634,11 @@ strokeLinecap="round"
                   </div>
                 )}
                 <div style={{maxWidth:"83%",padding:"0.55rem 0.85rem",fontSize:"0.81rem",lineHeight:1.6,whiteSpace:"pre-line",borderRadius:msg.role==="user"?"16px 16px 4px 16px":"16px 16px 16px 4px",backgroundColor:msg.role==="user"?(fullPage?"white":"black"):(fullPage?"#1a1a1a":"#f0f0f0"),color:msg.role==="user"?(fullPage?"black":"white"):(fullPage?"white":"#1a1a1a")}}>
-                  {msg.content.split(/(\bhttps?:\/\/\S+|\/products\/\S+)/g).map((part,i)=>{
-                    if(/^https?:\/\//.test(part)) return <a key={i} href={part} target="_blank" rel="noopener noreferrer" style={{display:"inline-block",marginTop:"6px",padding:"5px 12px",background:"#0ea5e9",color:"white",borderRadius:"6px",textDecoration:"none",fontSize:"0.75rem",fontWeight:700}}>🚚 Track Package</a>
+                  {msg.content.split(/((?:https?:\/\/|www\.)[\w\-.]+(?:\.[a-z]{2,})(?:\/\S*)?|(?:[\w-]+\.(?:com|net|org|io|co|shop|store|link|me|app)(?:\/\S*)?)|\/products\/\S+)/gi).map((part,i)=>{
+                    if(/^https?:\/\//.test(part) || /^www\./.test(part) || /^[a-zA-Z0-9-]+\.[a-zA-Z]{2,}(\/|$)/.test(part)) {
+                    const href = part.startsWith("http") ? part : "https://" + part
+                    return <a key={i} href={href} target="_blank" rel="noopener noreferrer" style={{display:"inline-block",marginTop:"6px",padding:"5px 12px",background:"#0ea5e9",color:"white",borderRadius:"6px",textDecoration:"none",fontSize:"0.75rem",fontWeight:700}}>🚚 Track Package</a>
+                  }
                     if(/^\/products\//.test(part)) return <a key={i} href={part} style={{display:"inline-block",marginTop:"4px",padding:"5px 12px",background:"black",color:"white",borderRadius:"6px",textDecoration:"none",fontSize:"0.75rem",fontWeight:700}}>👕 View Product →</a>
                     return <span key={i}>{part}</span>
                   })}

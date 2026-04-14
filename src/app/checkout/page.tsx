@@ -13,6 +13,7 @@ export default function CheckoutPage() {
   const [phone, setPhone] = useState("")
   const [address, setAddress] = useState("")
   const [notes, setNotes] = useState("")
+  const [email, setEmail] = useState("")
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState("")
@@ -52,20 +53,30 @@ export default function CheckoutPage() {
     try {
       const supabase = createClient()
       // Create one order per cart item
-      const orderRows = items.map(item => ({
-        name: name.trim(),
-        phone: phone.trim(),
-        address: address.trim(),
-        product_id: item.productId,
-        product_name: item.name,
-        size: item.size,
-        color: item.color,
-        quantity: item.quantity,
-        total_price: isFlex100 ? Math.round(item.price * item.quantity * 0.9) : item.price * item.quantity,
-        notes: notes.trim(),
-        status: "pending",
-      }))
-      const { error: dbError } = await supabase.from("orders").insert(orderRows)
+      const orderRows = items.map(item => {
+        const row: Record<string,any> = {
+          name: name.trim(),
+          phone: phone.trim(),
+          address: address.trim(),
+          product_id: item.productId,
+          product_name: item.name,
+          size: item.size,
+          color: item.color,
+          quantity: item.quantity,
+          total_price: isFlex100 ? Math.round(item.price * item.quantity * 0.9) : item.price * item.quantity,
+          notes: notes.trim(),
+          status: "pending",
+        }
+        if (email.trim()) row.email = email.trim()
+        return row
+      })
+      let { error: dbError } = await supabase.from("orders").insert(orderRows)
+      // Retry without email if column doesn't exist yet
+      if (dbError && dbError.message?.includes("email")) {
+        const safeRows = orderRows.map(r => { const s = {...r}; delete s.email; return s })
+        const retry = await supabase.from("orders").insert(safeRows)
+        dbError = retry.error
+      }
       if (dbError) throw dbError
       // Auto-create/update customer record
       await upsertCustomer(supabase, { name: name.trim(), phone: phone.trim(), totalPrice: total })
@@ -189,6 +200,10 @@ export default function CheckoutPage() {
               <textarea value={address} onChange={e => setAddress(e.target.value)} placeholder="House/Flat No, Road, Area, District" rows={3} style={{ width: "100%", border: "1px solid #e0e0e0", padding: "0.875rem 1rem", fontSize: "0.95rem", outline: "none", resize: "vertical" as const, fontFamily: "inherit", boxSizing: "border-box" as const }} />
             </div>
             <div style={{ marginBottom: "1.5rem" }}>
+              <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 700, marginBottom: "0.4rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Email <span style={{ fontWeight: 400, color: "#999", textTransform: "none" as const }}>(Optional)</span></label>
+              <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="your@email.com" style={{ width: "100%", border: "1px solid #e0e0e0", padding: "0.875rem 1rem", fontSize: "0.95rem", outline: "none", boxSizing: "border-box" as const }} />
+            </div>
+            <div style={{ marginBottom: "1.25rem" }}>
               <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 700, marginBottom: "0.4rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Order Notes (Optional)</label>
               <input type="text" value={notes} onChange={e => setNotes(e.target.value)} placeholder="Any special instructions..." style={{ width: "100%", border: "1px solid #e0e0e0", padding: "0.875rem 1rem", fontSize: "0.95rem", outline: "none", boxSizing: "border-box" as const }} />
             </div>
@@ -268,7 +283,7 @@ export default function CheckoutPage() {
             </div>
 
             <div style={{ backgroundColor: "#f9f9f9", padding: "1rem", fontSize: "0.78rem", color: "#666", lineHeight: 1.7 }}>
-              📦 Delivery info available on our <a href="/delivery" style={{ color: "#111", fontWeight: 700 }}>Delivery page</a><br/>
+              📦 Dhaka City: 1-2 days · Other cities: 3-5 days<br/>
               💚 Cash on Delivery — pay on arrival
             </div>
           </div>

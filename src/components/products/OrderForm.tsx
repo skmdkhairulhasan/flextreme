@@ -14,6 +14,7 @@ export default function OrderForm({ product }: { product: Product & { stock_matr
   const [phone, setPhone] = useState("")
   const [address, setAddress] = useState("")
   const [notes, setNotes] = useState("")
+  const [email, setEmail] = useState("")
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState("")
@@ -100,12 +101,20 @@ export default function OrderForm({ product }: { product: Product & { stock_matr
     setError("")
     try {
       const supabase = createClient()
-      const { error: dbError } = await supabase.from("orders").insert({
+      const orderData: Record<string,any> = {
         name: name.trim(), phone: phone.trim(), address: address.trim(),
         product_id: product.id, product_name: product.name,
         size: selectedSize, color: selectedColor, quantity, total_price: totalPrice,
         notes: notes.trim(), status: "pending",
-      })
+      }
+      if (email.trim()) orderData.email = email.trim()
+      let { error: dbError } = await supabase.from("orders").insert(orderData)
+      // If email column doesn't exist in DB yet, retry without it
+      if (dbError && dbError.message?.includes("email")) {
+        delete orderData.email
+        const retry = await supabase.from("orders").insert(orderData)
+        dbError = retry.error
+      }
       if (dbError) throw dbError
       // Auto-create/update customer record
       await upsertCustomer(supabase, { name: name.trim(), phone: phone.trim(), totalPrice })
@@ -308,6 +317,10 @@ export default function OrderForm({ product }: { product: Product & { stock_matr
               <p style={{ fontSize: "0.75rem", color: "#92400e", fontWeight: 600 }}>FLEX100 Member — 10% lifetime discount applied ✓</p>
             </div>
           )}
+        </div>
+        <div style={{ marginBottom: "1rem" }}>
+          <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, marginBottom: "0.4rem", textTransform: "uppercase" }}>Email <span style={{ color:"#999", fontWeight:400 }}>(Optional)</span></label>
+          <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="your@email.com" style={{ width: "100%", border: "1px solid #e0e0e0", padding: "0.75rem 1rem", fontSize: "0.95rem", outline: "none", boxSizing: "border-box" as const }} />
         </div>
         <div style={{ marginBottom: "1rem" }}>
           <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, marginBottom: "0.4rem", textTransform: "uppercase" }}>Delivery Address *</label>
