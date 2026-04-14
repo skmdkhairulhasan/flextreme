@@ -205,8 +205,8 @@ export default function AdminOrders() {
       )}
 
       {/* Edit order modal */}
-      {editingId && (
-        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.6)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem", overflow: "hidden" }}>
+      {editingId && typeof document !== "undefined" && createPortal(
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.6)", zIndex: 99999, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem", overflow: "hidden" }}>
           <div style={{ backgroundColor: "white", padding: "1.75rem", maxWidth: "480px", width: "100%", maxHeight: "80vh", overflowY: "auto", position: "relative" }}>
             <h3 style={{ fontWeight: 900, fontSize: "1rem", textTransform: "uppercase", marginBottom: "1.25rem", paddingBottom: "0.75rem", borderBottom: "2px solid black" }}>Edit Order Details</h3>
             <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
@@ -241,7 +241,7 @@ export default function AdminOrders() {
             </div>
           </div>
         </div>
-      )}
+      , document.body)}
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem", flexWrap: "wrap", gap: "0.75rem" }}>
         <div>

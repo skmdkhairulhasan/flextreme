@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { createPortal } from "react-dom"
 import { createClient } from "@/lib/supabase/client"
 import ConfirmModal from "@/components/ui/ConfirmModal"
 
@@ -416,7 +417,7 @@ export default function AdminCustomers() {
       </div>
 
       {/* CUSTOMER DETAIL POPUP */}
-      {selected && (
+      {selected && typeof document !== "undefined" && createPortal(
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999, padding: "1rem" }} onClick={() => setSelected(null)}>
           <div style={{ background: "white", padding: "1.5rem", width: "100%", maxWidth: "480px", maxHeight: "85vh", overflowY: "auto", borderRadius: "8px" }} onClick={e => e.stopPropagation()}>
 
@@ -547,7 +548,7 @@ export default function AdminCustomers() {
             )}
           </div>
         </div>
-      )}
+      , document.body)}
 
     </div>
   )

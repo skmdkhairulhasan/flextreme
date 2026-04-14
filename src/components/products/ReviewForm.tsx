@@ -1,5 +1,5 @@
 ﻿"use client"
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { createClient } from "@/lib/supabase/client"
 
 export default function ReviewForm({ productId, productName }: { productId: string, productName: string }) {
@@ -8,6 +8,9 @@ export default function ReviewForm({ productId, productName }: { productId: stri
   const [rating, setRating] = useState(0)
   const [hoverRating, setHoverRating] = useState(0)
   const [text, setText] = useState("")
+  const [photo, setPhoto] = useState<File | null>(null)
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null)
+  const fileRef = useRef<HTMLInputElement>(null)
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState("")
@@ -22,6 +25,16 @@ export default function ReviewForm({ productId, productName }: { productId: stri
     try {
       const supabase = createClient()
       console.log("Submitting review with productId:", productId)
+      let photo_url: string | null = null
+      if (photo) {
+        const ext = photo.name.split(".").pop()
+        const fileName = `review-${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+        const { data: uploadData, error: uploadErr } = await supabase.storage
+          .from("review-photos").upload(fileName, photo, { contentType: photo.type })
+        if (uploadErr) { setError("Photo upload failed: " + uploadErr.message); setLoading(false); return }
+        const { data: urlData } = supabase.storage.from("review-photos").getPublicUrl(uploadData.path)
+        photo_url = urlData.publicUrl
+      }
       const payload = {
         product_id: productId,
         product_name: productName,
@@ -29,6 +42,7 @@ export default function ReviewForm({ productId, productName }: { productId: stri
         customer_location: location.trim(),
         rating,
         review_text: text.trim(),
+        photo_url,
         status: "pending",
       }
       console.log("Payload:", payload)
@@ -87,6 +101,30 @@ export default function ReviewForm({ productId, productName }: { productId: stri
         <label style={{ display: "block", fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.4rem", color: "#555" }}>Your Review *</label>
         <textarea value={text} onChange={e => setText(e.target.value)} placeholder="Tell others about your experience..." rows={4} style={{ width: "100%", border: "1px solid #e0e0e0", padding: "0.65rem 0.875rem", fontSize: "0.9rem", outline: "none", resize: "vertical", fontFamily: "inherit", boxSizing: "border-box" }} />
         <p style={{ fontSize: "0.7rem", color: "#999", marginTop: "0.25rem" }}>{text.length} characters</p>
+      </div>
+
+      {/* Photo upload */}
+      <div style={{ marginBottom: "1.25rem" }}>
+        <label style={{ display: "block", fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.4rem", color: "#555" }}>
+          Photo <span style={{ fontWeight: 400, color: "#999", textTransform: "none" }}>(Optional — max 5MB)</span>
+        </label>
+        <input ref={fileRef} type="file" accept="image/*" style={{ display: "none" }} onChange={e => {
+          const file = e.target.files?.[0]
+          if (!file) return
+          if (file.size > 5 * 1024 * 1024) { setError("Photo must be under 5MB"); return }
+          setPhoto(file); setPhotoPreview(URL.createObjectURL(file)); setError("")
+        }} />
+        {photoPreview ? (
+          <div style={{ position: "relative", display: "inline-block" }}>
+            <img src={photoPreview} alt="Preview" style={{ width: "100px", height: "100px", objectFit: "cover", border: "1px solid #e0e0e0", display: "block" }} />
+            <button onClick={() => { setPhoto(null); setPhotoPreview(null); if (fileRef.current) fileRef.current.value = "" }}
+              style={{ position: "absolute", top: -7, right: -7, width: 20, height: 20, borderRadius: "50%", background: "#dc2626", color: "white", border: "none", cursor: "pointer", fontSize: "0.7rem", fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+          </div>
+        ) : (
+          <button onClick={() => fileRef.current?.click()} style={{ display: "flex", alignItems: "center", gap: "0.4rem", padding: "0.6rem 1rem", border: "1.5px dashed #ccc", background: "white", cursor: "pointer", fontSize: "0.82rem", color: "#666" }}>
+            📷 Add Photo
+          </button>
+        )}
       </div>
 
       {error && (

@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react"
 import { createClient } from "@/lib/supabase/client"
 
-type DeleteTarget = { id: string; name: string } | null
+type DeleteTarget = { id: string; name: string; photo_url?: string | null } | null
 
 export default function AdminReviews() {
   const [reviews, setReviews] = useState<any[]>([])
@@ -29,14 +29,40 @@ export default function AdminReviews() {
     setUpdating(null)
   }
 
+  async function toggleFeatured(id: string, current: boolean) {
+    const supabase = createClient()
+    await supabase.from("reviews").update({ featured: !current }).eq("id", id)
+    setReviews(prev => prev.map(r => r.id === id ? { ...r, featured: !current } : r))
+  }
+
   async function confirmDelete() {
     if (!deleteTarget) return
     setDeleting(true)
     const supabase = createClient()
+    // Delete photo from storage first
+    if (deleteTarget.photo_url) {
+      try {
+        const path = deleteTarget.photo_url.split("/review-photos/")[1]
+        if (path) await supabase.storage.from("review-photos").remove([path])
+      } catch {}
+    }
     await supabase.from("reviews").delete().eq("id", deleteTarget.id)
     setReviews(prev => prev.filter(r => r.id !== deleteTarget.id))
     setDeleteTarget(null)
     setDeleting(false)
+  }
+
+  async function rejectAndDelete(review: any) {
+    const supabase = createClient()
+    // Delete photo from storage
+    if (review.photo_url) {
+      try {
+        const path = review.photo_url.split("/review-photos/")[1]
+        if (path) await supabase.storage.from("review-photos").remove([path])
+      } catch {}
+    }
+    await supabase.from("reviews").delete().eq("id", review.id)
+    setReviews(prev => prev.filter(r => r.id !== review.id))
   }
 
   const filtered = filter === "all" ? reviews : reviews.filter(r => r.status === filter)
@@ -114,9 +140,16 @@ export default function AdminReviews() {
               </span>
             </div>
 
-            <p style={{ fontSize: "0.9rem", color: "#444", lineHeight: 1.7, marginBottom: "1.25rem", padding: "1rem", backgroundColor: "#f9f9f9", borderLeft: "3px solid #e0e0e0" }}>
+            <p style={{ fontSize: "0.9rem", color: "#444", lineHeight: 1.7, marginBottom: review.photo_url ? "0.75rem" : "1.25rem", padding: "1rem", backgroundColor: "#f9f9f9", borderLeft: "3px solid #e0e0e0" }}>
               "{review.review_text}"
             </p>
+            {review.photo_url && (
+              <div style={{ marginBottom: "1.25rem" }}>
+                <img src={review.photo_url} alt="Review photo" style={{ maxWidth: "160px", maxHeight: "160px", objectFit: "cover", border: "1px solid #e0e0e0", borderRadius: "4px", cursor: "pointer" }}
+                  onClick={() => window.open(review.photo_url, "_blank")} />
+                <p style={{ fontSize: "0.65rem", color: "#999", marginTop: "0.3rem" }}>Click to view full size</p>
+              </div>
+            )}
 
             <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", alignItems: "center" }}>
               {review.status !== "approved" && (
@@ -124,11 +157,19 @@ export default function AdminReviews() {
                   {updating === review.id ? "..." : "Approve"}
                 </button>
               )}
+              {review.status === "approved" && (
+                <button onClick={() => toggleFeatured(review.id, review.featured)} style={{ padding: "0.5rem 1.25rem", backgroundColor: review.featured ? "#fef3c7" : "white", color: review.featured ? "#92400e" : "#666", border: review.featured ? "1px solid #f59e0b" : "1px solid #e0e0e0", fontSize: "0.78rem", fontWeight: 700, cursor: "pointer", textTransform: "uppercase" }}>
+                  {review.featured ? "⭐ Featured" : "☆ Feature"}
+                </button>
+              )}
               {review.status !== "rejected" && (
                 <button onClick={() => updateStatus(review.id, "rejected")} disabled={updating === review.id} style={{ padding: "0.5rem 1.25rem", backgroundColor: "white", color: "#dc2626", border: "1px solid #dc2626", fontSize: "0.78rem", fontWeight: 700, cursor: updating === review.id ? "not-allowed" : "pointer", textTransform: "uppercase" }}>
                   {updating === review.id ? "..." : "Reject"}
                 </button>
               )}
+              <button onClick={() => rejectAndDelete(review)} style={{ padding: "0.5rem 1.25rem", backgroundColor: "#dc2626", color: "white", border: "none", fontSize: "0.78rem", fontWeight: 700, cursor: "pointer", textTransform: "uppercase" }}>
+                Reject & Delete
+              </button>
               {review.status === "approved" && (
                 <button onClick={() => updateStatus(review.id, "pending")} disabled={updating === review.id} style={{ padding: "0.5rem 1.25rem", backgroundColor: "white", color: "#666", border: "1px solid #e0e0e0", fontSize: "0.78rem", fontWeight: 700, cursor: updating === review.id ? "not-allowed" : "pointer", textTransform: "uppercase" }}>
                   Unpublish
@@ -136,7 +177,7 @@ export default function AdminReviews() {
               )}
               {/* Delete with confirmation */}
               <button
-                onClick={() => setDeleteTarget({ id: review.id, name: review.customer_name })}
+                onClick={() => setDeleteTarget({ id: review.id, name: review.customer_name, photo_url: review.photo_url })}
                 style={{ padding: "0.5rem 1.25rem", backgroundColor: "#fff0f0", color: "#cc0000", border: "1px solid #ffcccc", fontSize: "0.78rem", fontWeight: 700, cursor: "pointer", textTransform: "uppercase", marginLeft: "auto" }}
               >
                 🗑 Delete

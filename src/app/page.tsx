@@ -1,4 +1,5 @@
 ﻿import Link from "next/link"
+import ReviewsSection from "@/components/ui/ReviewsSection"
 import { createClient } from "@/lib/supabase/server"
 import { Product } from "@/types"
 import BrandStamp from "@/components/ui/BrandStamp"
@@ -18,7 +19,7 @@ export default async function HomePage() {
     supabase.from("products").select("*").eq("is_featured", true).limit(4),
     getSettings(),
     supabase.from("products").select("*", { count: "exact", head: true }),
-    supabase.from("reviews").select("*").eq("status", "approved").order("created_at", { ascending: false }).limit(6),
+    supabase.from("reviews").select("*").eq("status", "approved").order("featured", { ascending: false }).order("created_at", { ascending: false }).limit(6),
     supabase.from("orders").select("*", { count: "exact", head: true }),
     supabase.from("reviews").select("rating").eq("status", "approved"),
   ])
@@ -41,7 +42,7 @@ export default async function HomePage() {
       <PerformanceFeatures />
       <WhyFlextreme />
       <BrandStory settings={settings} totalProducts={totalProducts} customerCount={customerCount} avgRating={avgRatingDisplay} totalReviews={allApprovedReviews.length} />
-      <Reviews reviews={approvedReviews} />
+      <ReviewsSection reviews={approvedReviews} />
       <FinalCTA settings={settings} />
     </div>
   )
@@ -275,47 +276,7 @@ function BrandStory({ settings, totalProducts, customerCount, avgRating, totalRe
   )
 }
 
-function Reviews({ reviews }: { reviews: any[] }) {
-  if (reviews.length === 0) return null
-  return (
-    <section style={{ backgroundColor: "white", padding: "6rem 1.5rem" }}>
-      <div style={{ maxWidth: "1280px", margin: "0 auto" }}>
-        <div style={{ textAlign: "center", marginBottom: "4rem" }}>
-          <p style={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.3em", textTransform: "uppercase", color: "#999", marginBottom: "0.75rem" }}>Real Athletes</p>
-          <h2 style={{ fontSize: "clamp(2rem, 5vw, 3.5rem)", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.03em", lineHeight: 1 }}>What They Say</h2>
-          <p style={{ color: "#999", fontSize: "0.875rem", marginTop: "0.75rem" }}>{reviews.length} verified {reviews.length === 1 ? "review" : "reviews"} shown</p>
-        </div>
-        <style>{`
-              @media (max-width: 640px) {
-                .featured-grid { grid-template-columns: 1fr !important; gap: 1rem !important; }
-              }
-            `}</style>
-            <div className="featured-grid" style={{ display: "grid", gridTemplateColumns: reviews.length === 1 ? "minmax(auto, 480px)" : "repeat(auto-fit, minmax(280px, 1fr))", gap: "2rem", justifyContent: "center" }}>
-          {reviews.map((review: any, index: number) => (
-            <div key={review.id || index} style={{ border: "1px solid #e0e0e0", padding: "2rem" }}>
-              <div style={{ fontSize: "1rem", marginBottom: "1rem", color: "#f0a500" }}>{"★".repeat(review.rating)}<span style={{ color: "#e0e0e0" }}>{"★".repeat(5 - review.rating)}</span></div>
-              <p style={{ fontSize: "0.95rem", lineHeight: 1.7, color: "#333", marginBottom: "1.5rem", fontStyle: "italic" }}>"{review.review_text}"</p>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
-                <div>
-                  <p style={{ fontWeight: 700, fontSize: "0.875rem" }}>{review.customer_name}</p>
-                  {review.customer_location && <p style={{ fontSize: "0.75rem", color: "#999" }}>{review.customer_location}</p>}
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
-                  <span style={{ width: "14px", height: "14px", backgroundColor: "black", borderRadius: "50%", display: "inline-flex", alignItems: "center", justifyContent: "center", color: "white", fontSize: "0.5rem" }}>v</span>
-                  <span style={{ fontSize: "0.65rem", color: "#666", fontWeight: 600 }}>Verified</span>
-                </div>
-              </div>
-              {review.product_name && <p style={{ fontSize: "0.7rem", color: "#bbb", marginTop: "0.5rem" }}>Purchased: {review.product_name}</p>}
-            </div>
-          ))}
-        </div>
-        <div style={{ textAlign: "center", marginTop: "3rem" }}>
-          <Link href="/reviews" style={{ display: "inline-block", border: "2px solid black", padding: "0.875rem 2.5rem", fontWeight: 700, fontSize: "0.8rem", letterSpacing: "0.15em", textTransform: "uppercase", textDecoration: "none", color: "black" }}>See All Reviews</Link>
-        </div>
-      </div>
-    </section>
-  )
-}
+// Reviews section moved to client component for lightbox support
 
 function FinalCTA({ settings }: { settings: Record<string, string> }) {
   return (

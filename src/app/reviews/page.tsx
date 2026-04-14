@@ -1,5 +1,6 @@
 ﻿import { createClient } from "@/lib/supabase/server"
 import Link from "next/link"
+import ReviewsGrid from "@/components/ui/ReviewsGrid"
 
 export const metadata = { title: "Customer Reviews" }
 
@@ -26,16 +27,14 @@ export default async function ReviewsPage({ searchParams }: { searchParams: Prom
       <div style={{ backgroundColor: "black", color: "white", padding: "4rem 1.5rem", textAlign: "center" }}>
         <p style={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.3em", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", marginBottom: "0.75rem" }}>Real Athletes</p>
         <h1 style={{ fontSize: "clamp(2.5rem, 6vw, 5rem)", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.03em", lineHeight: 1 }}>Customer Reviews</h1>
-        <div style={{ marginTop: "1.5rem", marginBottom: "0.5rem" }}>
-          <a href="/reviews/write" style={{ display: "inline-block", backgroundColor: "white", color: "black", padding: "0.875rem 2.5rem", fontWeight: 800, fontSize: "0.82rem", letterSpacing: "0.12em", textTransform: "uppercase", textDecoration: "none", transition: "all 0.2s" }}>
-            ✍️ Write a Review
-          </a>
-        </div>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.75rem", marginTop: "1rem" }}>
           <span style={{ color: "#f0a500", fontSize: "1.5rem" }}>{"★".repeat(Math.round(Number(avgRating)))}</span>
           <span style={{ color: "white", fontSize: "1.25rem", fontWeight: 900 }}>{avgRating}</span>
           <span style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.9rem" }}>({allReviewsList.length} reviews)</span>
         </div>
+        <Link href="/reviews/write" style={{ display: "inline-block", marginTop: "1.5rem", backgroundColor: "white", color: "black", padding: "0.875rem 2.5rem", fontWeight: 900, fontSize: "0.8rem", letterSpacing: "0.15em", textTransform: "uppercase", textDecoration: "none" }}>
+          ✍️ Write a Review
+        </Link>
       </div>
 
       <style>{`
@@ -99,30 +98,7 @@ export default async function ReviewsPage({ searchParams }: { searchParams: Prom
                 <Link href="/products" style={{ display: "inline-block", marginTop: "1rem", backgroundColor: "black", color: "white", padding: "0.75rem 2rem", fontWeight: 700, fontSize: "0.8rem", textTransform: "uppercase", textDecoration: "none" }}>Shop Now</Link>
               </div>
             ) : (
-              <div className="reviews-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "1.5rem", justifyItems: "stretch" }}>
-                {reviews.map((review: any) => (
-                  <div key={review.id} style={{ border: "1px solid #e0e0e0", padding: "1.5rem" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.75rem" }}>
-                      <div style={{ color: "#f0a500", fontSize: "0.9rem" }}>{"★".repeat(review.rating)}<span style={{ color: "#e0e0e0" }}>{"★".repeat(5 - review.rating)}</span></div>
-                      <p style={{ fontSize: "0.7rem", color: "#bbb" }}>{new Date(review.created_at).toLocaleDateString("en-BD", { year: "numeric", month: "short", day: "numeric" })}</p>
-                    </div>
-                    <p style={{ fontSize: "0.9rem", color: "#444", lineHeight: 1.7, marginBottom: "1rem", fontStyle: "italic" }}>"{review.review_text}"</p>
-                    <div style={{ borderTop: "1px solid #f0f0f0", paddingTop: "0.75rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <div>
-                        <p style={{ fontWeight: 700, fontSize: "0.85rem" }}>{review.customer_name}</p>
-                        {review.customer_location && <p style={{ fontSize: "0.72rem", color: "#999" }}>{review.customer_location}</p>}
-                      </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
-                        <span style={{ width: "14px", height: "14px", backgroundColor: "black", borderRadius: "50%", display: "inline-flex", alignItems: "center", justifyContent: "center", color: "white", fontSize: "0.5rem" }}>v</span>
-                        <span style={{ fontSize: "0.65rem", color: "#666", fontWeight: 600 }}>Verified</span>
-                      </div>
-                    </div>
-                    {review.product_name && (
-                      <p style={{ fontSize: "0.7rem", color: "#bbb", marginTop: "0.5rem" }}>Purchased: {review.product_name}</p>
-                    )}
-                  </div>
-                ))}
-              </div>
+              <ReviewsGrid reviews={reviews} />
             )}
 
             {/* Pagination */}
