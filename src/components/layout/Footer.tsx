@@ -26,7 +26,7 @@ export default function Footer() {
   ].filter(l => l.url && l.url.trim())
 
   return (
-    <footer style={{ backgroundColor: "black", color: "white", paddingTop: "4rem", paddingBottom: "2rem" }}>
+    <footer style={{ backgroundColor: "var(--theme-primary, black)", color: "var(--theme-btn-text, white)", paddingTop: "4rem", paddingBottom: "2rem" }}>
       <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "0 1.5rem" }}>
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "3rem", paddingBottom: "3rem", borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
@@ -34,7 +34,7 @@ export default function Footer() {
           {/* Brand + Social */}
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1rem" }}>
-              <img src="/logo.png" alt="Flextreme" style={{ width: "36px", height: "36px", objectFit: "contain", filter: "invert(1)" }} />
+              <img src="/logo-transparent.png" alt="Flextreme" style={{ width: "36px", height: "36px", objectFit: "contain" }} />
               <p style={{ fontSize: "1.75rem", fontWeight: 900, letterSpacing: "-0.05em", textTransform: "uppercase", margin: 0 }}>FLEXTREME</p>
             </div>
             <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.875rem", lineHeight: 1.8, marginBottom: "1.5rem" }}>

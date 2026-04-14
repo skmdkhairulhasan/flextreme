@@ -51,7 +51,7 @@ export default async function SizeGuidePage() {
 
   return (
     <div style={{ paddingTop: "72px" }}>
-      <div style={{ backgroundColor: "black", color: "white", padding: "4rem 1.5rem", textAlign: "center" }}>
+      <div style={{ backgroundColor: "var(--theme-primary, black)", color: "var(--theme-btn-text, white)", padding: "4rem 1.5rem", textAlign: "center" }}>
         <p style={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.3em", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", marginBottom: "0.75rem" }}>Find Your Fit</p>
         <h1 style={{ fontSize: "clamp(2.5rem, 6vw, 5rem)", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.03em", lineHeight: 1 }}>Size Guide</h1>
         <p style={{ color: "rgba(255,255,255,0.5)", marginTop: "1rem", fontSize: "0.95rem" }}>Measurements help you find the perfect fit</p>
@@ -88,7 +88,7 @@ export default async function SizeGuidePage() {
             <div style={{ border: "1px solid #e0e0e0", overflowX: "auto", WebkitOverflowScrolling: "touch" as any }}>
               <table style={{ width: "100%", borderCollapse: "collapse", minWidth: `${(table.columns?.length + 1) * 120}px` }}>
                 <thead>
-                  <tr style={{ backgroundColor: "black", color: "white" }}>
+                  <tr style={{ backgroundColor: "var(--theme-primary, black)", color: "var(--theme-btn-text, white)" }}>
                     <th style={{ padding: "0.875rem 1.25rem", textAlign: "left", fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", whiteSpace: "nowrap" }}>Size</th>
                     {table.columns?.map((col: any) => (
                       <th key={col.id} style={{ padding: "0.875rem 1.25rem", textAlign: "left", fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", whiteSpace: "nowrap" }}>
@@ -120,7 +120,7 @@ export default async function SizeGuidePage() {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "1.5rem" }}>
             {tips.map((tip, i) => (
               <div key={i} style={{ padding: "1.5rem", border: "1px solid #e0e0e0" }}>
-                <div style={{ width: "32px", height: "32px", backgroundColor: "black", color: "white", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: "0.85rem", marginBottom: "1rem" }}>{i + 1}</div>
+                <div style={{ width: "32px", height: "32px", backgroundColor: "var(--theme-primary, black)", color: "var(--theme-btn-text, white)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: "0.85rem", marginBottom: "1rem" }}>{i + 1}</div>
                 <h3 style={{ fontWeight: 700, fontSize: "0.875rem", textTransform: "uppercase", marginBottom: "0.5rem" }}>{tip.title}</h3>
                 <p style={{ fontSize: "0.82rem", color: "#666", lineHeight: 1.7 }}>{tip.description}</p>
               </div>

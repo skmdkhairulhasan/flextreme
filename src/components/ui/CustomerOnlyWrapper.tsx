@@ -6,6 +6,7 @@ import Footer from "@/components/layout/Footer"
 import ChatBot from "@/components/ui/ChatBot"
 import { CartProvider, CartDrawer } from "@/components/ui/Cart"
 import { FacebookPixelPageView } from "@/components/ui/FacebookPixel"
+import AnnouncementBanner from "@/components/ui/AnnouncementBanner"
 
 export default function CustomerOnlyWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
@@ -27,6 +28,7 @@ export default function CustomerOnlyWrapper({ children }: { children: React.Reac
       <Suspense fallback={null}>
         <FacebookPixelPageView />
       </Suspense>
+      <AnnouncementBanner />
       <Navbar />
       <main>{children}</main>
       <Footer />

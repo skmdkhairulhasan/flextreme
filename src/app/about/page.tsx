@@ -86,7 +86,7 @@ export default async function AboutPage() {
     <div style={{ paddingTop: "72px" }}>
 
       {/* HERO */}
-      <section style={{ backgroundColor: "black", color: "white", padding: "6rem 1.5rem", textAlign: "center" }}>
+      <section style={{ backgroundColor: "var(--theme-primary, black)", color: "var(--theme-btn-text, white)", padding: "6rem 1.5rem", textAlign: "center" }}>
         <div style={{ maxWidth: "800px", margin: "0 auto" }}>
           <p style={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.3em", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", marginBottom: "1rem" }}>Our Story</p>
           <h1 style={{ fontSize: "clamp(2.5rem, 7vw, 5rem)", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.03em", lineHeight: 0.95, marginBottom: "2rem" }}>
@@ -98,7 +98,7 @@ export default async function AboutPage() {
 
       {/* STORY + STATS */}
       {(hasStory || true) && (
-        <section style={{ backgroundColor: "white", padding: "6rem 1.5rem" }}>
+        <section style={{ backgroundColor: "var(--theme-bg, white)", padding: "6rem 1.5rem" }}>
           <div style={{ maxWidth: "1280px", margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "4rem", alignItems: "center" }}>
             <div>
               {storyTitle && (
@@ -110,7 +110,7 @@ export default async function AboutPage() {
               {storyBody1 && <p style={{ color: "#555", lineHeight: 1.8, marginBottom: "1.25rem" }}>{renderText(storyBody1)}</p>}
               {storyBody2 && <p style={{ color: "#555", lineHeight: 1.8, marginBottom: "1.25rem" }}>{renderText(storyBody2)}</p>}
               {storyBody3 && <p style={{ color: "#555", lineHeight: 1.8, marginBottom: "2rem" }}>{renderText(storyBody3)}</p>}
-              <Link href="/products" style={{ display: "inline-block", backgroundColor: "black", color: "white", padding: "1rem 2.5rem", fontWeight: 700, fontSize: "0.8rem", letterSpacing: "0.15em", textTransform: "uppercase", textDecoration: "none" }}>Shop The Collection</Link>
+              <Link href="/products" style={{ display: "inline-block", backgroundColor: "var(--theme-primary, black)", color: "var(--theme-btn-text, white)", padding: "1rem 2.5rem", fontWeight: 700, fontSize: "0.8rem", letterSpacing: "0.15em", textTransform: "uppercase", textDecoration: "none" }}>Shop The Collection</Link>
             </div>
             <style>{`.stats-grid { grid-template-columns: 1fr 1fr !important; } @media(max-width:480px){ .stats-grid { grid-template-columns: 1fr 1fr !important; max-width: 100%; overflow: hidden; } .stats-grid > div { padding: 1rem !important; } }`}</style>
             <div className="stats-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
@@ -127,7 +127,7 @@ export default async function AboutPage() {
 
       {/* VALUES */}
       {values.length > 0 && (
-        <section style={{ backgroundColor: "black", color: "white", padding: "6rem 1.5rem" }}>
+        <section style={{ backgroundColor: "var(--theme-primary, black)", color: "var(--theme-btn-text, white)", padding: "6rem 1.5rem" }}>
           <div style={{ maxWidth: "1280px", margin: "0 auto" }}>
             <div style={{ textAlign: "center", marginBottom: "4rem" }}>
               <p style={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.3em", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", marginBottom: "0.75rem" }}>What We Stand For</p>
@@ -137,7 +137,7 @@ export default async function AboutPage() {
               {values.map((v: any, i: number) => (
                 <div key={i} style={{ border: "1px solid rgba(255,255,255,0.12)", padding: "2.5rem 2rem" }}>
                   <p style={{ fontSize: "0.85rem", fontWeight: 700, letterSpacing: "0.15em", color: "rgba(255,255,255,0.4)", marginBottom: "1rem" }}>{v.number || String(i+1).padStart(2,"0")}</p>
-                  <h3 style={{ fontSize: "1rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.75rem", color: "white" }}>{v.title}</h3>
+                  <h3 style={{ fontSize: "1rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.75rem", color: "var(--theme-btn-text, white)" }}>{v.title}</h3>
                   <p style={{ color: "rgba(255,255,255,0.65)", fontSize: "0.9rem", lineHeight: 1.75 }}>{renderText(v.description)}</p>
                 </div>
               ))}
@@ -148,7 +148,7 @@ export default async function AboutPage() {
 
       {/* TEAM */}
       {team.length > 0 && (
-        <section style={{ backgroundColor: "white", padding: "6rem 1.5rem" }}>
+        <section style={{ backgroundColor: "var(--theme-bg, white)", padding: "6rem 1.5rem" }}>
           <div style={{ maxWidth: "1280px", margin: "0 auto" }}>
             <div style={{ textAlign: "center", marginBottom: "4rem" }}>
               <p style={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.3em", textTransform: "uppercase", color: "#999", marginBottom: "0.75rem" }}>The People</p>
@@ -157,7 +157,7 @@ export default async function AboutPage() {
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "2rem" }}>
               {team.map((member: any, i: number) => (
                 <div key={i} style={{ border: "1px solid #e0e0e0", padding: "2rem" }}>
-                  <div style={{ width: "60px", height: "60px", backgroundColor: "black", borderRadius: "50%", marginBottom: "1.25rem", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontWeight: 900, fontSize: "1.25rem" }}>
+                  <div style={{ width: "60px", height: "60px", backgroundColor: "var(--theme-primary, black)", borderRadius: "50%", marginBottom: "1.25rem", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--theme-btn-text, white)", fontWeight: 900, fontSize: "1.25rem" }}>
                     {(member.name || "?").charAt(0).toUpperCase()}
                   </div>
                   <h3 style={{ fontSize: "1rem", fontWeight: 700, textTransform: "uppercase", marginBottom: "0.25rem" }}>{member.name}</h3>
@@ -171,15 +171,15 @@ export default async function AboutPage() {
       )}
 
       {/* CTA */}
-      <section style={{ backgroundColor: "black", color: "white", padding: "6rem 1.5rem", textAlign: "center" }}>
+      <section style={{ backgroundColor: "var(--theme-primary, black)", color: "var(--theme-btn-text, white)", padding: "6rem 1.5rem", textAlign: "center" }}>
         <div style={{ maxWidth: "700px", margin: "0 auto" }}>
           <h2 style={{ fontSize: "clamp(2.5rem, 6vw, 4rem)", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.03em", lineHeight: 0.95, marginBottom: "1.5rem" }}>
             {renderHeadline(ctaHeadline)}
           </h2>
           {ctaSub && <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "1rem", lineHeight: 1.7, marginBottom: "2.5rem" }}>{renderText(ctaSub)}</p>}
           <div style={{ display: "flex", gap: "1rem", justifyContent: "center", flexWrap: "wrap" }}>
-            <Link href="/products" style={{ display: "inline-block", backgroundColor: "white", color: "black", padding: "1rem 2.5rem", fontWeight: 700, fontSize: "0.8rem", letterSpacing: "0.15em", textTransform: "uppercase", textDecoration: "none" }}>Shop Now</Link>
-            <Link href="/contact" style={{ display: "inline-block", backgroundColor: "transparent", color: "white", padding: "1rem 2.5rem", fontWeight: 700, fontSize: "0.8rem", letterSpacing: "0.15em", textTransform: "uppercase", textDecoration: "none", border: "1px solid rgba(255,255,255,0.3)" }}>Contact Us</Link>
+            <Link href="/products" style={{ display: "inline-block", backgroundColor: "var(--theme-bg, white)", color: "var(--theme-text, black)", padding: "1rem 2.5rem", fontWeight: 700, fontSize: "0.8rem", letterSpacing: "0.15em", textTransform: "uppercase", textDecoration: "none" }}>Shop Now</Link>
+            <Link href="/contact" style={{ display: "inline-block", backgroundColor: "transparent", color: "var(--theme-btn-text, white)", padding: "1rem 2.5rem", fontWeight: 700, fontSize: "0.8rem", letterSpacing: "0.15em", textTransform: "uppercase", textDecoration: "none", border: "1px solid rgba(255,255,255,0.3)" }}>Contact Us</Link>
           </div>
         </div>
       </section>

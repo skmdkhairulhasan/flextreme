@@ -39,7 +39,7 @@ export default function ReviewsGrid({ reviews }: { reviews: any[] }) {
                   {review.customer_location && <p style={{ fontSize: "0.7rem", color: "#999" }}>{review.customer_location}</p>}
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
-                  <span style={{ width: "13px", height: "13px", backgroundColor: "black", borderRadius: "50%", display: "inline-flex", alignItems: "center", justifyContent: "center", color: "white", fontSize: "0.45rem" }}>v</span>
+                  <span style={{ width: "13px", height: "13px", backgroundColor: "var(--theme-primary, black)", borderRadius: "50%", display: "inline-flex", alignItems: "center", justifyContent: "center", color: "white", fontSize: "0.45rem" }}>v</span>
                   <span style={{ fontSize: "0.62rem", color: "#666", fontWeight: 600 }}>Verified</span>
                 </div>
               </div>

@@ -8,7 +8,7 @@ export default function ReviewsSection({ reviews }: { reviews: any[] }) {
   if (reviews.length === 0) return null
 
   return (
-    <section style={{ backgroundColor: "white", padding: "6rem 1.5rem" }}>
+    <section style={{ backgroundColor: "var(--theme-bg, white)", padding: "6rem 1.5rem" }}>
       {/* Lightbox */}
       {lightbox && typeof document !== "undefined" && createPortal(
         <div onClick={() => setLightbox(null)} style={{ position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh", backgroundColor: "rgba(0,0,0,0.92)", zIndex: 99999, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem", cursor: "zoom-out" }}>
@@ -50,7 +50,7 @@ export default function ReviewsSection({ reviews }: { reviews: any[] }) {
                     {review.customer_location && <p style={{ fontSize: "0.72rem", color: "#999" }}>{review.customer_location}</p>}
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
-                    <span style={{ width: "14px", height: "14px", backgroundColor: "black", borderRadius: "50%", display: "inline-flex", alignItems: "center", justifyContent: "center", color: "white", fontSize: "0.5rem" }}>v</span>
+                    <span style={{ width: "14px", height: "14px", backgroundColor: "var(--theme-primary, black)", borderRadius: "50%", display: "inline-flex", alignItems: "center", justifyContent: "center", color: "white", fontSize: "0.5rem" }}>v</span>
                     <span style={{ fontSize: "0.65rem", color: "#666", fontWeight: 600 }}>Verified</span>
                   </div>
                 </div>

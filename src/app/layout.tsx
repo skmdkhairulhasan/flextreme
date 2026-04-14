@@ -4,6 +4,7 @@ import "./globals.css"
 import DumbbellCursorWrapper from "@/components/ui/DumbbellCursorWrapper"
 import PageTransition from "@/components/ui/PageTransition"
 import CustomerOnlyWrapper from "@/components/ui/CustomerOnlyWrapper"
+import AnnouncementBanner from "@/components/ui/AnnouncementBanner"
 import { createClient } from "@/lib/supabase/server"
 
 export const viewport: Viewport = {
@@ -38,6 +39,7 @@ export const metadata: Metadata = {
 }
 
 const FB_PIXEL_ID = process.env.NEXT_PUBLIC_FB_PIXEL_ID || ""
+const GTM_ID = process.env.NEXT_PUBLIC_GTM_ID || ""
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -57,8 +59,24 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   ].join(";")
 
   return (
-    <html lang="en" suppressHydrationWarning={true}>
+    <html lang="en" suppressHydrationWarning={true} data-scroll-behavior="smooth">
       <head>
+        {/* Google Tag Manager */}
+        {GTM_ID && (
+          <Script
+            id="gtm-script"
+            strategy="afterInteractive"
+            dangerouslySetInnerHTML={{
+              __html: `
+                (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+                new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+                j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+                'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+                })(window,document,'script','dataLayer','${GTM_ID}');
+              `,
+            }}
+          />
+        )}
         <style>{`:root{${cssVars}}`}</style>
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -98,8 +116,18 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         )}
       </head>
       <body suppressHydrationWarning={true} style={{ backgroundColor: theme.bg, color: theme.text }}>
+        {/* Google Tag Manager noscript */}
+        {GTM_ID && (
+          <noscript>
+            <iframe
+              src={`https://www.googletagmanager.com/ns.html?id=${GTM_ID}`}
+              height="0" width="0"
+              style={{ display: "none", visibility: "hidden" }}
+            />
+          </noscript>
+        )}
         <DumbbellCursorWrapper />
-        <CustomerOnlyWrapper>
+      <CustomerOnlyWrapper>
           <PageTransition>
             {children}
           </PageTransition>

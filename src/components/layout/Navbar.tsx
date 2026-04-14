@@ -29,11 +29,11 @@ export default function Navbar() {
   ]
 
   const isTransparent = isHome && !scrolled
-  const bgColor = isTransparent ? "rgba(0,0,0,0)" : "rgba(0,0,0,0.97)"
+  const bgColor = isTransparent ? "rgba(0,0,0,0)" : "var(--theme-primary, rgba(0,0,0,0.97))"
   const borderColor = isTransparent ? "transparent" : "rgba(255,255,255,0.08)"
 
   return (
-    <nav style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 50, backgroundColor: bgColor, backdropFilter: isTransparent ? "none" : "blur(12px)", transition: "all 0.3s ease", borderBottom: "1px solid " + borderColor }}>
+    <nav className="navbar-fixed" style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 50, backgroundColor: bgColor, backdropFilter: isTransparent ? "none" : "blur(12px)", transition: "all 0.3s ease", borderBottom: "1px solid " + borderColor }}>
       <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "0 1.5rem", height: "72px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem" }}>
 
         {/* Logo */}
@@ -79,7 +79,7 @@ export default function Navbar() {
 
       {/* Mobile Menu */}
       {isOpen && (
-        <div style={{ backgroundColor: "black", borderTop: "1px solid rgba(255,255,255,0.1)", padding: "1.5rem", display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+        <div style={{ backgroundColor: "var(--theme-primary, black)", borderTop: "1px solid rgba(255,255,255,0.1)", padding: "1.5rem", display: "flex", flexDirection: "column", gap: "1.5rem" }}>
           {navLinks.map((link) => (
             <Link key={link.href} href={link.href} onClick={() => setIsOpen(false)} style={(link as any).special ? {
               color: "black", backgroundColor: "white", textDecoration: "none", fontSize: "1rem",
@@ -93,7 +93,7 @@ export default function Navbar() {
               {link.label}
             </Link>
           ))}
-          <Link href="/products" onClick={() => setIsOpen(false)} style={{ backgroundColor: "white", color: "black", padding: "1rem", fontWeight: 700, fontSize: "0.875rem", letterSpacing: "0.1em", textTransform: "uppercase", textDecoration: "none", textAlign: "center", display: "block" }}>
+          <Link href="/products" onClick={() => setIsOpen(false)} style={{ backgroundColor: "var(--theme-accent, white)", color: "var(--theme-primary, black)", padding: "1rem", fontWeight: 700, fontSize: "0.875rem", letterSpacing: "0.1em", textTransform: "uppercase", textDecoration: "none", textAlign: "center", display: "block" }}>
             Browse Products
           </Link>
         </div>

@@ -933,6 +933,7 @@ export default function AdminSettings() {
     { id: "categories", label: "Categories" },
     { id: "delivery", label: "Delivery & FAQ" },
     { id: "about", label: "About Page" },
+    { id: "banner", label: "📢 Banner" },
     { id: "content", label: "Content" },
     { id: "social", label: "Social" },
   ]
@@ -1144,6 +1145,80 @@ export default function AdminSettings() {
       )}
 
       {/* SOCIAL TAB */}
+      {activeTab === "banner" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+          <Section title="Announcement Banner" subtitle="Scrolling banner shown above the navbar on all pages">
+            <div style={{ marginBottom: "1rem" }}>
+              <label style={{ display: "flex", alignItems: "center", gap: "0.75rem", cursor: "pointer" }}>
+                <div
+                  onClick={() => saveSetting("banner_enabled", settings.banner_enabled === "true" ? "false" : "true")}
+                  style={{ width: "44px", height: "24px", borderRadius: "12px", backgroundColor: settings.banner_enabled === "true" ? "#16a34a" : "#e0e0e0", position: "relative", cursor: "pointer", transition: "background 0.2s", flexShrink: 0 }}>
+                  <div style={{ position: "absolute", top: "3px", left: settings.banner_enabled === "true" ? "22px" : "3px", width: "18px", height: "18px", borderRadius: "50%", backgroundColor: "white", transition: "left 0.2s", boxShadow: "0 1px 3px rgba(0,0,0,0.2)" }} />
+                </div>
+                <span style={{ fontSize: "0.875rem", fontWeight: 600 }}>
+                  {settings.banner_enabled === "true" ? "Banner ON — visible on site" : "Banner OFF — hidden from site"}
+                </span>
+              </label>
+            </div>
+            <div style={{ marginBottom: "1rem" }}>
+              <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", marginBottom: "0.4rem" }}>Banner Text</label>
+              <input
+                defaultValue={settings.banner_text || ""}
+                onBlur={e => saveSetting("banner_text", e.target.value)}
+                placeholder="e.g. FREE DELIVERY on orders above BDT 1500 🚚 · Use code FLEX10 for 10% off"
+                style={{ width: "100%", border: "1px solid #e0e0e0", padding: "0.75rem 1rem", fontSize: "0.9rem", outline: "none", boxSizing: "border-box" as const }}
+              />
+              <p style={{ fontSize: "0.7rem", color: "#999", marginTop: "0.25rem" }}>This text will scroll repeatedly across the banner. Use · to separate multiple messages.</p>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1rem" }}>
+              <div>
+                <label style={{ display: "block", fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", marginBottom: "0.4rem", color: "#555" }}>Background Color</label>
+                <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                  <input type="color" value={settings.banner_bg || "#000000"} onChange={e => saveSetting("banner_bg", e.target.value)}
+                    style={{ width: "44px", height: "36px", padding: "0", border: "1px solid #e0e0e0", cursor: "pointer", flexShrink: 0, borderRadius: "4px" }} />
+                  <input value={settings.banner_bg || "#000000"} onChange={e => saveSetting("banner_bg", e.target.value)}
+                    style={{ flex: 1, border: "1px solid #e0e0e0", padding: "0.4rem 0.6rem", fontSize: "0.75rem", fontFamily: "monospace", outline: "none" }} />
+                </div>
+              </div>
+              <div>
+                <label style={{ display: "block", fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", marginBottom: "0.4rem", color: "#555" }}>Text Color</label>
+                <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                  <input type="color" value={settings.banner_color || "#ffffff"} onChange={e => saveSetting("banner_color", e.target.value)}
+                    style={{ width: "44px", height: "36px", padding: "0", border: "1px solid #e0e0e0", cursor: "pointer", flexShrink: 0, borderRadius: "4px" }} />
+                  <input value={settings.banner_color || "#ffffff"} onChange={e => saveSetting("banner_color", e.target.value)}
+                    style={{ flex: 1, border: "1px solid #e0e0e0", padding: "0.4rem 0.6rem", fontSize: "0.75rem", fontFamily: "monospace", outline: "none" }} />
+                </div>
+              </div>
+            </div>
+            <div style={{ marginBottom: "1rem" }}>
+              <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", marginBottom: "0.4rem" }}>Scroll Speed</label>
+              <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+                <span style={{ fontSize: "0.75rem", color: "#999", minWidth: "40px" }}>Fast</span>
+                <input type="range" min="10" max="60" step="5"
+                  value={settings.banner_speed || "30"}
+                  onChange={e => saveSetting("banner_speed", e.target.value)}
+                  style={{ flex: 1, cursor: "pointer" }} />
+                <span style={{ fontSize: "0.75rem", color: "#999", minWidth: "40px" }}>Slow</span>
+                <span style={{ fontSize: "0.8rem", fontWeight: 700, minWidth: "50px" }}>{settings.banner_speed || "30"}s</span>
+              </div>
+              <p style={{ fontSize: "0.7rem", color: "#999", marginTop: "0.25rem" }}>Lower = faster scroll. Default is 30s.</p>
+            </div>
+
+            {/* Live preview */}
+            {settings.banner_text && (
+              <div>
+                <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", marginBottom: "0.4rem" }}>Preview</label>
+                <div style={{ backgroundColor: settings.banner_bg || "#000000", height: "36px", overflow: "hidden", display: "flex", alignItems: "center", borderRadius: "4px" }}>
+                  <marquee style={{ color: settings.banner_color || "#ffffff", fontSize: "0.75rem", fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase" }}>
+                    {[...Array(4)].map((_, i) => <span key={i}>{settings.banner_text}&nbsp;&nbsp;&nbsp;·&nbsp;&nbsp;&nbsp;</span>)}
+                  </marquee>
+                </div>
+              </div>
+            )}
+          </Section>
+        </div>
+      )}
+
       {activeTab === "social" && (
         <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
           <Section title="Contact" subtitle="WhatsApp number shown in footer and chatbot">

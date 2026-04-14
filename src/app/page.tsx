@@ -61,7 +61,7 @@ function HeroSection({ settings }: { settings: Record<string, string> }) {
   const watermarkSize = settings.hero_watermark_size || "75"
   const watermarkOpacity = parseFloat(settings.hero_watermark_opacity || "0.045")
   return (
-    <section style={{ minHeight: "100vh", backgroundColor: "black", display: "flex", alignItems: "center", justifyContent: "center", paddingTop: "72px", paddingBottom: "4rem", overflow: "hidden", position: "relative" }}>
+    <section style={{ minHeight: "100vh", backgroundColor: "var(--theme-primary, black)", display: "flex", alignItems: "center", justifyContent: "center", paddingTop: "72px", paddingBottom: "4rem", overflow: "hidden", position: "relative" }}>
       {bgType === "image" && bgImage && (
         <div style={{ position: "absolute", inset: 0, zIndex: 0, overflow: "hidden" }}>
           <img src={bgImage} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: bgPosX + "% " + bgPosY + "%", opacity: bgOpacity, transform: "scale(" + bgScale + ")", transformOrigin: bgPosX + "% " + bgPosY + "%" }} />
@@ -105,7 +105,7 @@ function HeroSection({ settings }: { settings: Record<string, string> }) {
         </p>
 
         <div style={{ display: "flex", gap: "1rem", justifyContent: "center", flexWrap: "wrap", paddingBottom: "3rem" }}>
-          <Link href="/products" style={{ backgroundColor: "white", color: "black", padding: "1rem 2.5rem", fontWeight: 700, fontSize: "0.8rem", letterSpacing: "0.15em", textTransform: "uppercase", textDecoration: "none", display: "inline-block" }}>Shop Collection</Link>
+          <Link href="/products" style={{ backgroundColor: "var(--theme-bg, white)", color: "black", padding: "1rem 2.5rem", fontWeight: 700, fontSize: "0.8rem", letterSpacing: "0.15em", textTransform: "uppercase", textDecoration: "none", display: "inline-block" }}>Shop Collection</Link>
           <Link href="/about" style={{ backgroundColor: "transparent", color: "white", padding: "1rem 2.5rem", fontWeight: 700, fontSize: "0.8rem", letterSpacing: "0.15em", textTransform: "uppercase", textDecoration: "none", display: "inline-block", border: "1px solid rgba(255,255,255,0.3)" }}>Our Story</Link>
         </div>
       </div>
@@ -115,7 +115,7 @@ function HeroSection({ settings }: { settings: Record<string, string> }) {
 
 function FeaturedProducts({ products }: { products: Product[] }) {
   return (
-    <section style={{ backgroundColor: "white", padding: "6rem 1.5rem" }}>
+    <section style={{ backgroundColor: "var(--theme-bg, white)", padding: "6rem 1.5rem" }}>
       <div style={{ maxWidth: "1280px", margin: "0 auto" }}>
         <div style={{ marginBottom: "3rem" }}>
           <p style={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.3em", textTransform: "uppercase", color: "#999", marginBottom: "0.75rem" }}>The Collection</p>
@@ -144,7 +144,7 @@ function ProductCard({ product }: { product: Product }) {
       <div style={{ cursor: "pointer" }}>
         <div style={{ position: "relative", backgroundColor: "#f5f5f5", aspectRatio: "3/4", overflow: "hidden", marginBottom: "1rem" }}>
           <img src={image} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-          {discount && <div style={{ position: "absolute", top: "1rem", left: "1rem", backgroundColor: "black", color: "white", padding: "0.25rem 0.6rem", fontSize: "0.7rem", fontWeight: 700 }}>-{discount}%</div>}
+          {discount && <div style={{ position: "absolute", top: "1rem", left: "1rem", backgroundColor: "var(--theme-primary, black)", color: "white", padding: "0.25rem 0.6rem", fontSize: "0.7rem", fontWeight: 700 }}>-{discount}%</div>}
         </div>
         <div>
           <p style={{ fontSize: "0.7rem", color: "#999", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.3rem" }}>{product.category}</p>
@@ -172,7 +172,7 @@ function PerformanceFeatures() {
     { icon: "04", title: "Muscle Definition", stat: "Elite athlete cut", description: "Strategic fit that highlights your physique. Look as powerful as you perform." },
   ]
   return (
-    <section style={{ backgroundColor: "black", padding: "6rem 1.5rem", color: "white" }}>
+    <section style={{ backgroundColor: "var(--theme-primary, black)", padding: "6rem 1.5rem", color: "white" }}>
       <div style={{ maxWidth: "1280px", margin: "0 auto" }}>
         <div style={{ marginBottom: "4rem", textAlign: "center" }}>
           <p style={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.3em", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", marginBottom: "0.75rem" }}>Built Different</p>
@@ -205,14 +205,14 @@ function WhyFlextreme() {
     { feature: "Value for Performance", flextreme: true, others: false },
   ]
   return (
-    <section style={{ backgroundColor: "white", padding: "6rem 1.5rem" }}>
+    <section style={{ backgroundColor: "var(--theme-bg, white)", padding: "6rem 1.5rem" }}>
       <div style={{ maxWidth: "900px", margin: "0 auto" }}>
         <div style={{ textAlign: "center", marginBottom: "4rem" }}>
           <p style={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.3em", textTransform: "uppercase", color: "#999", marginBottom: "0.75rem" }}>The Difference</p>
           <h2 style={{ fontSize: "clamp(2rem, 5vw, 3.5rem)", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.03em", lineHeight: 1 }}>Why Flextreme?</h2>
         </div>
         <div style={{ border: "1px solid #e0e0e0" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 100px 100px", backgroundColor: "black", color: "white", padding: "0.875rem 1.25rem" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 100px 100px", backgroundColor: "var(--theme-primary, black)", color: "white", padding: "0.875rem 1.25rem" }}>
             <div style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase" }}>Feature</div>
             <div style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", display: "flex", justifyContent: "center" }}>Flextreme</div>
             <div style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", display: "flex", justifyContent: "center", color: "rgba(255,255,255,0.4)" }}>Others</div>
@@ -252,7 +252,7 @@ function BrandStory({ settings, totalProducts, customerCount, avgRating, totalRe
     })}</>
   }
   return (
-    <section style={{ backgroundColor: "#0a0a0a", padding: "6rem 1.5rem", color: "white" }}>
+    <section style={{ backgroundColor: "var(--theme-primary, #0a0a0a)", padding: "6rem 1.5rem", color: "var(--theme-btn-text, white)" }}>
       <div style={{ maxWidth: "1280px", margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "4rem", alignItems: "center" }}>
         <div>
           <p style={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.3em", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", marginBottom: "1rem" }}>Our Story</p>
@@ -280,7 +280,7 @@ function BrandStory({ settings, totalProducts, customerCount, avgRating, totalRe
 
 function FinalCTA({ settings }: { settings: Record<string, string> }) {
   return (
-    <section style={{ backgroundColor: "black", padding: "8rem 1.5rem", textAlign: "center", color: "white" }}>
+    <section style={{ backgroundColor: "var(--theme-primary, black)", padding: "8rem 1.5rem", textAlign: "center", color: "white" }}>
       <div style={{ maxWidth: "800px", margin: "0 auto" }}>
         <p style={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.3em", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", marginBottom: "1.5rem" }}>Ready To Level Up?</p>
         <h2 style={{ fontSize: "clamp(3rem, 8vw, 6rem)", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.04em", lineHeight: 0.9, marginBottom: "2rem" }}>
@@ -290,7 +290,7 @@ function FinalCTA({ settings }: { settings: Record<string, string> }) {
           {settings.cta_subtext || "Join our growing community. Cash on Delivery. Nationwide shipping."}
         </p>
         <div style={{ display: "flex", gap: "1rem", justifyContent: "center", flexWrap: "wrap" }}>
-          <Link href="/products" style={{ backgroundColor: "white", color: "black", padding: "1rem 2.5rem", fontWeight: 700, fontSize: "0.8rem", letterSpacing: "0.15em", textTransform: "uppercase", textDecoration: "none", display: "inline-block" }}>Shop Now</Link>
+          <Link href="/products" style={{ backgroundColor: "var(--theme-bg, white)", color: "black", padding: "1rem 2.5rem", fontWeight: 700, fontSize: "0.8rem", letterSpacing: "0.15em", textTransform: "uppercase", textDecoration: "none", display: "inline-block" }}>Shop Now</Link>
           <a href={"https://wa.me/" + (settings.whatsapp_number || "8801935962421")} target="_blank" rel="noopener noreferrer" style={{ backgroundColor: "#25D366", color: "white", padding: "1rem 2.5rem", fontWeight: 700, fontSize: "0.8rem", letterSpacing: "0.15em", textTransform: "uppercase", textDecoration: "none", display: "inline-block" }}>WhatsApp Us</a>
         </div>
       </div>

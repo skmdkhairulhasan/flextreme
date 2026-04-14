@@ -65,19 +65,19 @@ export default function WriteReviewPage() {
   }
 
   if (success) return (
-    <div style={{ paddingTop: "72px", minHeight: "100vh", backgroundColor: "white", display: "flex", alignItems: "center", justifyContent: "center", padding: "2rem" }}>
+    <div style={{ paddingTop: "72px", minHeight: "100vh", backgroundColor: "var(--theme-bg, white)", display: "flex", alignItems: "center", justifyContent: "center", padding: "2rem" }}>
       <div style={{ textAlign: "center", maxWidth: "400px" }}>
         <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>✓</div>
         <h2 style={{ fontWeight: 900, fontSize: "1.5rem", textTransform: "uppercase", marginBottom: "0.75rem" }}>Thank You!</h2>
         <p style={{ color: "#555", marginBottom: "1.5rem" }}>Your review has been submitted and will be published after approval.</p>
-        <a href="/reviews" style={{ display: "inline-block", backgroundColor: "black", color: "white", padding: "0.875rem 2rem", fontWeight: 700, fontSize: "0.8rem", letterSpacing: "0.1em", textTransform: "uppercase", textDecoration: "none" }}>Back to Reviews</a>
+        <a href="/reviews" style={{ display: "inline-block", backgroundColor: "var(--theme-primary, black)", color: "var(--theme-btn-text, white)", padding: "0.875rem 2rem", fontWeight: 700, fontSize: "0.8rem", letterSpacing: "0.1em", textTransform: "uppercase", textDecoration: "none" }}>Back to Reviews</a>
       </div>
     </div>
   )
 
   return (
-    <div style={{ paddingTop: "72px", minHeight: "100vh", backgroundColor: "white" }}>
-      <div style={{ backgroundColor: "black", color: "white", padding: "3rem 1.5rem", textAlign: "center" }}>
+    <div style={{ paddingTop: "72px", minHeight: "100vh", backgroundColor: "var(--theme-bg, white)" }}>
+      <div style={{ backgroundColor: "var(--theme-primary, black)", color: "var(--theme-btn-text, white)", padding: "3rem 1.5rem", textAlign: "center" }}>
         <p style={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.3em", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", marginBottom: "0.75rem" }}>Share Your Experience</p>
         <h1 style={{ fontSize: "clamp(2rem, 5vw, 3.5rem)", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.03em", lineHeight: 1 }}>Write a Review</h1>
       </div>
@@ -132,7 +132,7 @@ export default function WriteReviewPage() {
             <div style={{ position: "relative", display: "inline-block" }}>
               <img src={photoPreview} alt="Preview" style={{ width: "120px", height: "120px", objectFit: "cover", border: "1px solid #e0e0e0", display: "block" }} />
               <button onClick={() => { setPhoto(null); setPhotoPreview(null); if (fileRef.current) fileRef.current.value = "" }}
-                style={{ position: "absolute", top: -8, right: -8, width: 22, height: 22, borderRadius: "50%", background: "#dc2626", color: "white", border: "none", cursor: "pointer", fontSize: "0.75rem", fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+                style={{ position: "absolute", top: -8, right: -8, width: 22, height: 22, borderRadius: "50%", background: "#dc2626", color: "var(--theme-btn-text, white)", border: "none", cursor: "pointer", fontSize: "0.75rem", fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
             </div>
           ) : (
             <button onClick={() => fileRef.current?.click()} style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.75rem 1.25rem", border: "1.5px dashed #ccc", background: "white", cursor: "pointer", fontSize: "0.85rem", color: "#666", borderRadius: "4px" }}>
@@ -143,7 +143,7 @@ export default function WriteReviewPage() {
 
         {error && <div style={{ backgroundColor: "#fff0f0", border: "1px solid #ffcccc", padding: "0.75rem 1rem", marginBottom: "1rem", fontSize: "0.875rem", color: "#cc0000" }}>{error}</div>}
 
-        <button onClick={submit} disabled={loading} style={{ width: "100%", backgroundColor: "black", color: "white", padding: "1.1rem", fontWeight: 700, fontSize: "0.875rem", letterSpacing: "0.15em", textTransform: "uppercase", border: "none", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.7 : 1 }}>
+        <button onClick={submit} disabled={loading} style={{ width: "100%", backgroundColor: "var(--theme-primary, black)", color: "var(--theme-btn-text, white)", padding: "1.1rem", fontWeight: 700, fontSize: "0.875rem", letterSpacing: "0.15em", textTransform: "uppercase", border: "none", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.7 : 1 }}>
           {loading ? "Submitting..." : "Submit Review"}
         </button>
         <p style={{ fontSize: "0.72rem", color: "#999", textAlign: "center" as const, marginTop: "0.75rem" }}>Reviews are published after approval</p>

@@ -242,7 +242,7 @@ export default function OrderForm({ product }: { product: Product & { stock_matr
           }}
           style={{
             padding: "0.9rem 1rem",
-            backgroundColor: "black",
+            backgroundColor: "var(--theme-btn-bg, black)",
             color: "white",
             border: "2px solid black",
             fontWeight: 700,

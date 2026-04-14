@@ -84,7 +84,7 @@ function CheckoutButton({ setOpen }: { setOpen: (v: boolean) => void }) {
     router.push("/checkout")
   }
   return (
-    <button onClick={go} style={{ display: "block", width: "100%", backgroundColor: "black", color: "white", padding: "1rem", textAlign: "center", fontWeight: 700, fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "0.1em", border: "none", cursor: "var(--chat-cursor,auto)", marginBottom: "0.75rem" }}>
+    <button onClick={go} style={{ display: "block", width: "100%", backgroundColor: "var(--theme-btn-bg, black)", color: "var(--theme-btn-text, white)", padding: "1rem", textAlign: "center", fontWeight: 700, fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "0.1em", border: "none", cursor: "var(--chat-cursor,auto)", marginBottom: "0.75rem" }}>
       Proceed to Checkout
     </button>
   )
@@ -133,7 +133,7 @@ export function CartDrawer() {
                   <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>🛒</div>
                   <p style={{ fontWeight: 700, fontSize: "0.95rem", marginBottom: "0.5rem" }}>Your cart is empty</p>
                   <p style={{ color: "#999", fontSize: "0.82rem" }}>Add some items to get started!</p>
-                  <button onClick={() => setOpen(false)} style={{ marginTop: "1.5rem", padding: "0.75rem 2rem", backgroundColor: "black", color: "white", border: "none", fontWeight: 700, fontSize: "0.8rem", textTransform: "uppercase", cursor: "var(--chat-cursor,auto)", letterSpacing: "0.1em" }}>Continue Shopping</button>
+                  <button onClick={() => setOpen(false)} style={{ marginTop: "1.5rem", padding: "0.75rem 2rem", backgroundColor: "var(--theme-btn-bg, black)", color: "var(--theme-btn-text, white)", border: "none", fontWeight: 700, fontSize: "0.8rem", textTransform: "uppercase", cursor: "var(--chat-cursor,auto)", letterSpacing: "0.1em" }}>Continue Shopping</button>
                 </div>
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
@@ -198,7 +198,7 @@ export function CartButton() {
         <path d="M16 10a4 4 0 01-8 0"/>
       </svg>
       {count > 0 && (
-        <span style={{ position: "absolute", top: "-4px", right: "-4px", width: "20px", height: "20px", borderRadius: "50%", backgroundColor: "black", color: "white", fontSize: "0.6rem", fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", border: "2px solid white" }}>
+        <span style={{ position: "absolute", top: "-4px", right: "-4px", width: "20px", height: "20px", borderRadius: "50%", backgroundColor: "var(--theme-btn-bg, black)", color: "var(--theme-btn-text, white)", fontSize: "0.6rem", fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", border: "2px solid white" }}>
           {count > 99 ? "99+" : count}
         </span>
       )}

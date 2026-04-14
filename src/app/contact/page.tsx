@@ -15,10 +15,10 @@ export default async function ContactPage() {
   const address = s.store_address || ""
 
   return (
-    <div style={{ paddingTop: "72px", minHeight: "100vh", backgroundColor: "white" }}>
+    <div style={{ paddingTop: "72px", minHeight: "100vh", backgroundColor: "var(--theme-bg, white)" }}>
 
       {/* Header */}
-      <div style={{ backgroundColor: "black", color: "white", padding: "5rem 1.5rem", textAlign: "center" }}>
+      <div style={{ backgroundColor: "var(--theme-primary, black)", color: "var(--theme-btn-text, white)", padding: "5rem 1.5rem", textAlign: "center" }}>
         <p style={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.3em", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", marginBottom: "1rem" }}>Get In Touch</p>
         <h1 style={{ fontSize: "clamp(2.5rem, 6vw, 4rem)", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.03em", margin: 0 }}>Contact Us</h1>
         <p style={{ color: "rgba(255,255,255,0.5)", marginTop: "1rem", fontSize: "0.95rem" }}>We'd love to hear from you. Send us a message or reach out directly.</p>
@@ -48,7 +48,7 @@ export default async function ContactPage() {
               {/* Email */}
               {email && (
                 <a href={"mailto:" + email} style={{ display: "flex", gap: "1rem", alignItems: "flex-start", textDecoration: "none", color: "inherit", padding: "1.25rem", border: "1px solid #e0e0e0" }}>
-                  <div style={{ width: "44px", height: "44px", backgroundColor: "black", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <div style={{ width: "44px", height: "44px", backgroundColor: "var(--theme-primary, black)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
                   </div>
                   <div>
@@ -62,7 +62,7 @@ export default async function ContactPage() {
               {/* Phone */}
               {phone && (
                 <a href={"tel:" + phone} style={{ display: "flex", gap: "1rem", alignItems: "flex-start", textDecoration: "none", color: "inherit", padding: "1.25rem", border: "1px solid #e0e0e0" }}>
-                  <div style={{ width: "44px", height: "44px", backgroundColor: "black", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <div style={{ width: "44px", height: "44px", backgroundColor: "var(--theme-primary, black)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 8.81 19.79 19.79 0 01.06 2.18 2 2 0 012.03 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
                   </div>
                   <div>
@@ -75,7 +75,7 @@ export default async function ContactPage() {
               {/* Address */}
               {address && (
                 <div style={{ display: "flex", gap: "1rem", alignItems: "flex-start", padding: "1.25rem", border: "1px solid #e0e0e0" }}>
-                  <div style={{ width: "44px", height: "44px", backgroundColor: "black", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <div style={{ width: "44px", height: "44px", backgroundColor: "var(--theme-primary, black)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
                   </div>
                   <div>
@@ -88,18 +88,15 @@ export default async function ContactPage() {
               {/* Business hours */}
               <div style={{ padding: "1.25rem", backgroundColor: "#f9f9f9", border: "1px solid #e0e0e0" }}>
                 <p style={{ fontWeight: 700, fontSize: "0.82rem", marginBottom: "0.75rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Business Hours</p>
-                {(s.business_hours
-  ? JSON.parse(s.business_hours)
-  : [
-      { day: "Saturday – Thursday", hours: "9:00 AM – 9:00 PM" },
-      { day: "Friday", hours: "2:00 PM – 9:00 PM" },
-    ]
-).map((h: any, i: number) => (
-  <div key={i} style={{ display: "flex", justifyContent: "space-between", fontSize: "0.82rem", padding: "0.3rem 0", borderBottom: i === 0 ? "1px solid #e0e0e0" : "none" }}>
-    <span style={{ color: "#555" }}>{h.day}</span>
-    <span style={{ fontWeight: 600 }}>{h.hours}</span>
-  </div>
-))}
+                {[
+                  { day: "Saturday – Thursday", hours: "9:00 AM – 9:00 PM" },
+                  { day: "Friday", hours: "2:00 PM – 9:00 PM" },
+                ].map((h, i) => (
+                  <div key={i} style={{ display: "flex", justifyContent: "space-between", fontSize: "0.82rem", padding: "0.3rem 0", borderBottom: i === 0 ? "1px solid #e0e0e0" : "none" }}>
+                    <span style={{ color: "#555" }}>{h.day}</span>
+                    <span style={{ fontWeight: 600 }}>{h.hours}</span>
+                  </div>
+                ))}
               </div>
             </div>
           </div>

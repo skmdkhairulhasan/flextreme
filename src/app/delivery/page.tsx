@@ -1,6 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
 
-export const dynamic = "force-dynamic"
 export const metadata = { title: "Delivery Info | Flextreme" }
 
 type DeliveryZone = { id: string; name: string; charge: string; days: string }
@@ -48,10 +47,10 @@ export default async function DeliveryPage() {
   ]
 
   return (
-    <div style={{ minHeight: "100vh", backgroundColor: "white", paddingTop: "72px" }}>
+    <div style={{ minHeight: "100vh", backgroundColor: "var(--theme-bg, white)", paddingTop: "72px" }}>
 
       {/* Header */}
-      <div style={{ backgroundColor: "black", color: "white", padding: "4rem 1.5rem", textAlign: "center" }}>
+      <div style={{ backgroundColor: "var(--theme-primary, black)", color: "var(--theme-btn-text, white)", padding: "4rem 1.5rem", textAlign: "center" }}>
         <p style={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.3em", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", marginBottom: "1rem" }}>Bangladesh Wide</p>
         <h1 style={{ fontSize: "clamp(2.5rem, 6vw, 4rem)", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.03em", margin: 0 }}>Delivery Info</h1>
         <p style={{ color: "rgba(255,255,255,0.5)", marginTop: "1rem", fontSize: "0.95rem" }}>
@@ -68,22 +67,6 @@ export default async function DeliveryPage() {
             <h2 style={{ fontSize: "clamp(1.5rem, 4vw, 2rem)", fontWeight: 900, color: "#15803d", marginBottom: "0.75rem", textTransform: "uppercase", letterSpacing: "-0.02em" }}>Free Delivery Nationwide</h2>
             <p style={{ fontSize: "1rem", color: "#166534", lineHeight: 1.7, maxWidth: "500px", margin: "0 auto 0.75rem" }}>We offer <strong>FREE delivery</strong> across all of Bangladesh — no minimum order, no hidden charges, no surprises.</p>
             <p style={{ fontSize: "0.9rem", color: "#16a34a", fontWeight: 700 }}>✓ Cash on Delivery &nbsp;·&nbsp; ✓ Pay when it arrives &nbsp;·&nbsp; ✓ Zero advance payment</p>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1px 1fr 1px 1fr", gap: "0", marginTop: "1.25rem", maxWidth: "420px", margin: "1.25rem auto 0" }}>
-              <div style={{ textAlign: "center", padding: "0 0.5rem" }}>
-                <p style={{ fontWeight: 900, fontSize: "1.25rem", color: "#15803d" }}>1-2</p>
-                <p style={{ fontSize: "0.72rem", color: "#166534", fontWeight: 600, lineHeight: 1.4 }}>Days<br/>Khulna City</p>
-              </div>
-              <div style={{ backgroundColor: "#86efac", width: "1px" }} />
-              <div style={{ textAlign: "center", padding: "0 0.5rem" }}>
-                <p style={{ fontWeight: 900, fontSize: "1.25rem", color: "#15803d" }}>2-3</p>
-                <p style={{ fontSize: "0.72rem", color: "#166534", fontWeight: 600, lineHeight: 1.4 }}>Days<br/>Near Khulna</p>
-              </div>
-              <div style={{ backgroundColor: "#86efac", width: "1px" }} />
-              <div style={{ textAlign: "center", padding: "0 0.5rem" }}>
-                <p style={{ fontWeight: 900, fontSize: "1.25rem", color: "#15803d" }}>3-5</p>
-                <p style={{ fontSize: "0.72rem", color: "#166534", fontWeight: 600, lineHeight: 1.4 }}>Days<br/>All Bangladesh</p>
-              </div>
-            </div>
           </div>
         ) : (
           <>
@@ -109,7 +92,7 @@ export default async function DeliveryPage() {
                       <col style={{ width: "30%" }} />
                     </colgroup>
                     <thead>
-                      <tr style={{ backgroundColor: "black", color: "white" }}>
+                      <tr style={{ backgroundColor: "var(--theme-primary, black)", color: "var(--theme-btn-text, white)" }}>
                         <th style={{ padding: "0.75rem 1rem", textAlign: "left", fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" }}>City / Area</th>
                         <th style={{ padding: "0.75rem 1rem", textAlign: "left", fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" }}>Charge</th>
                         <th style={{ padding: "0.75rem 1rem", textAlign: "left", fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" }}>Est. Delivery</th>
@@ -136,7 +119,7 @@ export default async function DeliveryPage() {
           <div style={{ marginTop: "3rem" }}>
             <div style={{ marginBottom: "1.5rem" }}>
               <h2 style={{ fontSize: "clamp(1.25rem, 3vw, 1.75rem)", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.02em" }}>Frequently Asked Questions</h2>
-              <div style={{ width: "40px", height: "2px", backgroundColor: "black", marginTop: "0.5rem" }} />
+              <div style={{ width: "40px", height: "2px", backgroundColor: "var(--theme-primary, black)", marginTop: "0.5rem" }} />
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "0" }}>
               {faqs.map((faq, i) => (
@@ -153,10 +136,10 @@ export default async function DeliveryPage() {
         )}
 
         {/* Contact strip */}
-        <div style={{ marginTop: "3rem", backgroundColor: "black", color: "white", padding: "2rem", textAlign: "center" }}>
+        <div style={{ marginTop: "3rem", backgroundColor: "var(--theme-primary, black)", color: "var(--theme-btn-text, white)", padding: "2rem", textAlign: "center" }}>
           <p style={{ fontWeight: 700, fontSize: "0.95rem", marginBottom: "0.5rem" }}>Still have questions?</p>
           <p style={{ color: "rgba(255,255,255,0.6)", fontSize: "0.85rem", marginBottom: "1rem" }}>Our team is available 9am–9pm daily</p>
-          <a href={"https://wa.me/" + (map.whatsapp_number || "8801935962421")} target="_blank" rel="noopener noreferrer" style={{ display: "inline-block", backgroundColor: "#25D366", color: "white", padding: "0.75rem 2rem", fontWeight: 700, fontSize: "0.82rem", textDecoration: "none", letterSpacing: "0.08em", textTransform: "uppercase" }}>
+          <a href={"https://wa.me/" + (map.whatsapp_number || "8801935962421")} target="_blank" rel="noopener noreferrer" style={{ display: "inline-block", backgroundColor: "#25D366", color: "var(--theme-btn-text, white)", padding: "0.75rem 2rem", fontWeight: 700, fontSize: "0.82rem", textDecoration: "none", letterSpacing: "0.08em", textTransform: "uppercase" }}>
             WhatsApp Us
           </a>
         </div>

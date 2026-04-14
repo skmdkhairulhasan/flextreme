@@ -23,8 +23,8 @@ export default async function ReviewsPage({ searchParams }: { searchParams: Prom
   const ratingCounts = [5, 4, 3, 2, 1].map(r => ({ rating: r, count: allReviewsList.filter(x => x.rating === r).length }))
 
   return (
-    <div style={{ paddingTop: "72px", minHeight: "100vh", backgroundColor: "white" }}>
-      <div style={{ backgroundColor: "black", color: "white", padding: "4rem 1.5rem", textAlign: "center" }}>
+    <div style={{ paddingTop: "72px", minHeight: "100vh", backgroundColor: "var(--theme-bg, white)" }}>
+      <div style={{ backgroundColor: "var(--theme-primary, black)", color: "var(--theme-btn-text, white)", padding: "4rem 1.5rem", textAlign: "center" }}>
         <p style={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.3em", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", marginBottom: "0.75rem" }}>Real Athletes</p>
         <h1 style={{ fontSize: "clamp(2.5rem, 6vw, 5rem)", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.03em", lineHeight: 1 }}>Customer Reviews</h1>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.75rem", marginTop: "1rem" }}>
@@ -32,7 +32,7 @@ export default async function ReviewsPage({ searchParams }: { searchParams: Prom
           <span style={{ color: "white", fontSize: "1.25rem", fontWeight: 900 }}>{avgRating}</span>
           <span style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.9rem" }}>({allReviewsList.length} reviews)</span>
         </div>
-        <Link href="/reviews/write" style={{ display: "inline-block", marginTop: "1.5rem", backgroundColor: "white", color: "black", padding: "0.875rem 2.5rem", fontWeight: 900, fontSize: "0.8rem", letterSpacing: "0.15em", textTransform: "uppercase", textDecoration: "none" }}>
+        <Link href="/reviews/write" style={{ display: "inline-block", marginTop: "1.5rem", backgroundColor: "var(--theme-bg, white)", color: "var(--theme-text, black)", padding: "0.875rem 2.5rem", fontWeight: 900, fontSize: "0.8rem", letterSpacing: "0.15em", textTransform: "uppercase", textDecoration: "none" }}>
           ✍️ Write a Review
         </Link>
       </div>
@@ -74,7 +74,7 @@ export default async function ReviewsPage({ searchParams }: { searchParams: Prom
                   <span style={{ fontSize: "0.75rem", color: "#666", width: "12px" }}>{rc.rating}</span>
                   <span style={{ color: "#f0a500", fontSize: "0.75rem" }}>★</span>
                   <div style={{ flex: 1, height: "6px", backgroundColor: "#e0e0e0", borderRadius: "3px", overflow: "hidden" }}>
-                    <div style={{ height: "100%", backgroundColor: "black", width: allReviewsList.length > 0 ? (rc.count / allReviewsList.length * 100) + "%" : "0%", borderRadius: "3px" }} />
+                    <div style={{ height: "100%", backgroundColor: "var(--theme-primary, black)", width: allReviewsList.length > 0 ? (rc.count / allReviewsList.length * 100) + "%" : "0%", borderRadius: "3px" }} />
                   </div>
                   <span style={{ fontSize: "0.7rem", color: "#999", width: "20px", textAlign: "right" }}>{rc.count}</span>
                 </div>
@@ -95,7 +95,7 @@ export default async function ReviewsPage({ searchParams }: { searchParams: Prom
               <div style={{ textAlign: "center", padding: "4rem", border: "1px solid #e0e0e0", color: "#999" }}>
                 <p style={{ fontSize: "1rem", marginBottom: "0.5rem" }}>No reviews yet</p>
                 <p style={{ fontSize: "0.85rem" }}>Be the first to leave a review!</p>
-                <Link href="/products" style={{ display: "inline-block", marginTop: "1rem", backgroundColor: "black", color: "white", padding: "0.75rem 2rem", fontWeight: 700, fontSize: "0.8rem", textTransform: "uppercase", textDecoration: "none" }}>Shop Now</Link>
+                <Link href="/products" style={{ display: "inline-block", marginTop: "1rem", backgroundColor: "var(--theme-primary, black)", color: "var(--theme-btn-text, white)", padding: "0.75rem 2rem", fontWeight: 700, fontSize: "0.8rem", textTransform: "uppercase", textDecoration: "none" }}>Shop Now</Link>
               </div>
             ) : (
               <ReviewsGrid reviews={reviews} />
