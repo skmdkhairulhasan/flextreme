@@ -22,8 +22,9 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
   // Subtract sold quantities from stock_matrix
   let computedMatrix: Record<string, number> | null = null
-  if (p.stock_matrix && soldOrders) {
-    computedMatrix = { ...p.stock_matrix }
+  const pAny = p as any
+  if (pAny.stock_matrix && soldOrders) {
+    computedMatrix = { ...pAny.stock_matrix }
     for (const order of soldOrders) {
       if (!order.size || !order.color) continue
       const key = order.size.trim() + "_" + order.color.trim()
@@ -36,7 +37,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     }
   }
 
-  const productWithStock = { ...p, stock_matrix: computedMatrix || p.stock_matrix }
+  const productWithStock = { ...p, stock_matrix: computedMatrix || pAny.stock_matrix } as any
   return (
     <div style={{ paddingTop: "72px", minHeight: "100vh", backgroundColor: "var(--theme-bg, white)" }}>
       <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "3rem 1.5rem" }}>
