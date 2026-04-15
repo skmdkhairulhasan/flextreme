@@ -225,6 +225,7 @@ const [profile] = useState({
   const [loading, setLoading] = useState(false)
   const [unread, setUnread] = useState(1)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const msgsContainerRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
   function setProfile(p: Profile) {
@@ -286,12 +287,11 @@ const [profile] = useState({
       setUnread(0)
       setTimeout(() => {
         inputRef.current?.focus()
-        messagesEndRef.current?.scrollIntoView({ behavior: "instant" })
+        if (msgsContainerRef.current) msgsContainerRef.current.scrollTop = msgsContainerRef.current.scrollHeight
       }, 150) 
     } 
   }, [open])
-  useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }) }, [messages, loading])
-  useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }) }, [messages, loading])
+  useEffect(() => { if (msgsContainerRef.current) msgsContainerRef.current.scrollTop = msgsContainerRef.current.scrollHeight }, [messages, loading])
 
   function addBot(content: string, delay = 0) {
   setTimeout(() => {
@@ -1625,7 +1625,7 @@ strokeLinecap="round"
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
             <span style={{fontSize:"0.65rem",color:"#999",fontWeight:500}}>AI Fitness + Shopping Assistant · Flextreme</span>
           </div>
-          <div className="msgs" style={{flex:1,overflowY:"auto",padding:"0.875rem",display:"flex",flexDirection:"column",gap:"0.6rem",backgroundColor:fullPage?"#0a0a0a":"white"}}>
+          <div className="msgs" ref={msgsContainerRef} style={{flex:1,overflowY:"auto",padding:"0.875rem",display:"flex",flexDirection:"column",gap:"0.6rem",backgroundColor:fullPage?"#0a0a0a":"white"}}>
             {messages.map((msg,i)=>(
               <div key={i} className="cmsg" style={{display:"flex",justifyContent:msg.role==="user"?"flex-end":"flex-start",alignItems:"flex-end",gap:"0.35rem"}}>
                 {msg.role==="assistant"&&(
