@@ -1147,7 +1147,7 @@ export default function AdminSettings() {
 
       {/* SOCIAL TAB */}
       {activeTab === "banner" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem", maxWidth: "100%", overflowX: "hidden" }}>
           <Section title="Announcement Banner" subtitle="Scrolling banner shown above the navbar on all pages">
             <div style={{ marginBottom: "1rem" }}>
               <label style={{ display: "flex", alignItems: "center", gap: "0.75rem", cursor: "pointer" }}>
@@ -1167,11 +1167,12 @@ export default function AdminSettings() {
                 defaultValue={settings.banner_text || ""}
                 onBlur={e => saveSetting("banner_text", e.target.value)}
                 placeholder="e.g. FREE DELIVERY on orders above BDT 1500 🚚 · Use code FLEX10 for 10% off"
-                style={{ width: "100%", border: "1px solid #e0e0e0", padding: "0.75rem 1rem", fontSize: "0.9rem", outline: "none", boxSizing: "border-box" as const }}
+                style={{ width: "100%", border: "1px solid #e0e0e0", padding: "0.75rem 1rem", fontSize: "0.9rem", outline: "none", boxSizing: "border-box" as const, maxWidth: "100%" }}
               />
               <p style={{ fontSize: "0.7rem", color: "#999", marginTop: "0.25rem" }}>This text will scroll repeatedly across the banner. Use · to separate multiple messages.</p>
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1rem" }}>
+            <style>{`.banner-color-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem}@media(max-width:600px){.banner-color-grid{grid-template-columns:1fr}}`}</style>
+            <div className="banner-color-grid">
               <div>
                 <label style={{ display: "block", fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", marginBottom: "0.4rem", color: "#555" }}>Background Color</label>
                 <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
@@ -1193,14 +1194,14 @@ export default function AdminSettings() {
             </div>
             <div style={{ marginBottom: "1rem" }}>
               <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", marginBottom: "0.4rem" }}>Scroll Speed</label>
-              <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-                <span style={{ fontSize: "0.75rem", color: "#999", minWidth: "40px" }}>Fast</span>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}>
+                <span style={{ fontSize: "0.75rem", color: "#999" }}>Fast</span>
                 <input type="range" min="10" max="60" step="5"
                   value={settings.banner_speed || "30"}
                   onChange={e => saveSetting("banner_speed", e.target.value)}
-                  style={{ flex: 1, cursor: "pointer" }} />
-                <span style={{ fontSize: "0.75rem", color: "#999", minWidth: "40px" }}>Slow</span>
-                <span style={{ fontSize: "0.8rem", fontWeight: 700, minWidth: "50px" }}>{settings.banner_speed || "30"}s</span>
+                  style={{ flex: 1, minWidth: "120px", cursor: "pointer" }} />
+                <span style={{ fontSize: "0.75rem", color: "#999" }}>Slow</span>
+                <span style={{ fontSize: "0.8rem", fontWeight: 700, whiteSpace: "nowrap" }}>{settings.banner_speed || "30"}s</span>
               </div>
               <p style={{ fontSize: "0.7rem", color: "#999", marginTop: "0.25rem" }}>Lower = faster scroll. Default is 30s.</p>
             </div>

@@ -44,6 +44,12 @@ export default function AdminOrders() {
   const [deleteTarget, setDeleteTarget] = useState<DeleteTarget>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editForm, setEditForm] = useState<EditForm>({ name: "", phone: "", address: "", notes: "", total_price: "" })
+  const [addressPopup, setAddressPopup] = useState<{ name: string; phone: string; address: string; notes?: string } | null>(null)
+  const [copied, setCopied] = useState(false)
+
+  function copyAddress(addr: string) {
+    navigator.clipboard.writeText(addr).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000) })
+  }
   const [saving, setSaving] = useState(false)
   const isMobile = useIsMobile()
 
@@ -184,6 +190,62 @@ export default function AdminOrders() {
     <div style={{ maxWidth: "100%", overflowX: "hidden" }}>
 
       {/* Delete confirmation modal — portal to escape overflow:hidden */}
+      {/* Address detail popup */}
+      {addressPopup && typeof document !== "undefined" && createPortal(
+        <div onClick={() => setAddressPopup(null)} style={{ position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh", backgroundColor: "rgba(0,0,0,0.6)", zIndex: 99999, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
+          <div onClick={e => e.stopPropagation()} style={{ backgroundColor: "white", borderRadius: "8px", padding: "1.5rem", width: "100%", maxWidth: "360px", boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1rem" }}>
+              <p style={{ fontWeight: 900, fontSize: "1rem" }}>Delivery Details</p>
+              <button onClick={() => setAddressPopup(null)} style={{ background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer", color: "#999", padding: "0" }}>✕</button>
+            </div>
+
+            {/* Name row */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", backgroundColor: "#f9f9f9", border: "1px solid #e0e0e0", borderRadius: "6px", padding: "0.75rem 0.875rem", marginBottom: "0.5rem" }}>
+              <div>
+                <p style={{ fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase", color: "#999", letterSpacing: "0.08em", marginBottom: "0.2rem" }}>Name</p>
+                <p style={{ fontSize: "0.95rem", fontWeight: 700, color: "#333" }}>{addressPopup.name}</p>
+              </div>
+              <button onClick={() => copyAddress(addressPopup.name)} style={{ padding: "0.4rem 0.75rem", backgroundColor: "white", border: "1px solid #e0e0e0", borderRadius: "4px", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer", color: "#555", whiteSpace: "nowrap" }}>📋 Copy</button>
+            </div>
+
+            {/* Phone row */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", backgroundColor: "#f9f9f9", border: "1px solid #e0e0e0", borderRadius: "6px", padding: "0.75rem 0.875rem", marginBottom: "0.5rem" }}>
+              <div>
+                <p style={{ fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase", color: "#999", letterSpacing: "0.08em", marginBottom: "0.2rem" }}>Phone</p>
+                <p style={{ fontSize: "0.95rem", fontWeight: 700, color: "#333" }}>{addressPopup.phone}</p>
+              </div>
+              <button onClick={() => copyAddress(addressPopup.phone)} style={{ padding: "0.4rem 0.75rem", backgroundColor: "white", border: "1px solid #e0e0e0", borderRadius: "4px", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer", color: "#555", whiteSpace: "nowrap" }}>📋 Copy</button>
+            </div>
+
+            {/* Address row */}
+            <div style={{ backgroundColor: "#f9f9f9", border: "1px solid #e0e0e0", borderRadius: "6px", padding: "0.75rem 0.875rem", marginBottom: "0.5rem" }}>
+              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "0.5rem" }}>
+                <div style={{ flex: 1 }}>
+                  <p style={{ fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase", color: "#999", letterSpacing: "0.08em", marginBottom: "0.2rem" }}>Address</p>
+                  <p style={{ fontSize: "0.9rem", color: "#333", lineHeight: 1.6 }}>{addressPopup.address}</p>
+                </div>
+                <button onClick={() => copyAddress(addressPopup.address)} style={{ padding: "0.4rem 0.75rem", backgroundColor: "white", border: "1px solid #e0e0e0", borderRadius: "4px", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer", color: "#555", whiteSpace: "nowrap", flexShrink: 0 }}>📋 Copy</button>
+              </div>
+            </div>
+
+            {addressPopup.notes && (
+              <div style={{ backgroundColor: "#fffbeb", border: "1px solid #fde68a", borderRadius: "6px", padding: "0.75rem", marginBottom: "0.5rem" }}>
+                <p style={{ fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase", color: "#92400e", letterSpacing: "0.08em", marginBottom: "0.3rem" }}>Note</p>
+                <p style={{ fontSize: "0.85rem", color: "#78350f" }}>{addressPopup.notes}</p>
+              </div>
+            )}
+
+            {/* Copy all button */}
+            <button
+              onClick={() => copyAddress(addressPopup.name + "\n" + addressPopup.phone + "\n" + addressPopup.address)}
+              style={{ width: "100%", padding: "0.75rem", marginTop: "0.5rem", backgroundColor: copied ? "#16a34a" : "black", color: "white", border: "none", borderRadius: "6px", fontWeight: 700, fontSize: "0.85rem", cursor: "pointer", transition: "background 0.2s", letterSpacing: "0.05em" }}>
+              {copied ? "✓ Copied!" : "📋 Copy All (Name + Phone + Address)"}
+            </button>
+          </div>
+        </div>,
+        document.body
+      )}
+
       {deleteTarget && typeof document !== "undefined" && createPortal(
         <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.6)", zIndex: 99999, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem", overflow: "hidden" }}>
           <div style={{ backgroundColor: "white", padding: "1.75rem", maxWidth: "400px", width: "100%", border: "1px solid #e0e0e0", borderRadius: "4px" }}>
@@ -205,7 +267,7 @@ export default function AdminOrders() {
       )}
 
       {/* Edit order modal */}
-      {editingId && typeof document !== "undefined" && createPortal(
+      {editingId && (
         <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.6)", zIndex: 99999, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem", overflow: "hidden" }}>
           <div style={{ backgroundColor: "white", padding: "1.75rem", maxWidth: "480px", width: "100%", maxHeight: "80vh", overflowY: "auto", position: "relative" }}>
             <h3 style={{ fontWeight: 900, fontSize: "1rem", textTransform: "uppercase", marginBottom: "1.25rem", paddingBottom: "0.75rem", borderBottom: "2px solid black" }}>Edit Order Details</h3>
@@ -241,7 +303,7 @@ export default function AdminOrders() {
             </div>
           </div>
         </div>
-      , document.body)}
+      )}
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem", flexWrap: "wrap", gap: "0.75rem" }}>
         <div>
@@ -284,8 +346,8 @@ export default function AdminOrders() {
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.5rem" }}>
                 <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
                   <input type="checkbox" checked={selected.has(order.id)} onChange={() => toggleSelect(order.id)} style={{ width: "14px", height: "14px" }} />
-                  <div>
-                    <p style={{ fontWeight: 700, fontSize: "0.88rem" }}>{order.name}</p>
+                  <div onClick={() => setAddressPopup({ name: order.name, phone: order.phone, address: order.address, notes: order.notes })} style={{ cursor: "pointer" }}>
+                    <p style={{ fontWeight: 700, fontSize: "0.88rem" }}>{order.name} <span style={{ fontSize: "0.6rem", color: "#bbb", fontWeight: 400 }}>tap for address</span></p>
                     <p style={{ fontSize: "0.72rem", color: "#888" }}>{order.phone}</p>
                     {(order as any).email && <p style={{ fontSize: "0.7rem", color: "#888" }}>✉️ {(order as any).email}</p>}
                   </div>
@@ -331,8 +393,8 @@ export default function AdminOrders() {
             <div key={order.id} style={{ padding: "1rem 1.25rem", borderTop: "1px solid #f0f0f0", display: "grid", gridTemplateColumns: "28px 1fr auto", gap: "1rem", alignItems: "start", backgroundColor: selected.has(order.id) ? "#fff9f9" : "white" }}>
               <input type="checkbox" checked={selected.has(order.id)} onChange={() => toggleSelect(order.id)} style={{ width: "15px", height: "15px", marginTop: "4px" }} />
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "0.75rem" }}>
-                <div>
-                  <p style={{ fontWeight: 700, fontSize: "0.9rem" }}>{order.name}</p>
+                <div onClick={() => setAddressPopup({ name: order.name, phone: order.phone, address: order.address, notes: order.notes })} style={{ cursor: "pointer" }}>
+                  <p style={{ fontWeight: 700, fontSize: "0.9rem" }}>{order.name} <span style={{ fontSize: "0.6rem", color: "#bbb", fontWeight: 400 }}>click for details</span></p>
                   <p style={{ fontSize: "0.75rem", color: "#888" }}>{order.phone}</p>
                   {(order as any).email && <p style={{ fontSize: "0.7rem", color: "#888" }}>✉️ {(order as any).email}</p>}
                   <p style={{ fontSize: "0.7rem", color: "#bbb" }}>{new Date(order.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</p>
