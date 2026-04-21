@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import "./globals.css"
 import CustomerOnlyWrapper from "@/components/ui/CustomerOnlyWrapper"
+import { Analytics } from '@vercel/analytics/next'
 
 export const metadata: Metadata = {
   title: "Baking Duck — Quackingly Good Achaar",
@@ -14,6 +15,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <CustomerOnlyWrapper>
           {children}
         </CustomerOnlyWrapper>
+        <Analytics />
       </body>
     </html>
   )
