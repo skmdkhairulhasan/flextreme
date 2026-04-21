@@ -209,6 +209,7 @@ function FaqEditor({ faqs, saving, saved, onUpdate, onSave, requestConfirm }: Fa
 import { useEffect, useState, useRef } from "react"
 import { createClient } from "@/lib/supabase/client"
 import HeroImageEditor from "@/components/admin/HeroImageEditor"
+import { uploadToCloudinary } from "@/lib/cloudinary"
 
 // ── TYPES ──
 type SizeColumn = { id: string; name: string; description: string }
@@ -728,17 +729,16 @@ export default function AdminSettings() {
 
     async function uploadFile(file: File, type: "image" | "video") {
       setUploading(true); setUploadMsg("Uploading " + type + "...")
-      const supabase = createClient()
-      const ext = file.name.split(".").pop()
-      const fileName = "hero-" + type + "-" + Date.now() + "." + ext
-      const { error } = await supabase.storage.from("products").upload(fileName, file, { upsert: true })
-      if (error) { setUploadMsg("Error: " + error.message); setUploading(false); return }
-      const { data: urlData } = supabase.storage.from("products").getPublicUrl(fileName)
-      await saveSetting(type === "image" ? "hero_bg_image" : "hero_bg_video", urlData.publicUrl)
-      await saveSetting("hero_bg_type", type)
-      setUploadMsg(type + " uploaded!")
+      try {
+        const url = await uploadToCloudinary(file, "flextreme/hero")
+        await saveSetting(type === "image" ? "hero_bg_image" : "hero_bg_video", url)
+        await saveSetting("hero_bg_type", type)
+        setUploadMsg(type + " uploaded!")
+        setTimeout(() => setUploadMsg(""), 3000)
+      } catch (err: any) {
+        setUploadMsg("Error: " + err.message)
+      }
       setUploading(false)
-      setTimeout(() => setUploadMsg(""), 3000)
     }
 
     function Slider({ label, settingKey, min, max, step, value, display }: { label: string; settingKey: string; min: number; max: number; step: number; value: string; display: string }) {

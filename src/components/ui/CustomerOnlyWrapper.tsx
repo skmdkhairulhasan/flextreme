@@ -7,6 +7,7 @@ import ChatBot from "@/components/ui/ChatBot"
 import { CartProvider, CartDrawer } from "@/components/ui/Cart"
 import { FacebookPixelPageView } from "@/components/ui/FacebookPixel"
 import AnnouncementBanner from "@/components/ui/AnnouncementBanner"
+import DumbbellCursorWrapper from "@/components/ui/DumbbellCursorWrapper"
 
 export default function CustomerOnlyWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
@@ -20,6 +21,7 @@ export default function CustomerOnlyWrapper({ children }: { children: React.Reac
       <Suspense fallback={null}><FacebookPixelPageView /></Suspense>
       {children}
       <CartDrawer />
+      <DumbbellCursorWrapper />
     </CartProvider>
   )
 
@@ -34,6 +36,7 @@ export default function CustomerOnlyWrapper({ children }: { children: React.Reac
       <Footer />
       <ChatBot />
       <CartDrawer />
+      <DumbbellCursorWrapper />
     </CartProvider>
   )
 }

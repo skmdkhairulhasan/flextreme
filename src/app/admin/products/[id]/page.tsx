@@ -2,6 +2,7 @@
 import { useEffect, useState, useRef } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { useParams, useRouter } from "next/navigation"
+import { uploadToCloudinary } from "@/lib/cloudinary"
 
 export default function EditProduct() {
   const params = useParams()
@@ -91,31 +92,20 @@ export default function EditProduct() {
   async function uploadImages(files: FileList) {
     setUploading(true)
     setUploadError("")
-    const supabase = createClient()
     const uploaded: string[] = []
 
     for (let i = 0; i < files.length; i++) {
       const file = files[i]
       setUploadProgress("Uploading image " + (i + 1) + " of " + files.length + "...")
-      const ext = file.name.split(".").pop()
-      const fileName = "product-" + Date.now() + "-" + i + "." + ext
-
-      console.log("Uploading file:", fileName, "Size:", file.size)
-
-      const { data, error } = await supabase.storage.from("products").upload(fileName, file, { upsert: true })
-
-      if (error) {
-        console.error("Upload error:", error)
-        setUploadError("Upload failed: " + error.message)
+      try {
+        const url = await uploadToCloudinary(file, "flextreme/products")
+        uploaded.push(url)
+      } catch (err: any) {
+        setUploadError("Upload failed: " + err.message)
         setUploading(false)
         setUploadProgress("")
         return
       }
-
-      console.log("Upload success:", data)
-      const { data: urlData } = supabase.storage.from("products").getPublicUrl(fileName)
-      console.log("Public URL:", urlData.publicUrl)
-      uploaded.push(urlData.publicUrl)
     }
 
     setForm(prev => ({ ...prev, images: [...prev.images, ...uploaded] }))
@@ -127,22 +117,12 @@ export default function EditProduct() {
     setUploading(true)
     setUploadError("")
     setUploadProgress("Uploading video...")
-    const supabase = createClient()
-    const ext = file.name.split(".").pop()
-    const fileName = "video-" + Date.now() + "." + ext
-
-    const { error } = await supabase.storage.from("products").upload(fileName, file, { upsert: true })
-
-    if (error) {
-      console.error("Video upload error:", error)
-      setUploadError("Video upload failed: " + error.message)
-      setUploading(false)
-      setUploadProgress("")
-      return
+    try {
+      const url = await uploadToCloudinary(file, "flextreme/products")
+      setForm(prev => ({ ...prev, video_url: url }))
+    } catch (err: any) {
+      setUploadError("Video upload failed: " + err.message)
     }
-
-    const { data: urlData } = supabase.storage.from("products").getPublicUrl(fileName)
-    setForm(prev => ({ ...prev, video_url: urlData.publicUrl }))
     setUploading(false)
     setUploadProgress("")
   }

@@ -1,6 +1,7 @@
 ﻿"use client"
 import { useState, useRef } from "react"
 import { createClient } from "@/lib/supabase/client"
+import { uploadToCloudinary } from "@/lib/cloudinary"
 
 export default function ReviewForm({ productId, productName }: { productId: string, productName: string }) {
   const [name, setName] = useState("")
@@ -27,13 +28,13 @@ export default function ReviewForm({ productId, productName }: { productId: stri
       console.log("Submitting review with productId:", productId)
       let photo_url: string | null = null
       if (photo) {
-        const ext = photo.name.split(".").pop()
-        const fileName = `review-${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
-        const { data: uploadData, error: uploadErr } = await supabase.storage
-          .from("review-photos").upload(fileName, photo, { contentType: photo.type })
-        if (uploadErr) { setError("Photo upload failed: " + uploadErr.message); setLoading(false); return }
-        const { data: urlData } = supabase.storage.from("review-photos").getPublicUrl(uploadData.path)
-        photo_url = urlData.publicUrl
+        try {
+          photo_url = await uploadToCloudinary(photo, "flextreme/reviews")
+        } catch (uploadErr: any) {
+          setError("Photo upload failed: " + uploadErr.message)
+          setLoading(false)
+          return
+        }
       }
       const payload = {
         product_id: productId,
