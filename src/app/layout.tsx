@@ -1,11 +1,11 @@
-import type { Metadata } from "next"
+﻿import type { Metadata } from "next"
 import "./globals.css"
 import CustomerOnlyWrapper from "@/components/ui/CustomerOnlyWrapper"
 import { Analytics } from '@vercel/analytics/next'
 
 export const metadata: Metadata = {
-  title: "Baking Duck — Quackingly Good Achaar",
-  description: "Premium homemade Chicken & Garlic Achaar. Small batch, no preservatives, authentic recipe. Delivering across Bangladesh.",
+  title: "Flextreme — Premium Gym Wear",
+  description: "Premium quality gym wear and fitness apparel. Shop now for the best workout clothes.",
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
