@@ -1675,7 +1675,7 @@ strokeLinecap="round"
         </div>
       )}
 
-      {/* LABEL */}
+      {/* LABEL — appears after 10s, stays 3s, repeats every 13s */}
       {!open && !hidden && !fullPage && (
         <div className="clabel" style={{
           position:"fixed", bottom:28, right:80, zIndex:9996,
@@ -1685,7 +1685,18 @@ strokeLinecap="round"
           whiteSpace:"nowrap", boxShadow:"0 4px 16px rgba(0,0,0,0.25)",
           display:"flex", alignItems:"center", gap:"0.4rem",
           pointerEvents:"none",
+          animation: "chatLabelCycle 13s ease-in-out infinite",
+          opacity: 0,
         }}>
+          <style>{`
+            @keyframes chatLabelCycle {
+              0%   { opacity: 0; transform: translateY(6px); }
+              76%  { opacity: 0; transform: translateY(6px); }
+              80%  { opacity: 1; transform: translateY(0); }
+              95%  { opacity: 1; transform: translateY(0); }
+              100% { opacity: 0; transform: translateY(6px); }
+            }
+          `}</style>
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
           Chat with Flex AI
         </div>

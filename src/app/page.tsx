@@ -93,7 +93,7 @@ function HeroSection({ settings }: { settings: Record<string, string> }) {
   const secondaryCTALink = settings.hero_cta_secondary_link || "/about"
 
   return (
-    <section style={{ minHeight: "100vh", backgroundColor: "var(--theme-primary, black)", display: "flex", alignItems: "center", justifyContent: "center", paddingTop: "72px", paddingBottom: "4rem", overflow: "hidden", position: "relative" }}>
+    <section style={{ minHeight: "100vh", backgroundColor: "var(--theme-primary, black)", display: "flex", alignItems: "flex-start", justifyContent: "center", paddingTop: "120px", paddingBottom: "4rem", overflow: "hidden", position: "relative" }}>
       {bgType === "image" && bgImage && (
         <div style={{ position: "absolute", inset: 0, zIndex: 0, overflow: "hidden" }}>
           <img src={bgImage} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: bgPosX + "% " + bgPosY + "%", opacity: bgOpacity, transform: "scale(" + bgScale + ")", transformOrigin: bgPosX + "% " + bgPosY + "%" }} />
@@ -117,26 +117,34 @@ function HeroSection({ settings }: { settings: Record<string, string> }) {
           {settings.hero_badge || "Premium Gym Wear"}
         </div>
         <div style={{ marginBottom: "2.5rem" }}>
-          {(settings.hero_headline || "WORK|HARD.|FLEX|EXTREME.").split("|").map((line, i) => (
+          {(settings.hero_headline || "LOOK|BIGGER|INSTANTLY.").split("|").map((line, i) => (
             <h1 key={i} style={{ fontSize: headlineSize, fontWeight: parseInt(headlineWeight), color: i % 2 === 0 ? "white" : "rgba(255,255,255,0.2)", lineHeight: parseFloat(headlineLineHeight), letterSpacing: headlineSpacing, textTransform: "uppercase", margin: 0, marginBottom: i % 2 !== 0 ? "0.15em" : 0 }}>
               {line}
             </h1>
           ))}
         </div>
         <div style={{ width: "40px", height: "1px", backgroundColor: "rgba(255,255,255,0.3)", margin: "0 auto 1.5rem" }} />
-        <div style={{ fontSize: taglineSize, color: "rgba(255,255,255,0.5)", maxWidth: taglineMaxWidth, margin: "0 auto 2.5rem", lineHeight: parseFloat(taglineLineHeight), fontWeight: 300, letterSpacing: "0.02em", whiteSpace: "pre-line", textAlign: "center" }}>
-          {renderRichText(settings.hero_tagline || "Engineered for athletes who refuse to settle.\nBuilt for the gym. Made to be seen.")}
-        </div>
-        <div style={{ display: "flex", gap: "1rem", justifyContent: "center", flexWrap: "wrap", paddingBottom: "3rem" }}>
+
+        {/* Primary CTA first — highest conversion placement */}
+        <div style={{ marginBottom: "2rem" }}>
           <Link href={primaryCTALink} style={{ backgroundColor: "var(--theme-bg, white)", color: "black", padding: "1rem 2.5rem", fontWeight: 700, fontSize: "0.8rem", letterSpacing: "0.15em", textTransform: "uppercase", textDecoration: "none", display: "inline-block" }}>
             {primaryCTA}
           </Link>
-          {secondaryCTA !== "hidden" && (
+        </div>
+
+        {/* Tagline below Buy Now */}
+        <div style={{ fontSize: taglineSize, color: "rgba(255,255,255,0.5)", maxWidth: taglineMaxWidth, margin: "0 auto 2rem", lineHeight: parseFloat(taglineLineHeight), fontWeight: 300, letterSpacing: "0.02em", whiteSpace: "pre-line", textAlign: "center" }}>
+          {renderRichText(settings.hero_tagline || "Engineered for athletes who refuse to settle.\nBuilt for the gym. Made to be seen.")}
+        </div>
+
+        {/* Secondary CTA after tagline */}
+        {secondaryCTA !== "hidden" && (
+          <div style={{ paddingBottom: "3rem" }}>
             <Link href={secondaryCTALink} style={{ backgroundColor: "transparent", color: "white", padding: "1rem 2.5rem", fontWeight: 700, fontSize: "0.8rem", letterSpacing: "0.15em", textTransform: "uppercase", textDecoration: "none", display: "inline-block", border: "1px solid rgba(255,255,255,0.3)" }}>
               {secondaryCTA}
             </Link>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </section>
   )
@@ -201,7 +209,7 @@ function PerformanceFeatures({ settings }: { settings: Record<string, string> })
     { icon: settings.perf_4_icon || "04", title: settings.perf_4_title || "Muscle Definition", stat: settings.perf_4_stat || "Elite athlete cut", description: settings.perf_4_desc || "Strategic fit that highlights your physique. Look as powerful as you perform." },
   ]
   return (
-    <section style={{ backgroundColor: "var(--theme-primary, black)", padding: "6rem 1.5rem", color: "white" }}>
+    <section style={{ backgroundColor: "var(--theme-bg, white)", padding: "6rem 1.5rem", color: "var(--theme-primary, black)" }}>
       <style>{`
         .perf-scroll-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 2rem; }
         @media (max-width: 768px) {
@@ -216,16 +224,16 @@ function PerformanceFeatures({ settings }: { settings: Record<string, string> })
       `}</style>
       <div className="perf-section-inner" style={{ maxWidth: "1280px", margin: "0 auto" }}>
         <div style={{ marginBottom: "4rem", textAlign: "center" }}>
-          <p style={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.3em", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", marginBottom: "0.75rem" }}>{settings.perf_section_label || "Built Different"}</p>
+          <p style={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.3em", textTransform: "uppercase", color: "#999", marginBottom: "0.75rem" }}>{settings.perf_section_label || "Built Different"}</p>
           <h2 className="perf-title" style={{ fontSize: "clamp(2rem, 5vw, 3.5rem)", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.03em", lineHeight: 1 }}>{settings.perf_section_title || "Performance Tech"}</h2>
         </div>
         <div className="perf-scroll-container">
           {features.map((feature, index) => (
-            <div key={index} className="perf-card" style={{ border: "1px solid rgba(255,255,255,0.1)", padding: "2.5rem 2rem" }}>
-              <div style={{ fontSize: "2rem", fontWeight: 900, color: "white", marginBottom: "1rem" }}>{feature.icon}</div>
-              <div style={{ display: "inline-block", backgroundColor: "rgba(255,255,255,0.08)", padding: "0.25rem 0.75rem", fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(255,255,255,0.5)", marginBottom: "1rem" }}>{feature.stat}</div>
-              <h3 style={{ fontSize: "1rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.75rem" }}>{feature.title}</h3>
-              <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.9rem", lineHeight: 1.7 }}>{feature.description}</p>
+            <div key={index} className="perf-card" style={{ border: "1px solid #e0e0e0", padding: "2.5rem 2rem" }}>
+              <div style={{ fontSize: "2rem", fontWeight: 900, color: "var(--theme-primary, black)", marginBottom: "1rem" }}>{feature.icon}</div>
+              <div style={{ display: "inline-block", backgroundColor: "#f5f5f5", padding: "0.25rem 0.75rem", fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", color: "#666", marginBottom: "1rem" }}>{feature.stat}</div>
+              <h3 style={{ fontSize: "1rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.75rem", color: "var(--theme-primary, black)" }}>{feature.title}</h3>
+              <p style={{ color: "#666", fontSize: "0.9rem", lineHeight: 1.7 }}>{feature.description}</p>
             </div>
           ))}
         </div>

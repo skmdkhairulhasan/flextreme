@@ -972,16 +972,16 @@ export default function AdminSettings() {
         <Section title="Hero Section" subtitle="Background, watermark and headline text">
           <HeroBgUploader />
           <SettingRow label="Badge Text" settingKey="hero_badge" defaultValue="Premium Gym Wear" hint="Small text above the headline" />
-          <SettingRow label="Main Headline" settingKey="hero_headline" defaultValue="WORK|HARD.|FLEX|EXTREME." hint="Use | to split lines e.g. WORK|HARD.|FLEX|EXTREME." />
+          <SettingRow label="Main Headline" settingKey="hero_headline" defaultValue="LOOK|BIGGER|INSTANTLY." hint="Use | to split lines e.g. LOOK|BIGGER|INSTANTLY." />
           <SettingRow label="Tagline" settingKey="hero_tagline" multiline defaultValue={"Engineered for athletes who refuse to settle.\nBuilt for the gym. Made to be seen."} hint="Supports line breaks — press Enter for new line. e.g. ⚡ Only 100 will own this&#10;🔥 Limited stock available&#10;🚚 Cash on Delivery" />
 
           {/* CTA Buttons */}
           <div style={{ padding: "1rem 0", borderBottom: "1px solid #f5f5f5" }}>
             <p style={{ fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#444", marginBottom: "0.75rem" }}>CTA Buttons</p>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-              <SettingRow label="Primary Button" settingKey="hero_cta_primary" defaultValue="Buy Now" hint='e.g. "Buy Now"' />
-              <SettingRow label="Secondary Button" settingKey="hero_cta_secondary" defaultValue="Our Story" hint='e.g. "Our Story" or type "hidden" to hide' />
+            <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "0.75rem" }}>
+              <SettingRow label="Primary Button Text" settingKey="hero_cta_primary" defaultValue="Buy Now" hint='e.g. "Buy Now"' />
               <SettingRow label="Primary Button Link" settingKey="hero_cta_primary_link" defaultValue="/products" hint='e.g. /products' />
+              <SettingRow label="Secondary Button Text" settingKey="hero_cta_secondary" defaultValue="Our Story" hint='e.g. "Our Story" or type "hidden" to hide' />
               <SettingRow label="Secondary Button Link" settingKey="hero_cta_secondary_link" defaultValue="/about" hint='e.g. /about' />
             </div>
           </div>
