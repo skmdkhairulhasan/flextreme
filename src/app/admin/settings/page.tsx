@@ -604,13 +604,13 @@ export default function AdminSettings() {
     setSizeTables(prev => [...prev, makeTable("New Size Table")])
   }
 
-  function SettingRow({ label, settingKey, multiline = false, hint = "" }: { label: string; settingKey: string; multiline?: boolean; hint?: string }) {
-    const [val, setVal] = useState(settings[settingKey] || "")
+  function SettingRow({ label, settingKey, multiline = false, hint = "", defaultValue = "" }: { label: string; settingKey: string; multiline?: boolean; hint?: string; defaultValue?: string }) {
+    const [val, setVal] = useState(settings[settingKey] || defaultValue)
     const taRef = useRef<HTMLTextAreaElement>(null)
     const isSaving = saving === settingKey
     const isSaved = saved === settingKey
 
-    useEffect(() => { setVal(settings[settingKey] || "") }, [settings[settingKey]])
+    useEffect(() => { setVal(settings[settingKey] || defaultValue) }, [settings[settingKey]])
 
     // Convert stored markdown to HTML for display
     function toHTML(text: string) {
@@ -971,9 +971,53 @@ export default function AdminSettings() {
       {activeTab === "hero" && (
         <Section title="Hero Section" subtitle="Background, watermark and headline text">
           <HeroBgUploader />
-          <SettingRow label="Badge Text" settingKey="hero_badge" hint="Small text above the headline" />
-          <SettingRow label="Main Headline" settingKey="hero_headline" hint="Use | to split lines e.g. WORK|HARD.|FLEX|EXTREME." />
-          <SettingRow label="Tagline" settingKey="hero_tagline" multiline hint="Subtext below the headline" />
+          <SettingRow label="Badge Text" settingKey="hero_badge" defaultValue="Premium Gym Wear" hint="Small text above the headline" />
+          <SettingRow label="Main Headline" settingKey="hero_headline" defaultValue="WORK|HARD.|FLEX|EXTREME." hint="Use | to split lines e.g. WORK|HARD.|FLEX|EXTREME." />
+          <SettingRow label="Tagline" settingKey="hero_tagline" multiline defaultValue={"Engineered for athletes who refuse to settle.\nBuilt for the gym. Made to be seen."} hint="Supports line breaks — press Enter for new line. e.g. ⚡ Only 100 will own this&#10;🔥 Limited stock available&#10;🚚 Cash on Delivery" />
+
+          {/* CTA Buttons */}
+          <div style={{ padding: "1rem 0", borderBottom: "1px solid #f5f5f5" }}>
+            <p style={{ fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#444", marginBottom: "0.75rem" }}>CTA Buttons</p>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+              <SettingRow label="Primary Button" settingKey="hero_cta_primary" defaultValue="Buy Now" hint='e.g. "Buy Now"' />
+              <SettingRow label="Secondary Button" settingKey="hero_cta_secondary" defaultValue="Our Story" hint='e.g. "Our Story" or type "hidden" to hide' />
+              <SettingRow label="Primary Button Link" settingKey="hero_cta_primary_link" defaultValue="/products" hint='e.g. /products' />
+              <SettingRow label="Secondary Button Link" settingKey="hero_cta_secondary_link" defaultValue="/about" hint='e.g. /about' />
+            </div>
+          </div>
+
+          {/* Typography Controls */}
+          <div style={{ padding: "1rem 0", borderBottom: "1px solid #f5f5f5" }}>
+            <p style={{ fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#444", marginBottom: "1rem" }}>Typography Controls</p>
+
+            <p style={{ fontSize: "0.7rem", fontWeight: 700, color: "#888", textTransform: "uppercase", marginBottom: "0.5rem" }}>Headline</p>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1.25rem", padding: "0.75rem", backgroundColor: "#f9f9f9", border: "1px solid #e0e0e0" }}>
+              {[
+                { label: "Font Size (px) — leave blank for responsive", settingKey: "hero_headline_size", defaultValue: "", hint: "e.g. 80 (leave blank for auto)" },
+                { label: "Font Weight", settingKey: "hero_headline_weight", defaultValue: "900", hint: "e.g. 900, 700, 400" },
+                { label: "Line Height", settingKey: "hero_headline_lineheight", defaultValue: "0.85", hint: "e.g. 0.85, 1, 1.2" },
+                { label: "Letter Spacing (em)", settingKey: "hero_headline_spacing", defaultValue: "-0.05", hint: "e.g. -0.05, 0, 0.1" },
+              ].map(f => <SettingRow key={f.settingKey} label={f.label} settingKey={f.settingKey} defaultValue={f.defaultValue} hint={f.hint} />)}
+            </div>
+
+            <p style={{ fontSize: "0.7rem", fontWeight: 700, color: "#888", textTransform: "uppercase", marginBottom: "0.5rem" }}>Badge</p>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1rem", marginBottom: "1.25rem", padding: "0.75rem", backgroundColor: "#f9f9f9", border: "1px solid #e0e0e0" }}>
+              {[
+                { label: "Font Size (rem)", settingKey: "hero_badge_size", defaultValue: "0.7", hint: "e.g. 0.7" },
+                { label: "Opacity (0-1)", settingKey: "hero_badge_opacity", defaultValue: "0.6", hint: "e.g. 0.6" },
+                { label: "Letter Spacing (em)", settingKey: "hero_badge_spacing", defaultValue: "0.3", hint: "e.g. 0.3" },
+              ].map(f => <SettingRow key={f.settingKey} label={f.label} settingKey={f.settingKey} defaultValue={f.defaultValue} hint={f.hint} />)}
+            </div>
+
+            <p style={{ fontSize: "0.7rem", fontWeight: 700, color: "#888", textTransform: "uppercase", marginBottom: "0.5rem" }}>Tagline</p>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1rem", padding: "0.75rem", backgroundColor: "#f9f9f9", border: "1px solid #e0e0e0" }}>
+              {[
+                { label: "Font Size (rem)", settingKey: "hero_tagline_size", defaultValue: "1", hint: "e.g. 1, 0.9, 1.1" },
+                { label: "Line Height", settingKey: "hero_tagline_lineheight", defaultValue: "1.7", hint: "e.g. 1.7" },
+                { label: "Max Width (px)", settingKey: "hero_tagline_maxwidth", defaultValue: "420", hint: "e.g. 420, 600" },
+              ].map(f => <SettingRow key={f.settingKey} label={f.label} settingKey={f.settingKey} defaultValue={f.defaultValue} hint={f.hint} />)}
+            </div>
+          </div>
         </Section>
       )}
 
