@@ -1,12 +1,21 @@
 import { NextRequest } from "next/server"
-import { proxyToWorker } from "@/lib/api/proxy"
 
-export async function PATCH(request: NextRequest, ctx: RouteContext<"/api/orders/[id]">) {
-  const { id } = await ctx.params
-  return proxyToWorker(request, `/api/orders/${encodeURIComponent(id)}`)
-}
+const API_BASE = process.env.CLOUDFLARE_API_BASE_URL!
 
-export async function DELETE(request: NextRequest, ctx: RouteContext<"/api/orders/[id]">) {
-  const { id } = await ctx.params
-  return proxyToWorker(request, `/api/orders/${encodeURIComponent(id)}`)
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const body = await request.text()
+
+  const res = await fetch(`${API_BASE}/api/orders/${params.id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body,
+  })
+
+  return new Response(await res.text(), {
+    status: res.status,
+    headers: { "Content-Type": "application/json" },
+  })
 }

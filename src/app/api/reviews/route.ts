@@ -1,10 +1,27 @@
 import { NextRequest } from "next/server"
-import { proxyToWorker } from "@/lib/api/proxy"
+
+const API_BASE = process.env.CLOUDFLARE_API_BASE_URL!
 
 export async function GET(request: NextRequest) {
-  return proxyToWorker(request, `/api/reviews${request.nextUrl.search || ""}`)
+  const res = await fetch(`${API_BASE}/api/reviews${request.nextUrl.search || ""}`)
+
+  return new Response(await res.text(), {
+    status: res.status,
+    headers: { "Content-Type": "application/json" },
+  })
 }
 
 export async function POST(request: NextRequest) {
-  return proxyToWorker(request, "/api/reviews")
+  const body = await request.text()
+
+  const res = await fetch(`${API_BASE}/api/reviews`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body,
+  })
+
+  return new Response(await res.text(), {
+    status: res.status,
+    headers: { "Content-Type": "application/json" },
+  })
 }
