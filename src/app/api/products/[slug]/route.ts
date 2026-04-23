@@ -4,9 +4,11 @@ const API_BASE = process.env.CLOUDFLARE_API_BASE_URL!
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { slug: string } }
+  context: { params: Promise<{ slug: string }> }
 ) {
-  const res = await fetch(`${API_BASE}/api/products/${params.slug}`)
+  const { slug } = await context.params
+
+  const res = await fetch(`${API_BASE}/api/products/${slug}`)
 
   return new Response(await res.text(), {
     status: res.status,
