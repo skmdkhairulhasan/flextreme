@@ -1,26 +1,21 @@
-import { NextRequest } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 
-const API_BASE = process.env.CLOUDFLARE_API_BASE_URL!
+export async function GET(
+  req: NextRequest,
+  context: { params: Promise<{ slug: string }> }
+) {
+  try {
+    const { slug } = await context.params
 
-export async function GET() {
-  const res = await fetch(`${API_BASE}/api/products`)
-  return new Response(await res.text(), {
-    status: res.status,
-    headers: { "Content-Type": "application/json" },
-  })
-}
+    const res = await fetch(`${process.env.CLOUDFLARE_API_BASE_URL}/api/products/${slug}`)
 
-export async function POST(request: NextRequest) {
-  const body = await request.text()
+    const data = await res.json()
 
-  const res = await fetch(`${API_BASE}/api/products`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body,
-  })
-
-  return new Response(await res.text(), {
-    status: res.status,
-    headers: { "Content-Type": "application/json" },
-  })
+    return NextResponse.json(data)
+  } catch (error) {
+    return NextResponse.json(
+      { error: "Failed to fetch product" },
+      { status: 500 }
+    )
+  }
 }
