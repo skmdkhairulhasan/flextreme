@@ -1,14 +1,24 @@
-import { createClient } from "@/lib/supabase/server"
 import { NextRequest, NextResponse } from "next/server"
 
-export async function GET(req: NextRequest) {
-  const phone = req.nextUrl.searchParams.get("phone") || ""
-  if (!phone) return NextResponse.json({ flex100: false, name: "" })
-  const supabase = await createClient()
-  const { data } = await supabase
-    .from("customers")
-    .select("flex100, name")
-    .eq("phone", phone)
-    .single()
-  return NextResponse.json({ flex100: data?.flex100 === true, name: data?.name || "" })
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json()
+
+    const res = await fetch("https://api.flextremefit.com/customers/check", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    })
+
+    const data = await res.json()
+
+    return NextResponse.json(data)
+  } catch (error) {
+    return NextResponse.json(
+      { error: "Something went wrong" },
+      { status: 500 }
+    )
+  }
 }
