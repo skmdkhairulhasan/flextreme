@@ -181,12 +181,22 @@ export default function ChatBot({ fullPage = false }: { fullPage?: boolean } = {
   const [open, setOpen] = useState(false)
   // Auto-open when fullPage mode
   useEffect(() => { if (fullPage) setOpen(true) }, [fullPage])
-  // Hide to side — swipe left/right on button to hide, tap to show
-  const [hidden, setHidden] = useState(false)
+  // Hide to side — on mobile it starts tucked away and peeks from the edge
+  const [hidden, setHidden] = useState(!fullPage)
   const pathname = usePathname()
 
   // Close chatbox when navigating to a new page
-  useEffect(() => { setOpen(false) }, [pathname])
+  useEffect(() => {
+    setOpen(false)
+    if (!fullPage && typeof window !== "undefined") {
+      setHidden(window.innerWidth <= 768)
+    }
+  }, [fullPage, pathname])
+
+  useEffect(() => {
+    if (fullPage || typeof window === "undefined") return
+    setHidden(window.innerWidth <= 768)
+  }, [fullPage])
 
 
   const [settings, setSettings] = useState<Settings>({})
@@ -343,7 +353,7 @@ const [profile] = useState({
         try {
           // Use server API route to bypass RLS
           const res = await fetch("/api/order-lookup?phone=" + encodeURIComponent(phoneRaw))
-          const json = await res.json()
+          const json = await res.json() as { orders?: any[] }
           const data = json.orders
           let orderReply = ""
 
@@ -1503,6 +1513,16 @@ function handleSwipe(e:any){
   window.addEventListener("mouseup", onEnd)
 }
 
+function handleToggleClick() {
+  if (hidden) {
+    setHidden(false)
+    return
+  }
+  setOpen(o => !o)
+}
+
+const chatButtonRight = hidden ? -92 : 4
+
 
 return (
 <div style={fullPage ? {display:"flex",flexDirection:"column",flex:1,minHeight:0,width:"100%",height:"100%",overflow:"hidden",backgroundColor:"#0a0a0a"} : {}}>
@@ -1675,39 +1695,11 @@ strokeLinecap="round"
         </div>
       )}
 
-      {/* LABEL — appears after 10s, stays 3s, repeats every 13s */}
-      {!open && !hidden && !fullPage && (
-        <div className="clabel" style={{
-          position:"fixed", bottom:28, right:80, zIndex:9996,
-          backgroundColor:"black", color:"white",
-          padding:"0.4rem 0.9rem", borderRadius:"24px",
-          fontSize:"0.72rem", fontWeight:700, letterSpacing:"0.04em",
-          whiteSpace:"nowrap", boxShadow:"0 4px 16px rgba(0,0,0,0.25)",
-          display:"flex", alignItems:"center", gap:"0.4rem",
-          pointerEvents:"none",
-          animation: "chatLabelCycle 13s ease-in-out infinite",
-          opacity: 0,
-        }}>
-          <style>{`
-            @keyframes chatLabelCycle {
-              0%   { opacity: 0; transform: translateY(6px); }
-              76%  { opacity: 0; transform: translateY(6px); }
-              80%  { opacity: 1; transform: translateY(0); }
-              95%  { opacity: 1; transform: translateY(0); }
-              100% { opacity: 0; transform: translateY(6px); }
-            }
-          `}</style>
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-          Chat with Flex AI
-        </div>
-      )}
-
-
       {/* BUTTON — slides right to hide, tap to restore */}
       {!fullPage && <div style={{
         position:"fixed",
         bottom:20,
-        right: hidden ? -50 : 4,
+        right: chatButtonRight,
         zIndex:9997,
         transition:"right 0.35s cubic-bezier(0.34,1.56,0.64,1)",
         transform: hidden ? "translateX(0)" : "translateX(0)",
@@ -1715,21 +1707,22 @@ strokeLinecap="round"
       }}>
         <button
 className={`ctoggle ${hidden ? "peek-tilt" : ""}`}
-onClick={()=>setOpen(o=>!o)}
+onClick={handleToggleClick}
 onMouseDown={handleSwipe}
 onTouchStart={handleSwipe}
 style={{
   width:"68px",
   height:"68px",
   borderRadius:"50%",
-  backgroundColor:"black",
-  border:"2px solid rgba(255,255,255,0.15)",
+  backgroundColor:hidden ? "transparent" : "black",
+  border:hidden ? "none" : "2px solid rgba(255,255,255,0.15)",
   cursor:"pointer",
   display:"flex",
   alignItems:"center",
   justifyContent:"center",
   position:"relative",
-  overflow:"visible"
+  overflow:"visible",
+  boxShadow:hidden ? "none" : undefined
 }}
 >
 
@@ -1778,6 +1771,11 @@ animation-delay:1.3s;
 50%{transform:translate(-50%,-8px)}
 }
 
+@keyframes robotPeekFloat{
+0%,100%{transform:translate(-132%,2px) rotate(-22deg)}
+50%{transform:translate(-132%,-6px) rotate(-26deg)}
+}
+
 @keyframes robotBlink{
 0%,92%,100%{transform:scaleY(1)}
 95%{transform:scaleY(.15)}
@@ -1789,6 +1787,13 @@ bottom:32px;
 left:50%;
 transform:translateX(-50%);
 animation:robotFloat 2.2s ease-in-out infinite;
+}
+
+.robotPeek{
+left:22%;
+bottom:30px;
+animation:robotPeekFloat 2.2s ease-in-out infinite;
+transform-origin:center;
 }
 
 .robotEye{
@@ -1816,7 +1821,7 @@ animation:eyePulse 1.2s infinite;
 `}}/>
 
 {/* ROBOT */}
-<div className="robotWrap">
+<div className={`robotWrap ${hidden ? "robotPeek" : ""}`}>
 
 <svg
 className={`robotGlow ${loading ? "robotTalking" : ""}`}
@@ -1859,7 +1864,7 @@ strokeLinecap="round"
 </div>
 
 {/* CIRCLE ICON */}
-{open ? (
+{!hidden && (open ? (
 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
 <line x1="18" y1="6" x2="6" y2="18"/>
 <line x1="6" y1="6" x2="18" y2="18"/>
@@ -1868,7 +1873,7 @@ strokeLinecap="round"
 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2">
 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
 </svg>
-)}
+))}
 
 </button>
       </div>}

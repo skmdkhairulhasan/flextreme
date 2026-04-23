@@ -1,0 +1,310 @@
+[browser] Detected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior
+[browser] Detected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior
+[browser] Detected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior
+[browser] Detected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior
+[browser] AuthApiError: Service for this project is restricted due to the following violations: exceed_cached_egress_quota. Please reach out to Supabase support at https://supabase.help immediately.
+[browser] AuthApiError: Service for this project is restricted due to the following violations: exceed_cached_egress_quota. Please reach out to Supabase support at https://supabase.help immediately.
+    at async handleLogin (src/app/admin/login/page.tsx:19:36)
+  17 |     try {
+  18 |       const supabase = createClient()
+> 19 |       const { error: authError } = await supabase.auth.signInWithPassword({ email, passwor...
+     |                                    ^
+  20 |       if (authError) throw authError
+  21 |       router.push("/admin/dashboard")
+  22 |     } catch (err: any) { (src/app/admin/login/page.tsx:24:15)
+[browser] AuthApiError: Service for this project is restricted due to the following violations: exceed_cached_egress_quota. Please reach out to Supabase support at https://supabase.help immediately.
+    at async handleLogin (src/app/admin/login/page.tsx:19:36)
+  17 |     try {
+  18 |       const supabase = createClient()
+> 19 |       const { error: authError } = await supabase.auth.signInWithPassword({ email, passwor...
+     |                                    ^
+  20 |       if (authError) throw authError
+  21 |       router.push("/admin/dashboard")
+  22 |     } catch (err: any) { (src/app/admin/login/page.tsx:24:15)
+[browser] AuthApiError: Service for this project is restricted due to the following violations: exceed_cached_egress_quota. Please reach out to Supabase support at https://supabase.help immediately.
+    at async handleLogin (src/app/admin/login/page.tsx:19:36)
+  17 |     try {
+  18 |       const supabase = createClient()
+> 19 |       const { error: authError } = await supabase.auth.signInWithPassword({ email, passwor...
+     |                                    ^
+  20 |       if (authError) throw authError
+  21 |       router.push("/admin/dashboard")
+  22 |     } catch (err: any) { (src/app/admin/login/page.tsx:24:15)
+[browser] AuthApiError: Service for this project is restricted due to the following violations: exceed_cached_egress_quota. Please reach out to Supabase support at https://supabase.help immediately.
+    at async handleLogin (src/app/admin/login/page.tsx:19:36)
+  17 |     try {
+  18 |       const supabase = createClient()
+> 19 |       const { error: authError } = await supabase.auth.signInWithPassword({ email, passwor...
+     |                                    ^
+  20 |       if (authError) throw authError
+  21 |       router.push("/admin/dashboard")
+  22 |     } catch (err: any) { (src/app/admin/login/page.tsx:24:15)
+[browser] AuthApiError: Service for this project is restricted due to the following violations: exceed_cached_egress_quota. Please reach out to Supabase support at https://supabase.help immediately.
+    at async handleLogin (src/app/admin/login/page.tsx:19:36)
+  17 |     try {
+  18 |       const supabase = createClient()
+> 19 |       const { error: authError } = await supabase.auth.signInWithPassword({ email, passwor...
+     |                                    ^
+  20 |       if (authError) throw authError
+  21 |       router.push("/admin/dashboard")
+  22 |     } catch (err: any) { (src/app/admin/login/page.tsx:24:15)
+[browser] AuthApiError: Service for this project is restricted due to the following violations: exceed_cached_egress_quota. Please reach out to Supabase support at https://supabase.help immediately.
+    at async handleLogin (src/app/admin/login/page.tsx:19:36)
+  17 |     try {
+  18 |       const supabase = createClient()
+> 19 |       const { error: authError } = await supabase.auth.signInWithPassword({ email, passwor...
+     |                                    ^
+  20 |       if (authError) throw authError
+  21 |       router.push("/admin/dashboard")
+  22 |     } catch (err: any) { (src/app/admin/login/page.tsx:24:15)
+[browser] AuthApiError: Service for this project is restricted due to the following violations: exceed_cached_egress_quota. Please reach out to Supabase support at https://supabase.help immediately.
+    at async handleLogin (src/app/admin/login/page.tsx:19:36)
+  17 |     try {
+  18 |       const supabase = createClient()
+> 19 |       const { error: authError } = await supabase.auth.signInWithPassword({ email, passwor...
+     |                                    ^
+  20 |       if (authError) throw authError
+  21 |       router.push("/admin/dashboard")
+  22 |     } catch (err: any) { (src/app/admin/login/page.tsx:24:15)
+⨯ TypeError: Failed to parse URL from /api/products?featured=true&limit=4
+    at ignore-listed frames {
+  digest: '3885789470',
+  [cause]: TypeError: Invalid URL
+      at ignore-listed frames {
+    code: 'ERR_INVALID_URL',
+    input: '/api/products?featured=true&limit=4'
+  }
+}
+⨯ TypeError: Failed to parse URL from /api/products?featured=true&limit=4
+    at ignore-listed frames {
+  digest: '3885789470',
+  [cause]: TypeError: Invalid URL
+      at ignore-listed frames {
+    code: 'ERR_INVALID_URL',
+    input: '/api/products?featured=true&limit=4'
+  }
+}
+⨯ TypeError: Failed to parse URL from /api/products?featured=true&limit=4
+    at ignore-listed frames {
+  digest: '3885789470',
+  [cause]: TypeError: Invalid URL
+      at ignore-listed frames {
+    code: 'ERR_INVALID_URL',
+    input: '/api/products?featured=true&limit=4'
+  }
+}
+⨯ TypeError: Failed to parse URL from /api/products?featured=true&limit=4
+    at ignore-listed frames {
+  digest: '3885789470',
+  [cause]: TypeError: Invalid URL
+      at ignore-listed frames {
+    code: 'ERR_INVALID_URL',
+    input: '/api/products?featured=true&limit=4'
+  }
+}
+⨯ TypeError: Failed to parse URL from /api/products?featured=true&limit=4
+    at ignore-listed frames {
+  digest: '3885789470',
+  [cause]: TypeError: Invalid URL
+      at ignore-listed frames {
+    code: 'ERR_INVALID_URL',
+    input: '/api/products?featured=true&limit=4'
+  }
+}
+⨯ TypeError: Failed to parse URL from /api/products?featured=true&limit=4
+    at ignore-listed frames {
+  digest: '3885789470',
+  [cause]: TypeError: Invalid URL
+      at ignore-listed frames {
+    code: 'ERR_INVALID_URL',
+    input: '/api/products?featured=true&limit=4'
+  }
+}
+⨯ TypeError: Failed to parse URL from /api/products?featured=true&limit=4
+    at ignore-listed frames {
+  digest: '3885789470',
+  [cause]: TypeError: Invalid URL
+      at ignore-listed frames {
+    code: 'ERR_INVALID_URL',
+    input: '/api/products?featured=true&limit=4'
+  }
+}
+⨯ TypeError: Failed to parse URL from /api/products?featured=true&limit=4
+    at ignore-listed frames {
+  digest: '3885789470',
+  [cause]: TypeError: Invalid URL
+      at ignore-listed frames {
+    code: 'ERR_INVALID_URL',
+    input: '/api/products?featured=true&limit=4'
+  }
+}
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⨯ Error: Missing CLOUDFLARE_API_BASE_URL or API_BASE_URL
+    at getUpstreamBaseUrl (src\lib\api\proxy.ts:6:11)
+    at proxyToWorker (src\lib\api\proxy.ts:12:23)
+    at GET (src\app\api\products\route.ts:10:23)
+  4 |   const base = process.env.CLOUDFLARE_API_BASE_URL || process.env.API_BASE_URL || process.e...
+  5 |   if (!base) {
+> 6 |     throw new Error("Missing CLOUDFLARE_API_BASE_URL or API_BASE_URL")
+    |           ^
+  7 |   }
+  8 |   return base.replace(/\/$/, "")
+  9 | }
+⨯ Error: Missing CLOUDFLARE_API_BASE_URL or API_BASE_URL
+    at getUpstreamBaseUrl (src\lib\api\proxy.ts:6:11)
+    at proxyToWorker (src\lib\api\proxy.ts:12:23)
+    at GET (src\app\api\products\route.ts:10:23)
+  4 |   const base = process.env.CLOUDFLARE_API_BASE_URL || process.env.API_BASE_URL || process.e...
+  5 |   if (!base) {
+> 6 |     throw new Error("Missing CLOUDFLARE_API_BASE_URL or API_BASE_URL")
+    |           ^
+  7 |   }
+  8 |   return base.replace(/\/$/, "")
+  9 | }
+⨯ Error: Missing CLOUDFLARE_API_BASE_URL or API_BASE_URL
+    at getUpstreamBaseUrl (src\lib\api\proxy.ts:6:11)
+    at proxyToWorker (src\lib\api\proxy.ts:12:23)
+    at GET (src\app\api\products\route.ts:10:23)
+  4 |   const base = process.env.CLOUDFLARE_API_BASE_URL || process.env.API_BASE_URL || process.e...
+  5 |   if (!base) {
+> 6 |     throw new Error("Missing CLOUDFLARE_API_BASE_URL or API_BASE_URL")
+    |           ^
+  7 |   }
+  8 |   return base.replace(/\/$/, "")
+  9 | }
+⨯ Error: Missing CLOUDFLARE_API_BASE_URL or API_BASE_URL
+    at getUpstreamBaseUrl (src\lib\api\proxy.ts:6:11)
+    at proxyToWorker (src\lib\api\proxy.ts:12:23)
+    at GET (src\app\api\stats\route.ts:5:23)
+  4 |   const base = process.env.CLOUDFLARE_API_BASE_URL || process.env.API_BASE_URL || process.e...
+  5 |   if (!base) {
+> 6 |     throw new Error("Missing CLOUDFLARE_API_BASE_URL or API_BASE_URL")
+    |           ^
+  7 |   }
+  8 |   return base.replace(/\/$/, "")
+  9 | }
+⨯ Error: Missing CLOUDFLARE_API_BASE_URL or API_BASE_URL
+    at getUpstreamBaseUrl (src\lib\api\proxy.ts:6:11)
+    at proxyToWorker (src\lib\api\proxy.ts:12:23)
+    at GET (src\app\api\stats\route.ts:5:23)
+  4 |   const base = process.env.CLOUDFLARE_API_BASE_URL || process.env.API_BASE_URL || process.e...
+  5 |   if (!base) {
+> 6 |     throw new Error("Missing CLOUDFLARE_API_BASE_URL or API_BASE_URL")
+    |           ^
+  7 |   }
+  8 |   return base.replace(/\/$/, "")
+  9 | }
+⨯ Error: Missing CLOUDFLARE_API_BASE_URL or API_BASE_URL
+    at getUpstreamBaseUrl (src\lib\api\proxy.ts:6:11)
+    at proxyToWorker (src\lib\api\proxy.ts:12:23)
+    at GET (src\app\api\stats\route.ts:5:23)
+  4 |   const base = process.env.CLOUDFLARE_API_BASE_URL || process.env.API_BASE_URL || process.e...
+  5 |   if (!base) {
+> 6 |     throw new Error("Missing CLOUDFLARE_API_BASE_URL or API_BASE_URL")
+    |           ^
+  7 |   }
+  8 |   return base.replace(/\/$/, "")
+  9 | }
+⨯ Error: Missing CLOUDFLARE_API_BASE_URL or API_BASE_URL
+    at getUpstreamBaseUrl (src\lib\api\proxy.ts:6:11)
+    at proxyToWorker (src\lib\api\proxy.ts:12:23)
+    at GET (src\app\api\settings\route.ts:5:23)
+  4 |   const base = process.env.CLOUDFLARE_API_BASE_URL || process.env.API_BASE_URL || process.e...
+  5 |   if (!base) {
+> 6 |     throw new Error("Missing CLOUDFLARE_API_BASE_URL or API_BASE_URL")
+    |           ^
+  7 |   }
+  8 |   return base.replace(/\/$/, "")
+  9 | }
+⨯ Error: Missing CLOUDFLARE_API_BASE_URL or API_BASE_URL
+    at getUpstreamBaseUrl (src\lib\api\proxy.ts:6:11)
+    at proxyToWorker (src\lib\api\proxy.ts:12:23)
+    at GET (src\app\api\settings\route.ts:5:23)
+  4 |   const base = process.env.CLOUDFLARE_API_BASE_URL || process.env.API_BASE_URL || process.e...
+  5 |   if (!base) {
+> 6 |     throw new Error("Missing CLOUDFLARE_API_BASE_URL or API_BASE_URL")
+    |           ^
+  7 |   }
+  8 |   return base.replace(/\/$/, "")
+  9 | }
+⨯ Error: Missing CLOUDFLARE_API_BASE_URL or API_BASE_URL
+    at getUpstreamBaseUrl (src\lib\api\proxy.ts:6:11)
+    at proxyToWorker (src\lib\api\proxy.ts:12:23)
+    at GET (src\app\api\settings\route.ts:5:23)
+  4 |   const base = process.env.CLOUDFLARE_API_BASE_URL || process.env.API_BASE_URL || process.e...
+  5 |   if (!base) {
+> 6 |     throw new Error("Missing CLOUDFLARE_API_BASE_URL or API_BASE_URL")
+    |           ^
+  7 |   }
+  8 |   return base.replace(/\/$/, "")
+  9 | }
+⨯ Error: Missing CLOUDFLARE_API_BASE_URL or API_BASE_URL
+    at getUpstreamBaseUrl (src\lib\api\proxy.ts:6:11)
+    at proxyToWorker (src\lib\api\proxy.ts:12:23)
+    at GET (src\app\api\reviews\route.ts:5:23)
+  4 |   const base = process.env.CLOUDFLARE_API_BASE_URL || process.env.API_BASE_URL || process.e...
+  5 |   if (!base) {
+> 6 |     throw new Error("Missing CLOUDFLARE_API_BASE_URL or API_BASE_URL")
+    |           ^
+  7 |   }
+  8 |   return base.replace(/\/$/, "")
+  9 | }
+⨯ Error: Missing CLOUDFLARE_API_BASE_URL or API_BASE_URL
+    at getUpstreamBaseUrl (src\lib\api\proxy.ts:6:11)
+    at proxyToWorker (src\lib\api\proxy.ts:12:23)
+    at GET (src\app\api\reviews\route.ts:5:23)
+  4 |   const base = process.env.CLOUDFLARE_API_BASE_URL || process.env.API_BASE_URL || process.e...
+  5 |   if (!base) {
+> 6 |     throw new Error("Missing CLOUDFLARE_API_BASE_URL or API_BASE_URL")
+    |           ^
+  7 |   }
+  8 |   return base.replace(/\/$/, "")
+  9 | }
+⨯ Error: Missing CLOUDFLARE_API_BASE_URL or API_BASE_URL
+    at getUpstreamBaseUrl (src\lib\api\proxy.ts:6:11)
+    at proxyToWorker (src\lib\api\proxy.ts:12:23)
+    at GET (src\app\api\reviews\route.ts:5:23)
+  4 |   const base = process.env.CLOUDFLARE_API_BASE_URL || process.env.API_BASE_URL || process.e...
+  5 |   if (!base) {
+> 6 |     throw new Error("Missing CLOUDFLARE_API_BASE_URL or API_BASE_URL")
+    |           ^
+  7 |   }
+  8 |   return base.replace(/\/$/, "")
+  9 | }
+⨯ Error: Request failed
+    at apiFetchServer (src\lib\api\server.ts:17:11)
+    at async HomePage (src\app\page.tsx:30:56)
+  15 |   const data = await response.json().catch(() => ({}))
+  16 |   if (!response.ok) {
+> 17 |     throw new Error(data.error || "Request failed")
+     |           ^
+  18 |   }
+  19 |   return data as T
+  20 | } {
+  digest: '1003066822'
+}
+⨯ Error: Request failed
+    at apiFetchServer (src\lib\api\server.ts:17:11)
+    at async HomePage (src\app\page.tsx:30:56)
+  15 |   const data = await response.json().catch(() => ({}))
+  16 |   if (!response.ok) {
+> 17 |     throw new Error(data.error || "Request failed")
+     |           ^
+  18 |   }
+  19 |   return data as T
+  20 | } {
+  digest: '1003066822'
+}
+⨯ Error: Request failed
+    at apiFetchServer (src\lib\api\server.ts:17:11)
+    at async HomePage (src\app\page.tsx:30:56)
+  15 |   const data = await response.json().catch(() => ({}))
+  16 |   if (!response.ok) {
+> 17 |     throw new Error(data.error || "Request failed")
+     |           ^
+  18 |   }
+  19 |   return data as T
+  20 | } {
+  digest: '1003066822'
+}
+^C^C

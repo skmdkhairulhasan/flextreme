@@ -1,8 +1,7 @@
 "use client"
 import { useState, useEffect, useRef } from "react"
 import { Product } from "@/types"
-import { createClient } from "@/lib/supabase/client"
-import { upsertCustomer } from "@/lib/upsertCustomer"
+import { apiFetchClient } from "@/lib/api/client"
 import { useCart } from "@/components/ui/Cart"
 import { fbEvent } from "@/components/ui/FacebookPixel"
 
@@ -100,24 +99,22 @@ export default function OrderForm({ product }: { product: Product & { stock_matr
     setLoading(true)
     setError("")
     try {
-      const supabase = createClient()
       const orderData: Record<string,any> = {
-        name: name.trim(), phone: phone.trim(), address: address.trim(),
+        customer_name: name.trim(), phone: phone.trim(), address: address.trim(),
         product_id: product.id, product_name: product.name,
         size: selectedSize, color: selectedColor, quantity, total_price: totalPrice,
         notes: notes.trim(), status: "pending",
       }
       if (email.trim()) orderData.email = email.trim()
-      let { error: dbError } = await supabase.from("orders").insert(orderData)
-      // If email column doesn't exist in DB yet, retry without it
-      if (dbError && dbError.message?.includes("email")) {
-        delete orderData.email
-        const retry = await supabase.from("orders").insert(orderData)
-        dbError = retry.error
-      }
-      if (dbError) throw dbError
-      // Auto-create/update customer record
-      await upsertCustomer(supabase, { name: name.trim(), phone: phone.trim(), totalPrice })
+      orderData.items = [{
+        product_id: product.id,
+        product_name: product.name,
+        size: selectedSize,
+        color: selectedColor,
+        quantity,
+        price: totalPrice,
+      }]
+      await apiFetchClient("/api/orders", { method: "POST", body: JSON.stringify(orderData) })
       fbEvent.purchase({
         value: totalPrice,
         order_id: product.id + "_" + Date.now(),
@@ -288,26 +285,7 @@ export default function OrderForm({ product }: { product: Product & { stock_matr
               setPhone(v)
               setDiscountChecked(false)
               setIsFlex100(false)
-              // Debounced lookup when phone reaches valid length
               if (lookupTimer.current) clearTimeout(lookupTimer.current)
-              if (v.replace(/\D/g,"").length >= 11) {
-                lookupTimer.current = setTimeout(async () => {
-                  const supabase = createClient()
-                  const ph = v.trim()
-                  // Try exact match first, then with/without country code
-                  const local = ph.startsWith("0") ? ph : "0" + ph.slice(-10)
-                  const { data } = await supabase.from("customers")
-                    .select("flex100, name").eq("phone", local).single()
-                  if (data) {
-                    setIsFlex100(data.flex100 === true)
-                    setDiscountChecked(true)
-                    if (data.name) setName(data.name) // Always use DB name
-                  } else {
-                    setIsFlex100(false)
-                    setDiscountChecked(false)
-                  }
-                }, 600)
-              }
             }}
             placeholder="01XXXXXXXXX" style={{ width: "100%", border: fieldErrors.phone ? "1.5px solid #ef4444" : "1px solid #e0e0e0", padding: "0.75rem 1rem", fontSize: "0.95rem", outline: "none", boxSizing: "border-box" as const }} id="field-phone" />
           {fieldErrors.phone && <p style={{ color:"#ef4444", fontSize:"0.75rem", marginTop:"0.3rem", fontWeight:600 }}>⚠️ {fieldErrors.phone}</p>}

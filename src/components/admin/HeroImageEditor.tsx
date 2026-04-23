@@ -7,9 +7,10 @@ interface Props {
   initialScale?: number
   initialPosX?: number
   initialPosY?: number
+  headline?: string
 }
 
-export default function HeroImageEditor({ imageUrl, onSave, initialScale = 1, initialPosX = 50, initialPosY = 50 }: Props) {
+export default function HeroImageEditor({ imageUrl, onSave, initialScale = 1, initialPosX = 50, initialPosY = 50, headline = "LOOK|BIGGER|INSTANTLY." }: Props) {
   const [scale, setScale] = useState(initialScale)
   const [posX, setPosX] = useState(initialPosX)
   const [posY, setPosY] = useState(initialPosY)
@@ -157,16 +158,6 @@ export default function HeroImageEditor({ imageUrl, onSave, initialScale = 1, in
         {/* Scale indicator */}
         <div style={{ position: "absolute", top: "0.5rem", right: "0.5rem", color: "rgba(255,255,255,0.6)", fontSize: "0.65rem", fontWeight: 700, backgroundColor: "rgba(0,0,0,0.5)", padding: "0.2rem 0.5rem", pointerEvents: "none" }}>
           {scale.toFixed(1)}x
-        </div>
-
-        {/* Text preview overlay */}
-        <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
-          <div style={{ textAlign: "center" }}>
-            <p style={{ color: "white", fontWeight: 900, fontSize: "clamp(1.2rem, 4vw, 2.5rem)", letterSpacing: "-0.04em", textTransform: "uppercase", lineHeight: 0.9, opacity: 0.8 }}>WORK</p>
-            <p style={{ color: "rgba(255,255,255,0.3)", fontWeight: 900, fontSize: "clamp(1.2rem, 4vw, 2.5rem)", letterSpacing: "-0.04em", textTransform: "uppercase", lineHeight: 0.9, opacity: 0.8 }}>HARD.</p>
-            <p style={{ color: "white", fontWeight: 900, fontSize: "clamp(1.2rem, 4vw, 2.5rem)", letterSpacing: "-0.04em", textTransform: "uppercase", lineHeight: 0.9, opacity: 0.8, marginTop: "0.1em" }}>FLEX</p>
-            <p style={{ color: "rgba(255,255,255,0.3)", fontWeight: 900, fontSize: "clamp(1.2rem, 4vw, 2.5rem)", letterSpacing: "-0.04em", textTransform: "uppercase", lineHeight: 0.9, opacity: 0.8 }}>EXTREME.</p>
-          </div>
         </div>
       </div>
 

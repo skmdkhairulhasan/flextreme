@@ -1,7 +1,6 @@
-﻿"use client"
+"use client"
 import { useState, useRef } from "react"
-import { createClient } from "@/lib/supabase/client"
-import { uploadToCloudinary } from "@/lib/cloudinary"
+import { apiFetchClient, uploadFileToApi } from "@/lib/api/client"
 
 export default function ReviewForm({ productId, productName }: { productId: string, productName: string }) {
   const [name, setName] = useState("")
@@ -24,39 +23,32 @@ export default function ReviewForm({ productId, productName }: { productId: stri
     setLoading(true)
     setError("")
     try {
-      const supabase = createClient()
-      console.log("Submitting review with productId:", productId)
       let photo_url: string | null = null
       if (photo) {
         try {
-          photo_url = await uploadToCloudinary(photo, "flextreme/reviews")
+          const upload = await uploadFileToApi(photo, "reviews")
+          photo_url = upload.url
         } catch (uploadErr: any) {
           setError("Photo upload failed: " + uploadErr.message)
           setLoading(false)
           return
         }
       }
-      const payload = {
-        product_id: productId,
-        product_name: productName,
-        customer_name: name.trim(),
-        customer_location: location.trim(),
-        rating,
-        review_text: text.trim(),
-        photo_url,
-        status: "pending",
-      }
-      console.log("Payload:", payload)
-      const { data, error: dbError } = await supabase.from("reviews").insert(payload).select()
-      console.log("Response data:", data)
-      console.log("Response error:", dbError)
-      if (dbError) {
-        setError("Error: " + dbError.message + " (Code: " + dbError.code + ")")
-        return
-      }
+      await apiFetchClient("/api/reviews", {
+        method: "POST",
+        body: JSON.stringify({
+          product_id: productId,
+          product_name: productName,
+          customer_name: name.trim(),
+          customer_location: location.trim(),
+          rating,
+          review_text: text.trim(),
+          photo_url,
+          status: "pending",
+        }),
+      })
       setSuccess(true)
     } catch (err: any) {
-      console.error("Catch error:", err)
       setError("Error: " + (err?.message || JSON.stringify(err)))
     } finally {
       setLoading(false)
@@ -104,7 +96,6 @@ export default function ReviewForm({ productId, productName }: { productId: stri
         <p style={{ fontSize: "0.7rem", color: "#999", marginTop: "0.25rem" }}>{text.length} characters</p>
       </div>
 
-      {/* Photo upload */}
       <div style={{ marginBottom: "1.25rem" }}>
         <label style={{ display: "block", fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.4rem", color: "#555" }}>
           Photo <span style={{ fontWeight: 400, color: "#999", textTransform: "none" }}>(Optional — max 5MB)</span>

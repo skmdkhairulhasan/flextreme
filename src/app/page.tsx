@@ -1,15 +1,12 @@
 import Link from "next/link"
 import ReviewsSection from "@/components/ui/ReviewsSection"
-import { createClient } from "@/lib/supabase/server"
+import { apiFetchServer } from "@/lib/api/server"
 import { Product } from "@/types"
 import BrandStamp from "@/components/ui/BrandStamp"
 
 async function getSettings() {
-  const supabase = await createClient()
-  const { data } = await supabase.from("settings").select("*")
-  const map: Record<string, string> = {}
-  data?.forEach((s: any) => { map[s.key] = s.value })
-  return map
+  const { settings } = await apiFetchServer<{ settings: Record<string, string> }>("/api/settings")
+  return settings || {}
 }
 
 // Renders **bold**, _italic_, <u>underline</u> and \n line breaks
@@ -30,23 +27,18 @@ function renderRichText(text: string) {
 
 export const dynamic = "force-dynamic"
 export default async function HomePage() {
-  const supabase = await createClient()
-  const [{ data: products }, settings, { count: productCount }, { data: reviews }, { count: orderCount }, { data: allReviews }] = await Promise.all([
-    supabase.from("products").select("*").eq("is_featured", true).limit(4),
+  const [{ products }, settings, { reviews }, stats] = await Promise.all([
+    apiFetchServer<{ products: Product[] }>("/api/products?featured=true&limit=4"),
     getSettings(),
-    supabase.from("products").select("*", { count: "exact", head: true }),
-    supabase.from("reviews").select("*").eq("status", "approved").order("featured", { ascending: false }).order("created_at", { ascending: false }).limit(6),
-    supabase.from("orders").select("*", { count: "exact", head: true }),
-    supabase.from("reviews").select("rating").eq("status", "approved"),
+    apiFetchServer<{ reviews: any[] }>("/api/reviews?status=approved&limit=6"),
+    apiFetchServer<{ productCount: number; orderCount: number; reviewCount: number; avgRating: number }>("/api/stats"),
   ])
-  const featuredProducts = (products as Product[]) || []
-  const totalProducts = productCount || 0
+  const featuredProducts = products || []
+  const totalProducts = stats.productCount || featuredProducts.length
   const approvedReviews = reviews || []
-  const totalOrders = orderCount || 0
-  const allApprovedReviews = allReviews || []
-  const avgRating = allApprovedReviews.length > 0
-    ? (allApprovedReviews.reduce((sum: number, r: any) => sum + (r.rating || 5), 0) / allApprovedReviews.length)
-    : 5
+  const totalOrders = stats.orderCount || 0
+  const allApprovedReviews = approvedReviews
+  const avgRating = stats.avgRating || 5
   const avgRatingDisplay = avgRating.toFixed(1) + " / 5"
   const customerCount = totalOrders > 0
     ? (totalOrders >= 1000 ? (Math.floor(totalOrders / 100) * 100) + "+" : totalOrders >= 100 ? totalOrders + "+" : totalOrders > 0 ? totalOrders + "+" : "Growing")
@@ -57,8 +49,8 @@ export default async function HomePage() {
       <HeroSection settings={settings} />
       <FeaturedProducts products={featuredProducts} settings={settings} />
       <ReviewsSection reviews={approvedReviews} />
-      <PerformanceFeatures settings={settings} />
       <WhyFlextreme settings={settings} />
+      <PerformanceFeatures settings={settings} />
       <BrandStory settings={settings} totalProducts={totalProducts} customerCount={customerCount} avgRating={avgRatingDisplay} totalReviews={allApprovedReviews.length} />
       <FinalCTA settings={settings} />
     </div>
@@ -87,13 +79,22 @@ function HeroSection({ settings }: { settings: Record<string, string> }) {
   const taglineSize = (settings.hero_tagline_size || "1") + "rem"
   const taglineLineHeight = settings.hero_tagline_lineheight || "1.7"
   const taglineMaxWidth = (settings.hero_tagline_maxwidth || "420") + "px"
+  const taglineOpacity = settings.hero_tagline_opacity || "0.5"
   const primaryCTA = settings.hero_cta_primary || "Buy Now"
   const secondaryCTA = settings.hero_cta_secondary || "Our Story"
   const primaryCTALink = settings.hero_cta_primary_link || "/products"
   const secondaryCTALink = settings.hero_cta_secondary_link || "/about"
+  const heroPaddingTop = settings.hero_padding_top || "120"
+  const heroPaddingBottom = settings.hero_padding_bottom || "64"
+  // Individual element spacing (margin-bottom for each subsection)
+  const spaceBadge = settings.hero_space_badge || "2"         // below badge
+  const spaceHeadline = settings.hero_space_headline || "2.5" // below headline
+  const spaceDivider = settings.hero_space_divider || "1.5"   // below divider line
+  const spaceButton = settings.hero_space_button || "2"       // below Buy Now button
+  const spaceTagline = settings.hero_space_tagline || "1.5"   // below tagline
 
   return (
-    <section style={{ minHeight: "100vh", backgroundColor: "var(--theme-primary, black)", display: "flex", alignItems: "flex-start", justifyContent: "center", paddingTop: "120px", paddingBottom: "4rem", overflow: "hidden", position: "relative" }}>
+    <section style={{ minHeight: "100vh", backgroundColor: "var(--theme-primary, black)", display: "flex", alignItems: "flex-start", justifyContent: "center", paddingTop: heroPaddingTop + "px", paddingBottom: heroPaddingBottom + "px", overflow: "hidden", position: "relative" }}>
       {bgType === "image" && bgImage && (
         <div style={{ position: "absolute", inset: 0, zIndex: 0, overflow: "hidden" }}>
           <img src={bgImage} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: bgPosX + "% " + bgPosY + "%", opacity: bgOpacity, transform: "scale(" + bgScale + ")", transformOrigin: bgPosX + "% " + bgPosY + "%" }} />
@@ -113,33 +114,27 @@ function HeroSection({ settings }: { settings: Record<string, string> }) {
       )}
       <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "0 1.5rem", textAlign: "center", position: "relative", zIndex: 1, width: "100%" }}>
         <BrandStamp />
-        <div style={{ display: "inline-block", border: "1px solid rgba(255,255,255,0.2)", padding: "0.4rem 1.2rem", marginBottom: "2rem", fontSize: badgeSize, fontWeight: 700, letterSpacing: badgeSpacing, textTransform: "uppercase", color: "rgba(255,255,255," + badgeOpacity + ")" }}>
+        <div style={{ display: "inline-block", border: "1px solid rgba(255,255,255,0.2)", padding: "0.4rem 1.2rem", marginBottom: spaceBadge + "rem", fontSize: badgeSize, fontWeight: 700, letterSpacing: badgeSpacing, textTransform: "uppercase", color: "rgba(255,255,255," + badgeOpacity + ")" }}>
           {settings.hero_badge || "Premium Gym Wear"}
         </div>
-        <div style={{ marginBottom: "2.5rem" }}>
+        <div style={{ marginBottom: spaceHeadline + "rem" }}>
           {(settings.hero_headline || "LOOK|BIGGER|INSTANTLY.").split("|").map((line, i) => (
             <h1 key={i} style={{ fontSize: headlineSize, fontWeight: parseInt(headlineWeight), color: i % 2 === 0 ? "white" : "rgba(255,255,255,0.2)", lineHeight: parseFloat(headlineLineHeight), letterSpacing: headlineSpacing, textTransform: "uppercase", margin: 0, marginBottom: i % 2 !== 0 ? "0.15em" : 0 }}>
               {line}
             </h1>
           ))}
         </div>
-        <div style={{ width: "40px", height: "1px", backgroundColor: "rgba(255,255,255,0.3)", margin: "0 auto 1.5rem" }} />
-
-        {/* Primary CTA first — highest conversion placement */}
-        <div style={{ marginBottom: "2rem" }}>
+        <div style={{ width: "40px", height: "1px", backgroundColor: "rgba(255,255,255,0.3)", margin: "0 auto", marginBottom: spaceDivider + "rem" }} />
+        <div style={{ marginBottom: spaceButton + "rem" }}>
           <Link href={primaryCTALink} style={{ backgroundColor: "var(--theme-bg, white)", color: "black", padding: "1rem 2.5rem", fontWeight: 700, fontSize: "0.8rem", letterSpacing: "0.15em", textTransform: "uppercase", textDecoration: "none", display: "inline-block" }}>
             {primaryCTA}
           </Link>
         </div>
-
-        {/* Tagline below Buy Now */}
-        <div style={{ fontSize: taglineSize, color: "rgba(255,255,255,0.5)", maxWidth: taglineMaxWidth, margin: "0 auto 2rem", lineHeight: parseFloat(taglineLineHeight), fontWeight: 300, letterSpacing: "0.02em", whiteSpace: "pre-line", textAlign: "center" }}>
+        <div style={{ fontSize: taglineSize, color: `rgba(255,255,255,${taglineOpacity})`, maxWidth: taglineMaxWidth, margin: "0 auto", marginBottom: spaceTagline + "rem", lineHeight: parseFloat(taglineLineHeight), fontWeight: 300, letterSpacing: "0.02em", whiteSpace: "pre-line", textAlign: "center" }}>
           {renderRichText(settings.hero_tagline || "Engineered for athletes who refuse to settle.\nBuilt for the gym. Made to be seen.")}
         </div>
-
-        {/* Secondary CTA after tagline */}
         {secondaryCTA !== "hidden" && (
-          <div style={{ paddingBottom: "3rem" }}>
+          <div style={{ paddingBottom: "1rem" }}>
             <Link href={secondaryCTALink} style={{ backgroundColor: "transparent", color: "white", padding: "1rem 2.5rem", fontWeight: 700, fontSize: "0.8rem", letterSpacing: "0.15em", textTransform: "uppercase", textDecoration: "none", display: "inline-block", border: "1px solid rgba(255,255,255,0.3)" }}>
               {secondaryCTA}
             </Link>
@@ -209,31 +204,36 @@ function PerformanceFeatures({ settings }: { settings: Record<string, string> })
     { icon: settings.perf_4_icon || "04", title: settings.perf_4_title || "Muscle Definition", stat: settings.perf_4_stat || "Elite athlete cut", description: settings.perf_4_desc || "Strategic fit that highlights your physique. Look as powerful as you perform." },
   ]
   return (
-    <section style={{ backgroundColor: "var(--theme-bg, white)", padding: "6rem 1.5rem", color: "var(--theme-primary, black)" }}>
+    <section style={{ backgroundColor: "var(--theme-primary, black)", padding: "6rem 1.5rem", color: "white" }}>
       <style>{`
         .perf-scroll-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 2rem; }
         @media (max-width: 768px) {
           .perf-section-inner { padding: 40px 16px !important; }
-          .perf-title { font-size: 20px !important; margin-bottom: 20px !important; }
-          .perf-scroll-container { display: flex !important; overflow-x: auto !important; gap: 16px !important; padding-bottom: 10px !important; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; }
+          .perf-title { font-size: 20px !important; margin-bottom: 8px !important; }
+          .perf-scroll-container { display: flex !important; overflow-x: auto !important; gap: 16px !important; padding-bottom: 16px !important; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; }
           .perf-scroll-container::-webkit-scrollbar { display: none; }
-          .perf-card { min-width: 250px !important; flex: 0 0 auto !important; scroll-snap-align: start; padding: 16px !important; }
+          .perf-card { min-width: calc(85vw - 32px) !important; flex: 0 0 auto !important; scroll-snap-align: start; padding: 20px !important; }
           .perf-card h3 { font-size: 16px !important; }
           .perf-card p { font-size: 13px !important; }
         }
       `}</style>
       <div className="perf-section-inner" style={{ maxWidth: "1280px", margin: "0 auto" }}>
-        <div style={{ marginBottom: "4rem", textAlign: "center" }}>
-          <p style={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.3em", textTransform: "uppercase", color: "#999", marginBottom: "0.75rem" }}>{settings.perf_section_label || "Built Different"}</p>
-          <h2 className="perf-title" style={{ fontSize: "clamp(2rem, 5vw, 3.5rem)", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.03em", lineHeight: 1 }}>{settings.perf_section_title || "Performance Tech"}</h2>
+        <div style={{ marginBottom: "2.5rem", textAlign: "center" }}>
+          <p style={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.3em", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", marginBottom: "0.75rem" }}>{settings.perf_section_label || "Built Different"}</p>
+          <h2 className="perf-title" style={{ fontSize: "clamp(2rem, 5vw, 3.5rem)", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.03em", lineHeight: 1, color: "white" }}>{settings.perf_section_title || "Performance Tech"}</h2>
+          {/* Mobile swipe hint */}
+          <p className="perf-swipe-hint" style={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.35)", marginTop: "0.5rem", letterSpacing: "0.05em" }}>
+            <style>{`.perf-swipe-hint { display: none; } @media (max-width: 768px) { .perf-swipe-hint { display: block !important; } }`}</style>
+            ← Swipe to see all 4 →
+          </p>
         </div>
         <div className="perf-scroll-container">
           {features.map((feature, index) => (
-            <div key={index} className="perf-card" style={{ border: "1px solid #e0e0e0", padding: "2.5rem 2rem" }}>
-              <div style={{ fontSize: "2rem", fontWeight: 900, color: "var(--theme-primary, black)", marginBottom: "1rem" }}>{feature.icon}</div>
-              <div style={{ display: "inline-block", backgroundColor: "#f5f5f5", padding: "0.25rem 0.75rem", fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", color: "#666", marginBottom: "1rem" }}>{feature.stat}</div>
-              <h3 style={{ fontSize: "1rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.75rem", color: "var(--theme-primary, black)" }}>{feature.title}</h3>
-              <p style={{ color: "#666", fontSize: "0.9rem", lineHeight: 1.7 }}>{feature.description}</p>
+            <div key={index} className="perf-card" style={{ border: "1px solid rgba(255,255,255,0.15)", padding: "2.5rem 2rem", backgroundColor: "rgba(255,255,255,0.03)" }}>
+              <div style={{ fontSize: "2rem", fontWeight: 900, color: "white", marginBottom: "1rem" }}>{feature.icon}</div>
+              <div style={{ display: "inline-block", backgroundColor: "rgba(255,255,255,0.08)", padding: "0.25rem 0.75rem", fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(255,255,255,0.5)", marginBottom: "1rem" }}>{feature.stat}</div>
+              <h3 style={{ fontSize: "1rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.75rem", color: "white" }}>{feature.title}</h3>
+              <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.9rem", lineHeight: 1.7 }}>{feature.description}</p>
             </div>
           ))}
         </div>
@@ -287,24 +287,24 @@ function BrandStory({ settings, totalProducts, customerCount, avgRating, totalRe
     { number: avgRating, label: settings.stat_4_label || "Avg Rating", sub: totalReviews + " verified reviews" },
   ]
   return (
-    <section style={{ backgroundColor: "var(--theme-primary, #0a0a0a)", padding: "6rem 1.5rem", color: "var(--theme-btn-text, white)" }}>
+    <section style={{ backgroundColor: "var(--theme-bg, white)", padding: "6rem 1.5rem", color: "var(--theme-primary, black)" }}>
       <div style={{ maxWidth: "1280px", margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "4rem", alignItems: "center" }}>
         <div>
-          <p style={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.3em", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", marginBottom: "1rem" }}>{settings.brand_section_label || "Our Story"}</p>
+          <p style={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.3em", textTransform: "uppercase", color: "#999", marginBottom: "1rem" }}>{settings.brand_section_label || "Our Story"}</p>
           <h2 style={{ fontSize: "clamp(2rem, 4vw, 3rem)", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.03em", lineHeight: 1.1, marginBottom: "1.5rem" }}>
             {renderRichText(settings.brand_section_title || "Born In The Gym.\nBuilt For The Grind.")}
           </h2>
-          <p style={{ color: "rgba(255,255,255,0.6)", lineHeight: 1.8, fontSize: "1rem", marginBottom: "2rem" }}>
+          <p style={{ color: "#555", lineHeight: 1.8, fontSize: "1rem", marginBottom: "2rem" }}>
             {renderRichText(settings.brand_story || "Flextreme was born from frustration. We were athletes who could not find gym wear that matched our intensity.")}
           </p>
-          <Link href="/about" style={{ display: "inline-block", border: "1px solid rgba(255,255,255,0.4)", padding: "0.875rem 2rem", fontWeight: 700, fontSize: "0.75rem", letterSpacing: "0.15em", textTransform: "uppercase", textDecoration: "none", color: "white" }}>{settings.brand_read_more_text || "Read Our Story"}</Link>
+          <Link href="/about" style={{ display: "inline-block", border: "2px solid black", padding: "0.875rem 2rem", fontWeight: 700, fontSize: "0.75rem", letterSpacing: "0.15em", textTransform: "uppercase", textDecoration: "none", color: "black" }}>{settings.brand_read_more_text || "Read Our Story"}</Link>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem" }}>
           {stats.map((stat, index) => (
-            <div key={index} style={{ border: "1px solid rgba(255,255,255,0.1)", padding: "2rem", textAlign: "center" }}>
+            <div key={index} style={{ border: "1px solid #e0e0e0", padding: "2rem", textAlign: "center" }}>
               <p style={{ fontSize: "clamp(1.8rem, 4vw, 2.3rem)", fontWeight: 900, letterSpacing: "-0.03em", marginBottom: "0.4rem" }}>{stat.number}</p>
-              <p style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.6)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.25rem" }}>{stat.label}</p>
-              <p style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.3)", letterSpacing: "0.05em" }}>{stat.sub}</p>
+              <p style={{ fontSize: "0.75rem", color: "#666", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.25rem" }}>{stat.label}</p>
+              <p style={{ fontSize: "0.65rem", color: "#999", letterSpacing: "0.05em" }}>{stat.sub}</p>
             </div>
           ))}
         </div>

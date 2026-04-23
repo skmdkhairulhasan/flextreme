@@ -1,13 +1,7 @@
-﻿import { createClient } from "@/lib/supabase/server"
+import { apiFetchServer } from "@/lib/api/server"
 
 export default async function ProductReviews({ productId }: { productId: string }) {
-  const supabase = await createClient()
-  const { data: reviews } = await supabase
-    .from("reviews")
-    .select("*")
-    .eq("product_id", productId)
-    .eq("status", "approved")
-    .order("created_at", { ascending: false })
+  const { reviews } = await apiFetchServer<{ reviews: any[] }>(`/api/reviews?product_id=${encodeURIComponent(productId)}&status=approved`)
 
   const allReviews = reviews || []
   const avgRating = allReviews.length > 0

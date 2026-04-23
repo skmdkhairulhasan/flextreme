@@ -12,8 +12,10 @@
     "@supabase/ssr": "^0.10.0",
     "@supabase/supabase-js": "^2.101.1",
     "@vercel/analytics": "^2.0.1",
+    "bcryptjs": "^3.0.3",
     "chart.js": "^4.5.1",
     "clsx": "^2.1.1",
+    "jose": "^6.2.2",
     "lucide-react": "^1.7.0",
     "next": "16.2.2",
     "node-nlp": "5.0.0-alpha.5",
@@ -23,6 +25,7 @@
     "tailwind-merge": "^3.5.0"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260422.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
@@ -30,6 +33,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.2",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "wrangler": "^4.84.1"
   }
 }

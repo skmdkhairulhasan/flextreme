@@ -1,0 +1,16 @@
+name = "flextreme-api"
+main = "cloudflare/src/worker.ts"
+compatibility_date = "2026-04-23"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "flextreme-db"
+database_id = "d77abb13-2f34-4b57-b8d4-6893338dce68"
+
+[[r2_buckets]]
+binding = "ASSETS"
+bucket_name = "flextreme-assets"
+
+[vars]
+R2_PUBLIC_BASE_URL = "https://pub-REPLACE_ME.r2.dev"
+CORS_ORIGIN = "http://localhost:3000"

@@ -771,7 +771,7 @@ export default function AdminSettings() {
               {settings.hero_bg_image && <span style={{ fontSize: "0.75rem", color: "#16a34a", fontWeight: 600 }}>Image uploaded ✓</span>}
             </div>
             {settings.hero_bg_image && (
-              <HeroImageEditor imageUrl={settings.hero_bg_image} initialScale={parseFloat(settings.hero_bg_scale || "1")} initialPosX={parseFloat(settings.hero_bg_pos_x || "50")} initialPosY={parseFloat(settings.hero_bg_pos_y || "50")} onSave={async (scale, posX, posY) => { await saveSetting("hero_bg_scale", scale.toString()); await saveSetting("hero_bg_pos_x", posX.toString()); await saveSetting("hero_bg_pos_y", posY.toString()) }} />
+              <HeroImageEditor imageUrl={settings.hero_bg_image} initialScale={parseFloat(settings.hero_bg_scale || "1")} initialPosX={parseFloat(settings.hero_bg_pos_x || "50")} initialPosY={parseFloat(settings.hero_bg_pos_y || "50")} headline={settings.hero_headline || "LOOK|BIGGER|INSTANTLY."} onSave={async (scale, posX, posY) => { await saveSetting("hero_bg_scale", scale.toString()); await saveSetting("hero_bg_pos_x", posX.toString()); await saveSetting("hero_bg_pos_y", posY.toString()) }} />
             )}
             <div style={{ marginTop: "1rem", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
               <Slider label="Image Opacity" settingKey="hero_bg_opacity" min={0} max={1} step={0.05} value={bgOpacity} display={Math.round(parseFloat(bgOpacity) * 100) + "%"} />
@@ -975,14 +975,48 @@ export default function AdminSettings() {
           <SettingRow label="Main Headline" settingKey="hero_headline" defaultValue="LOOK|BIGGER|INSTANTLY." hint="Use | to split lines e.g. LOOK|BIGGER|INSTANTLY." />
           <SettingRow label="Tagline" settingKey="hero_tagline" multiline defaultValue={"Engineered for athletes who refuse to settle.\nBuilt for the gym. Made to be seen."} hint="Supports line breaks — press Enter for new line. e.g. ⚡ Only 100 will own this&#10;🔥 Limited stock available&#10;🚚 Cash on Delivery" />
 
+          {/* Spacing Controls */}
+          <div style={{ padding: "1rem 0", borderBottom: "1px solid #f5f5f5" }}>
+            <p style={{ fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#444", marginBottom: "0.75rem" }}>Spacing</p>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "0.75rem" }}>
+              <SettingRow label="Section Top Padding (px)" settingKey="hero_padding_top" defaultValue="120" hint="Space from top e.g. 120, 160, 200" />
+              <SettingRow label="Section Bottom Padding (px)" settingKey="hero_padding_bottom" defaultValue="64" hint="Space at bottom e.g. 64, 100" />
+              <SettingRow label="Space Below Badge (rem)" settingKey="hero_space_badge" defaultValue="2" hint="Gap after badge e.g. 1, 2, 3" />
+              <SettingRow label="Space Below Headline (rem)" settingKey="hero_space_headline" defaultValue="2.5" hint="Gap after headline e.g. 2, 2.5, 4" />
+              <SettingRow label="Space Below Divider Line (rem)" settingKey="hero_space_divider" defaultValue="1.5" hint="Gap after the divider e.g. 1, 1.5, 2" />
+              <SettingRow label="Space Below Buy Now Button (rem)" settingKey="hero_space_button" defaultValue="2" hint="Gap after button e.g. 1, 2, 3" />
+              <SettingRow label="Space Below Tagline (rem)" settingKey="hero_space_tagline" defaultValue="1.5" hint="Gap after tagline e.g. 1, 1.5, 2" />
+            </div>
+          </div>
+
           {/* CTA Buttons */}
           <div style={{ padding: "1rem 0", borderBottom: "1px solid #f5f5f5" }}>
             <p style={{ fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#444", marginBottom: "0.75rem" }}>CTA Buttons</p>
             <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "0.75rem" }}>
               <SettingRow label="Primary Button Text" settingKey="hero_cta_primary" defaultValue="Buy Now" hint='e.g. "Buy Now"' />
               <SettingRow label="Primary Button Link" settingKey="hero_cta_primary_link" defaultValue="/products" hint='e.g. /products' />
-              <SettingRow label="Secondary Button Text" settingKey="hero_cta_secondary" defaultValue="Our Story" hint='e.g. "Our Story" or type "hidden" to hide' />
-              <SettingRow label="Secondary Button Link" settingKey="hero_cta_secondary_link" defaultValue="/about" hint='e.g. /about' />
+              {/* Our Story toggle */}
+              <div style={{ padding: "0.75rem", backgroundColor: "#f9f9f9", border: "1px solid #e0e0e0", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem" }}>
+                <div>
+                  <p style={{ fontSize: "0.75rem", fontWeight: 700 }}>Our Story Button</p>
+                  <p style={{ fontSize: "0.7rem", color: "#999", marginTop: "0.2rem" }}>Show or hide the secondary button</p>
+                </div>
+                <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer", flexShrink: 0 }}>
+                  <div
+                    onClick={() => saveSetting("hero_cta_secondary", settings.hero_cta_secondary === "hidden" ? "Our Story" : "hidden")}
+                    style={{ width: "44px", height: "24px", borderRadius: "12px", backgroundColor: settings.hero_cta_secondary !== "hidden" ? "black" : "#e0e0e0", position: "relative", cursor: "pointer", transition: "background 0.2s", flexShrink: 0 }}
+                  >
+                    <div style={{ position: "absolute", top: "3px", left: settings.hero_cta_secondary !== "hidden" ? "23px" : "3px", width: "18px", height: "18px", borderRadius: "50%", backgroundColor: "white", transition: "left 0.2s" }} />
+                  </div>
+                  <span style={{ fontSize: "0.75rem", fontWeight: 600 }}>{settings.hero_cta_secondary !== "hidden" ? "ON" : "OFF"}</span>
+                </label>
+              </div>
+              {settings.hero_cta_secondary !== "hidden" && (
+                <>
+                  <SettingRow label="Secondary Button Text" settingKey="hero_cta_secondary" defaultValue="Our Story" hint='e.g. "Our Story"' />
+                  <SettingRow label="Secondary Button Link" settingKey="hero_cta_secondary_link" defaultValue="/about" hint='e.g. /about' />
+                </>
+              )}
             </div>
           </div>
 
@@ -991,7 +1025,7 @@ export default function AdminSettings() {
             <p style={{ fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#444", marginBottom: "1rem" }}>Typography Controls</p>
 
             <p style={{ fontSize: "0.7rem", fontWeight: 700, color: "#888", textTransform: "uppercase", marginBottom: "0.5rem" }}>Headline</p>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1.25rem", padding: "0.75rem", backgroundColor: "#f9f9f9", border: "1px solid #e0e0e0" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "0.75rem", marginBottom: "1.25rem", padding: "0.75rem", backgroundColor: "#f9f9f9", border: "1px solid #e0e0e0" }}>
               {[
                 { label: "Font Size (px) — leave blank for responsive", settingKey: "hero_headline_size", defaultValue: "", hint: "e.g. 80 (leave blank for auto)" },
                 { label: "Font Weight", settingKey: "hero_headline_weight", defaultValue: "900", hint: "e.g. 900, 700, 400" },
@@ -1001,7 +1035,7 @@ export default function AdminSettings() {
             </div>
 
             <p style={{ fontSize: "0.7rem", fontWeight: 700, color: "#888", textTransform: "uppercase", marginBottom: "0.5rem" }}>Badge</p>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1rem", marginBottom: "1.25rem", padding: "0.75rem", backgroundColor: "#f9f9f9", border: "1px solid #e0e0e0" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "0.75rem", marginBottom: "1.25rem", padding: "0.75rem", backgroundColor: "#f9f9f9", border: "1px solid #e0e0e0" }}>
               {[
                 { label: "Font Size (rem)", settingKey: "hero_badge_size", defaultValue: "0.7", hint: "e.g. 0.7" },
                 { label: "Opacity (0-1)", settingKey: "hero_badge_opacity", defaultValue: "0.6", hint: "e.g. 0.6" },
@@ -1010,11 +1044,12 @@ export default function AdminSettings() {
             </div>
 
             <p style={{ fontSize: "0.7rem", fontWeight: 700, color: "#888", textTransform: "uppercase", marginBottom: "0.5rem" }}>Tagline</p>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1rem", padding: "0.75rem", backgroundColor: "#f9f9f9", border: "1px solid #e0e0e0" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "0.75rem", padding: "0.75rem", backgroundColor: "#f9f9f9", border: "1px solid #e0e0e0" }}>
               {[
                 { label: "Font Size (rem)", settingKey: "hero_tagline_size", defaultValue: "1", hint: "e.g. 1, 0.9, 1.1" },
                 { label: "Line Height", settingKey: "hero_tagline_lineheight", defaultValue: "1.7", hint: "e.g. 1.7" },
                 { label: "Max Width (px)", settingKey: "hero_tagline_maxwidth", defaultValue: "420", hint: "e.g. 420, 600" },
+                { label: "Opacity (0-1)", settingKey: "hero_tagline_opacity", defaultValue: "0.5", hint: "e.g. 0.5, 0.7, 1" },
               ].map(f => <SettingRow key={f.settingKey} label={f.label} settingKey={f.settingKey} defaultValue={f.defaultValue} hint={f.hint} />)}
             </div>
           </div>

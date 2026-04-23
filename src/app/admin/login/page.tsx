@@ -1,6 +1,6 @@
-﻿"use client"
+"use client"
 import { useState } from "react"
-import { createClient } from "@/lib/supabase/client"
+import { apiFetchClient, setAdminToken } from "@/lib/api/client"
 import { useRouter } from "next/navigation"
 
 export default function AdminLogin() {
@@ -10,18 +10,30 @@ export default function AdminLogin() {
   const [error, setError] = useState("")
   const router = useRouter()
 
+  function getLoginErrorMessage(err: unknown) {
+    const message = err instanceof Error ? err.message : String(err || "")
+    const lowerMessage = message.toLowerCase()
+
+    if (lowerMessage.includes("invalid email or password") || lowerMessage.includes("invalid login credentials")) {
+      return "Invalid email or password. Please try again."
+    }
+
+    return "Unable to sign in right now. Please try again in a moment."
+  }
+
   async function handleLogin() {
     if (!email.trim() || !password.trim()) { setError("Please enter email and password"); return }
     setLoading(true)
     setError("")
     try {
-      const supabase = createClient()
-      const { error: authError } = await supabase.auth.signInWithPassword({ email, password })
-      if (authError) throw authError
+      const data = await apiFetchClient<{ token: string }>("/api/login", {
+        method: "POST",
+        body: JSON.stringify({ email, password }),
+      })
+      setAdminToken(data.token)
       router.push("/admin/dashboard")
     } catch (err: any) {
-      setError("Invalid email or password. Please try again.")
-      console.error(err)
+      setError(getLoginErrorMessage(err))
     } finally {
       setLoading(false)
     }
@@ -54,4 +66,3 @@ export default function AdminLogin() {
     </div>
   )
 }
-

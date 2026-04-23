@@ -1,21 +1,20 @@
 import Link from "next/link"
-import { createClient } from "@/lib/supabase/server"
+import { apiFetchServer } from "@/lib/api/server"
 import { Product } from "@/types"
 import FilterBar from "./FilterBar"
 
 export const metadata = { title: "Products" }
 
 export default async function ProductsPage() {
-  const supabase = await createClient()
-  const [{ data: products }, { data: settingsData }] = await Promise.all([
-    supabase.from("products").select("*").order("created_at", { ascending: false }),
-    supabase.from("settings").select("key,value").eq("key", "product_categories"),
+  const [{ products }, { settings }] = await Promise.all([
+    apiFetchServer<{ products: Product[] }>("/api/products"),
+    apiFetchServer<{ settings: Record<string, string> }>("/api/settings?keys=product_categories"),
   ])
-  const allProducts = (products as Product[]) || []
+  const allProducts = products || []
 
   // Parse categories — handle both string[] and CategoryGroup[] formats
   let categoryGroups: { id: string; name: string; subcategories: string[] }[] = []
-  const catRaw = settingsData?.find((s: any) => s.key === "product_categories")?.value
+  const catRaw = settings?.product_categories
   if (catRaw) {
     try {
       const parsed = JSON.parse(catRaw)
