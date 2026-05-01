@@ -1,0 +1,22 @@
+{
+  "products": [
+    {
+      "image": "/compression 01.png",
+      "label": "Ultra Flex Half Sleeve",
+      "slug": "/products/ultra-flex-half-sleeve",
+      "color": "#1574ef"
+    },
+    {
+      "image": "/compression 02.png",
+      "label": "Ultra Flex Sleeveless",
+      "slug": "/products/ultra-flex-sleeveless",
+      "color": "#1574ef"
+    },
+    {
+      "image": "/compression 03.png",
+      "label": "Ultra Flex Sleeveless",
+      "slug": "/products/ultra-flex-compression",
+      "color": "#ffffff"
+    }
+  ]
+}

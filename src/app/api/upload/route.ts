@@ -1,16 +1,34 @@
-import { NextRequest } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
+import { uploadToCloudinary } from "@/lib/cloudinary"
 
-const API_BASE = process.env.CLOUDFLARE_API_BASE_URL!
+export const dynamic = "force-dynamic"
 
 export async function POST(request: NextRequest) {
-  const formData = await request.formData()
+  try {
+    const formData = await request.formData()
+    const file = formData.get("file")
+    const folder = formData.get("folder")
 
-  const res = await fetch(`${API_BASE}/api/upload`, {
-    method: "POST",
-    body: formData,
-  })
+    if (!(file instanceof File)) {
+      return NextResponse.json({ error: "No file provided" }, { status: 400 })
+    }
 
-  return new Response(await res.text(), {
-    status: res.status,
-  })
+    const url = await uploadToCloudinary(
+      file,
+      typeof folder === "string" && folder ? folder : "flextreme"
+    )
+
+    return NextResponse.json({
+      success: true,
+      url,
+      message: "File uploaded successfully",
+    })
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Upload failed"
+    console.error("Upload error:", error)
+    return NextResponse.json(
+      { error: "Upload failed", details: message },
+      { status: 500 }
+    )
+  }
 }

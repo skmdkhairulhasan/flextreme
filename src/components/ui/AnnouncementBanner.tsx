@@ -1,29 +1,38 @@
 "use client"
 import { useEffect, useState } from "react"
-import { createClient } from "@/lib/supabase/client"
 
 export default function AnnouncementBanner() {
   const [text, setText] = useState("")
   const [bg, setBg] = useState("#000000")
   const [color, setColor] = useState("#ffffff")
   const [enabled, setEnabled] = useState(false)
-  const [speed, setSpeed] = useState(30) // seconds - higher = slower
+  const [speed, setSpeed] = useState(30)
 
   useEffect(() => {
-    createClient()
-      .from("settings")
-      .select("key, value")
-      .in("key", ["banner_text","banner_bg","banner_color","banner_enabled","banner_speed"])
-      .then(({ data }) => {
-        if (!data) return
+    async function load() {
+      try {
+        const res = await fetch("/api/settings")
+        const json = await res.json()
+
         const m: Record<string, string> = {}
-        data.forEach(r => { m[r.key] = r.value })
+        const settingsArray = json?.settings || json || []
+
+        settingsArray.forEach((r: any) => {
+          m[r.key] = r.value
+        })
+
         if (m.banner_text) setText(m.banner_text)
         if (m.banner_bg) setBg(m.banner_bg)
         if (m.banner_color) setColor(m.banner_color)
         if (m.banner_speed) setSpeed(parseInt(m.banner_speed) || 30)
         setEnabled(m.banner_enabled === "true")
-      })
+
+      } catch (error) {
+        console.error("Banner error:", error)
+      }
+    }
+
+    load()
   }, [])
 
   if (!enabled || !text) return null
@@ -44,11 +53,33 @@ export default function AnnouncementBanner() {
         }
         .banner-track:hover { animation-play-state: paused; }
       `}</style>
+
       <div style={{ height: "36px" }} />
-      <div style={{ backgroundColor: bg, overflow: "hidden", height: "36px", display: "flex", alignItems: "center", position: "fixed", top: 0, left: 0, right: 0, zIndex: 55 }}>
+
+      <div style={{
+        backgroundColor: bg,
+        overflow: "hidden",
+        height: "36px",
+        display: "flex",
+        alignItems: "center",
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 55
+      }}>
         <div className="banner-track">
           {[...Array(6)].map((_, i) => (
-            <span key={i} style={{ color, fontSize: "0.75rem", fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase" }}>
+            <span
+              key={i}
+              style={{
+                color,
+                fontSize: "0.75rem",
+                fontWeight: 600,
+                letterSpacing: "0.12em",
+                textTransform: "uppercase"
+              }}
+            >
               {text}
             </span>
           ))}

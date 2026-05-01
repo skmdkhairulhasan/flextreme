@@ -1,5 +1,6 @@
 "use client"
 import ConfirmModal from "@/components/ui/ConfirmModal"
+import HeroBgUploader from "@/components/admin/HeroBgUploader"
 
 // ── TYPE DECLARATIONS ──
 type DeliveryZone = { id: string; name: string; charge: string; days: string }
@@ -207,7 +208,7 @@ function FaqEditor({ faqs, saving, saved, onUpdate, onSave, requestConfirm }: Fa
 }
 
 import { useEffect, useState, useRef } from "react"
-import { createClient } from "@/lib/supabase/client"
+import { apiFetchClient } from "@/lib/api/client"
 import HeroImageEditor from "@/components/admin/HeroImageEditor"
 import { uploadToCloudinary } from "@/lib/cloudinary"
 
@@ -478,11 +479,15 @@ export default function AdminSettings() {
   useEffect(() => { fetchSettings() }, [])
 
   async function fetchSettings() {
-    const supabase = createClient()
-    const { data } = await supabase.from("settings").select("*")
-    const map: Record<string, string> = {}
-    data?.forEach((s: any) => { map[s.key] = s.value })
-    setSettings(map)
+    try {
+      const { settings } = await apiFetchClient<{ settings: Record<string, string> | { key: string; value: string }[] }>("/api/settings")
+      const map: Record<string, string> = Array.isArray(settings)
+        ? settings.reduce<Record<string, string>>((acc, item) => {
+            if (item.key) acc[item.key] = item.value
+            return acc
+          }, {})
+        : settings || {}
+      setSettings(map)
     // Load size tables
     if (map.size_tables) {
       setSizeTables(JSON.parse(map.size_tables))
@@ -549,13 +554,17 @@ export default function AdminSettings() {
       { id: "faq3", question: "How long does delivery take?", answer: "Dhaka City: 1-2 days. Dhaka District: 2-3 days. Other cities: 3-5 days depending on location." },
       { id: "faq4", question: "Can I return or exchange my order?", answer: "Yes! If there is any issue with your order, contact us on WhatsApp within 48 hours of receiving it and we will arrange an exchange or refund." },
     ])
+    } catch (e) { console.error("Failed to load settings", e) }
     setLoading(false)
   }
 
   async function saveSetting(key: string, value: string) {
     setSaving(key)
-    const supabase = createClient()
-    await supabase.from("settings").upsert({ key, value }, { onConflict: "key" })
+    await fetch("/api/settings", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ key, value }),
+    })
     setSettings(prev => ({ ...prev, [key]: value }))
     setSaving(null)
     setSaved(key)
@@ -564,8 +573,11 @@ export default function AdminSettings() {
 
   async function saveTables() {
     setTablesSaving(true)
-    const supabase = createClient()
-    await supabase.from("settings").upsert({ key: "size_tables", value: JSON.stringify(sizeTables) }, { onConflict: "key" })
+    await fetch("/api/settings", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ key: "size_tables", value: JSON.stringify(sizeTables) }),
+    })
     setTablesSaving(false)
     setTablesSaved(true)
     setTimeout(() => setTablesSaved(false), 2000)
@@ -573,23 +585,32 @@ export default function AdminSettings() {
 
   async function saveCategories() {
     setCatSaving(true)
-    const supabase = createClient()
-    await supabase.from("settings").upsert({ key: "product_categories", value: JSON.stringify(categories) }, { onConflict: "key" })
+    await fetch("/api/settings", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ key: "product_categories", value: JSON.stringify(categories) }),
+    })
     setCatSaving(false); setCatSaved(true)
     setTimeout(() => setCatSaved(false), 2000)
   }
 
   async function saveDelivery() {
     setDeliverySaving(true)
-    const supabase = createClient()
-    await supabase.from("settings").upsert({ key: "delivery_groups", value: JSON.stringify(deliveryGroups) }, { onConflict: "key" })
+    await fetch("/api/settings", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ key: "delivery_groups", value: JSON.stringify(deliveryGroups) }),
+    })
     setDeliverySaving(false); setDeliverySaved(true)
     setTimeout(() => setDeliverySaved(false), 2000)
   }
   async function saveFaqs() {
     setFaqSaving(true)
-    const supabase = createClient()
-    await supabase.from("settings").upsert({ key: "faqs", value: JSON.stringify(faqs) }, { onConflict: "key" })
+    await fetch("/api/settings", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ key: "faqs", value: JSON.stringify(faqs) }),
+    })
     setFaqSaving(false); setFaqSaved(true)
     setTimeout(() => setFaqSaved(false), 2000)
   }
@@ -715,11 +736,11 @@ export default function AdminSettings() {
     )
   }
 
-  function HeroBgUploader() {
-    const [uploading, setUploading] = useState(false)
-    const [uploadMsg, setUploadMsg] = useState("")
+  function HeroBgSettings() {
     const imgRef = useRef<HTMLInputElement>(null)
     const vidRef = useRef<HTMLInputElement>(null)
+    const [uploading, setUploading] = useState(false)
+    const [uploadMsg, setUploadMsg] = useState("")
     const bgType = settings.hero_bg_type || "color"
     const bgOpacity = settings.hero_bg_opacity || "1"
     const overlayOpacity = settings.hero_overlay_opacity || "0.6"
@@ -735,10 +756,11 @@ export default function AdminSettings() {
         await saveSetting("hero_bg_type", type)
         setUploadMsg(type + " uploaded!")
         setTimeout(() => setUploadMsg(""), 3000)
-      } catch (err: any) {
-        setUploadMsg("Error: " + err.message)
+      } catch (err) {
+        setUploadMsg("Error: " + (err instanceof Error ? err.message : "Upload failed"))
+      } finally {
+        setUploading(false)
       }
-      setUploading(false)
     }
 
     function Slider({ label, settingKey, min, max, step, value, display }: { label: string; settingKey: string; min: number; max: number; step: number; value: string; display: string }) {
@@ -754,7 +776,7 @@ export default function AdminSettings() {
       <div style={{ padding: "1rem 0", borderBottom: "1px solid #f5f5f5" }}>
         <label style={{ display: "block", fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "1rem", color: "#444" }}>Hero Background</label>
         <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1.25rem", flexWrap: "wrap" }}>
-          {[{ value: "color", label: "Black" }, { value: "image", label: "Image" }, { value: "video", label: "Video" }].map(opt => (
+          {[{ value: "color", label: "Black" }, { value: "image", label: "Image" }, { value: "video", label: "Video" }, { value: "showcase", label: "Showcase" }].map(opt => (
             <button key={opt.value} onClick={() => saveSetting("hero_bg_type", opt.value)} style={{ padding: "0.5rem 1rem", fontSize: "0.8rem", fontWeight: 600, border: "1px solid #e0e0e0", backgroundColor: bgType === opt.value ? "black" : "white", color: bgType === opt.value ? "white" : "black", cursor: "pointer", textTransform: "uppercase", transition: "all 0.2s" }}>
               {opt.label}
             </button>
@@ -792,6 +814,12 @@ export default function AdminSettings() {
               <Slider label="Video Opacity" settingKey="hero_bg_opacity" min={0} max={1} step={0.05} value={bgOpacity} display={Math.round(parseFloat(bgOpacity) * 100) + "%"} />
               <Slider label="Dark Overlay" settingKey="hero_overlay_opacity" min={0} max={1} step={0.05} value={overlayOpacity} display={Math.round(parseFloat(overlayOpacity) * 100) + "%"} />
             </div>
+          </div>
+        )}
+        {bgType === "showcase" && (
+          <div style={{ marginBottom: "1rem", padding: "1rem", backgroundColor: "#f9f9f9", border: "1px solid #e0e0e0" }}>
+            <p style={{ fontSize: "0.85rem", fontWeight: 700, marginBottom: "0.35rem" }}>Product Showcase Hero</p>
+            <p style={{ fontSize: "0.75rem", color: "#666", lineHeight: 1.6 }}>The homepage hero will use the animated showcase products. Edit the products in the Showcase tab.</p>
           </div>
         )}
         {uploadMsg && <div style={{ padding: "0.6rem 1rem", backgroundColor: uploadMsg.includes("Error") ? "#fff0f0" : "#f0fdf4", border: "1px solid " + (uploadMsg.includes("Error") ? "#ffcccc" : "#bbf7d0"), fontSize: "0.8rem", color: uploadMsg.includes("Error") ? "#cc0000" : "#15803d", marginBottom: "1rem" }}>{uploadMsg}</div>}
@@ -929,6 +957,7 @@ export default function AdminSettings() {
 
   const tabs = [
     { id: "hero", label: "Hero" },
+    { id: "showcase", label: "🎯 Showcase" },
     { id: "appearance", label: "Appearance" },
     { id: "sizes", label: "Size Guide" },
     { id: "categories", label: "Categories" },
@@ -970,7 +999,7 @@ export default function AdminSettings() {
       {/* HERO TAB */}
       {activeTab === "hero" && (
         <Section title="Hero Section" subtitle="Background, watermark and headline text">
-          <HeroBgUploader />
+          <HeroBgSettings />
           <SettingRow label="Badge Text" settingKey="hero_badge" defaultValue="Premium Gym Wear" hint="Small text above the headline" />
           <SettingRow label="Main Headline" settingKey="hero_headline" defaultValue="LOOK|BIGGER|INSTANTLY." hint="Use | to split lines e.g. LOOK|BIGGER|INSTANTLY." />
           <SettingRow label="Tagline" settingKey="hero_tagline" multiline defaultValue={"Engineered for athletes who refuse to settle.\nBuilt for the gym. Made to be seen."} hint="Supports line breaks — press Enter for new line. e.g. ⚡ Only 100 will own this&#10;🔥 Limited stock available&#10;🚚 Cash on Delivery" />
@@ -1057,6 +1086,12 @@ export default function AdminSettings() {
       )}
 
       {/* APPEARANCE TAB */}
+      {activeTab === "showcase" && (
+        <div style={{ marginBottom: "3rem" }}>
+          <HeroBgUploader />
+        </div>
+      )}
+
       {activeTab === "appearance" && (
         <Section title="Appearance" subtitle="Cursor style and color theme">
           <CursorSelector />

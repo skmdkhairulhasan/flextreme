@@ -1,12 +1,52 @@
-import Link from "next/link"
+﻿import Link from "next/link"
 import ReviewsSection from "@/components/ui/ReviewsSection"
+import ProductShowcaseHero from "@/components/ui/ProductShowcaseHero"
 import { apiFetchServer } from "@/lib/api/server"
 import { Product } from "@/types"
 import BrandStamp from "@/components/ui/BrandStamp"
 
-async function getSettings() {
-  const { settings } = await apiFetchServer<{ settings: Record<string, string> }>("/api/settings")
+type SettingItem = { key: string; value: string }
+type HeroProduct = {
+  image: string
+  label?: string
+  slug?: string
+  color?: string
+  circleColor?: string
+  glowEnabled?: boolean
+  glowPulse?: boolean
+}
+type SiteStats = { productCount: number; orderCount: number; reviewCount: number; avgRating: number }
+type GlowSettings = { enabled: boolean; size: number; opacity: number; blur: number; pulse: boolean; color: string }
+
+function parseBool(value: string | undefined, fallback: boolean) {
+  if (value === undefined) return fallback
+  return value === "true" || value === "1"
+}
+
+function parseNumber(value: string | undefined, fallback: number, min: number, max: number) {
+  const parsed = Number(value)
+  if (!Number.isFinite(parsed)) return fallback
+  return Math.min(max, Math.max(min, parsed))
+}
+
+function normalizeSettings(settings: Record<string, string> | SettingItem[] | undefined) {
+  if (Array.isArray(settings)) {
+    return settings.reduce<Record<string, string>>((map, setting) => {
+      if (setting.key) map[setting.key] = setting.value
+      return map
+    }, {})
+  }
   return settings || {}
+}
+
+async function getHeroProducts() {
+  const { products } = await apiFetchServer<{ products: HeroProduct[] }>("/api/hero-products")
+  return products || []
+}
+
+async function getSettings() {
+  const { settings } = await apiFetchServer<{ settings: Record<string, string> | SettingItem[] }>("/api/settings")
+  return normalizeSettings(settings)
 }
 
 // Renders **bold**, _italic_, <u>underline</u> and \n line breaks
@@ -27,12 +67,44 @@ function renderRichText(text: string) {
 
 export const dynamic = "force-dynamic"
 export default async function HomePage() {
-  const [{ products }, settings, { reviews }, stats] = await Promise.all([
-    apiFetchServer<{ products: Product[] }>("/api/products?featured=true&limit=4"),
-    getSettings(),
-    apiFetchServer<{ reviews: any[] }>("/api/reviews?status=approved&limit=6"),
-    apiFetchServer<{ productCount: number; orderCount: number; reviewCount: number; avgRating: number }>("/api/stats"),
-  ])
+  let heroProducts: HeroProduct[] = []
+  let products: Product[] = []
+  let settings: Record<string, string> = {}
+  let reviews: unknown[] = []
+  let stats: SiteStats = { productCount: 0, orderCount: 0, reviewCount: 0, avgRating: 0 }
+
+  try {
+    heroProducts = await getHeroProducts()
+  } catch (e) {
+    console.error("Hero products error:", e)
+  }
+
+  try {
+    const res = await apiFetchServer<{ products: Product[] }>("/api/products?featured=true&limit=4")
+    products = res?.products || []
+  } catch (e) {
+    console.error("Products error:", e)
+  }
+
+  try {
+    settings = await getSettings()
+  } catch (e) {
+    console.error("Settings error:", e)
+  }
+
+  try {
+    const res = await apiFetchServer<{ reviews: unknown[] }>("/api/reviews?status=approved&limit=6")
+    reviews = res?.reviews || []
+  } catch (e) {
+    console.error("Reviews error:", e)
+  }
+
+  try {
+    stats = { ...stats, ...(await apiFetchServer<Partial<SiteStats>>("/api/stats")) }
+  } catch (e) {
+    console.error("Stats error:", e)
+  }
+  
   const featuredProducts = products || []
   const totalProducts = stats.productCount || featuredProducts.length
   const approvedReviews = reviews || []
@@ -40,13 +112,33 @@ export default async function HomePage() {
   const allApprovedReviews = approvedReviews
   const avgRating = stats.avgRating || 5
   const avgRatingDisplay = avgRating.toFixed(1) + " / 5"
+  const heroBgType = settings.hero_bg_type || "color"
+  const glowSettings: GlowSettings = {
+    enabled: parseBool(settings.glow_enabled, true),
+    size: parseNumber(settings.glow_size, 520, 200, 800),
+    opacity: parseNumber(settings.glow_opacity, 0.65, 0, 1),
+    blur: parseNumber(settings.glow_blur, 90, 20, 150),
+    pulse: parseBool(settings.glow_pulse, false),
+    color: settings.glow_color || "",
+  }
   const customerCount = totalOrders > 0
     ? (totalOrders >= 1000 ? (Math.floor(totalOrders / 100) * 100) + "+" : totalOrders >= 100 ? totalOrders + "+" : totalOrders > 0 ? totalOrders + "+" : "Growing")
     : "Growing"
 
   return (
     <div>
-      <HeroSection settings={settings} />
+      {heroBgType === "showcase" ? (
+        <ProductShowcaseHero
+          products={heroProducts}
+          heading={settings.hero_headline?.replace(/\|/g, "\n") || "ULTRA FLEX\nENGINEERED TO FLEX.\nBUILT TO PERFORM."}
+          subtext={settings.hero_tagline || "Performance wear that moves with you. Zero restrictions, maximum power."}
+          primaryCTA={settings.hero_cta_primary || "Buy Now"}
+          showPrimaryCTA={settings.hero_cta_primary !== "hidden"}
+          glowSettings={glowSettings}
+        />
+      ) : (
+        <HeroSection settings={settings} />
+      )}
       <FeaturedProducts products={featuredProducts} settings={settings} />
       <ReviewsSection reviews={approvedReviews} />
       <WhyFlextreme settings={settings} />
@@ -56,6 +148,8 @@ export default async function HomePage() {
     </div>
   )
 }
+
+// ALL YOUR EXISTING COMPONENTS BELOW - UNCHANGED
 
 function HeroSection({ settings }: { settings: Record<string, string> }) {
   const bgType = settings.hero_bg_type || "color"
@@ -86,12 +180,11 @@ function HeroSection({ settings }: { settings: Record<string, string> }) {
   const secondaryCTALink = settings.hero_cta_secondary_link || "/about"
   const heroPaddingTop = settings.hero_padding_top || "120"
   const heroPaddingBottom = settings.hero_padding_bottom || "64"
-  // Individual element spacing (margin-bottom for each subsection)
-  const spaceBadge = settings.hero_space_badge || "2"         // below badge
-  const spaceHeadline = settings.hero_space_headline || "2.5" // below headline
-  const spaceDivider = settings.hero_space_divider || "1.5"   // below divider line
-  const spaceButton = settings.hero_space_button || "2"       // below Buy Now button
-  const spaceTagline = settings.hero_space_tagline || "1.5"   // below tagline
+  const spaceBadge = settings.hero_space_badge || "2"
+  const spaceHeadline = settings.hero_space_headline || "2.5"
+  const spaceDivider = settings.hero_space_divider || "1.5"
+  const spaceButton = settings.hero_space_button || "2"
+  const spaceTagline = settings.hero_space_tagline || "1.5"
 
   return (
     <section style={{ minHeight: "100vh", backgroundColor: "var(--theme-primary, black)", display: "flex", alignItems: "flex-start", justifyContent: "center", paddingTop: heroPaddingTop + "px", paddingBottom: heroPaddingBottom + "px", overflow: "hidden", position: "relative" }}>
@@ -221,7 +314,6 @@ function PerformanceFeatures({ settings }: { settings: Record<string, string> })
         <div style={{ marginBottom: "2.5rem", textAlign: "center" }}>
           <p style={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.3em", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", marginBottom: "0.75rem" }}>{settings.perf_section_label || "Built Different"}</p>
           <h2 className="perf-title" style={{ fontSize: "clamp(2rem, 5vw, 3.5rem)", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.03em", lineHeight: 1, color: "white" }}>{settings.perf_section_title || "Performance Tech"}</h2>
-          {/* Mobile swipe hint */}
           <p className="perf-swipe-hint" style={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.35)", marginTop: "0.5rem", letterSpacing: "0.05em" }}>
             <style>{`.perf-swipe-hint { display: none; } @media (max-width: 768px) { .perf-swipe-hint { display: block !important; } }`}</style>
             ← Swipe to see all 4 →
@@ -326,7 +418,7 @@ function FinalCTA({ settings }: { settings: Record<string, string> }) {
         </p>
         <div style={{ display: "flex", gap: "1rem", justifyContent: "center", flexWrap: "wrap" }}>
           <Link href="/products" style={{ backgroundColor: "var(--theme-bg, white)", color: "black", padding: "1rem 2.5rem", fontWeight: 700, fontSize: "0.8rem", letterSpacing: "0.15em", textTransform: "uppercase", textDecoration: "none", display: "inline-block" }}>{settings.final_cta_shop_text || "Shop Now"}</Link>
-          <a href={"https://wa.me/" + (settings.whatsapp_number || "8801935962421")} target="_blank" rel="noopener noreferrer" style={{ backgroundColor: "#25D366", color: "white", padding: "1rem 2.5rem", fontWeight: 700, fontSize: "0.8rem", letterSpacing: "0.15em", textTransform: "uppercase", textDecoration: "none", display: "inline-block" }}>{settings.final_cta_whatsapp_text || "WhatsApp Us"}</a>
+          <a href={`https://wa.me/${settings.whatsapp_number || "8801935962421"}`} target="_blank" rel="noopener noreferrer" style={{ backgroundColor: "#25D366", color: "white", padding: "1rem 2.5rem", fontWeight: 700, fontSize: "0.8rem", letterSpacing: "0.15em", textTransform: "uppercase", textDecoration: "none", display: "inline-block" }}>{settings.final_cta_whatsapp_text || "WhatsApp Us"}</a>
         </div>
       </div>
     </section>

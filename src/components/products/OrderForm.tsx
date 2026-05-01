@@ -1,337 +1,311 @@
 "use client"
-import { useState, useEffect, useRef } from "react"
-import { Product } from "@/types"
-import { apiFetchClient } from "@/lib/api/client"
+import { useState, useEffect } from "react"
 import { useCart } from "@/components/ui/Cart"
-import { fbEvent } from "@/components/ui/FacebookPixel"
 
-export default function OrderForm({ product }: { product: Product & { stock_matrix?: Record<string, number>, low_stock_alert?: number } }) {
+type DeliveryZone = {
+  id: string
+  name: string
+  charge: string
+  days: string
+}
+
+type DeliveryGroup = {
+  id: string
+  name: string
+  zones: DeliveryZone[]
+}
+
+type OrderFormProps = {
+  product: {
+    id: string
+    name: string
+    price: number
+    sizes?: string[]
+    colors?: string[]
+    stock_matrix?: any
+  }
+}
+
+export default function OrderForm({ product }: OrderFormProps) {
+  const { addItem } = useCart()
+  const [deliveryOptions, setDeliveryOptions] = useState<{name: string; price: number}[]>([])
+  const [freeDeliveryEnabled, setFreeDeliveryEnabled] = useState(false)
+  
   const [selectedSize, setSelectedSize] = useState("")
   const [selectedColor, setSelectedColor] = useState("")
+  const [selectedDelivery, setSelectedDelivery] = useState("")
   const [quantity, setQuantity] = useState(1)
-  const [name, setName] = useState("")
-  const [phone, setPhone] = useState("")
-  const [address, setAddress] = useState("")
-  const [notes, setNotes] = useState("")
-  const [email, setEmail] = useState("")
-  const [loading, setLoading] = useState(false)
-  const [success, setSuccess] = useState(false)
-  const [error, setError] = useState("")
-  const [fieldErrors, setFieldErrors] = useState<Record<string,string>>({})
-  
-  function setFieldError(field: string, msg: string) {
-    setFieldErrors(prev => ({ ...prev, [field]: msg }))
-  }
-  function clearFieldError(field: string) {
-    setFieldErrors(prev => { const next = {...prev}; delete next[field]; return next })
-  }
-  const [cartAdded, setCartAdded] = useState(false)
-  const [isFlex100, setIsFlex100] = useState(false)
-  const lookupTimer = useRef<NodeJS.Timeout | null>(null)
-  const [discountChecked, setDiscountChecked] = useState(false)
-  const { addItem } = useCart()
 
   useEffect(() => {
-    fbEvent.viewContent({ content_name: product.name, content_ids: [product.id], value: product.price })
-  }, [product.id])
+    loadDeliverySettings()
+  }, [])
 
-  const basePrice = product.price * quantity
-  const totalPrice = isFlex100 ? Math.round(basePrice * 0.9) : basePrice
-
-  function getVariantStock(): number | null {
-    const matrix = product.stock_matrix
-    if (!matrix || !selectedSize || !selectedColor) return null
-    const rawKey = selectedSize.trim() + "_" + selectedColor.trim()
-    const matchedKey = Object.keys(matrix).find(
-      k => k.toLowerCase() === rawKey.toLowerCase()
-    ) || rawKey
-    const v = matrix[matchedKey]
-    return v !== undefined ? v : null
+  async function loadDeliverySettings() {
+    try {
+      const res = await fetch("/api/settings")
+      const data = await res.json()
+      
+      if (data.settings && Array.isArray(data.settings)) {
+        const map: Record<string,string> = {}
+        data.settings.forEach((s: any) => { if (s.key) map[s.key] = s.value })
+        
+        // Check free delivery toggle
+        const freeDelivery = map.free_delivery === "true" || map.free_delivery === "1"
+        setFreeDeliveryEnabled(freeDelivery)
+        
+        if (freeDelivery) {
+          // Free delivery mode
+          setDeliveryOptions([{ name: "Free Delivery", price: 0 }])
+          setSelectedDelivery("Free Delivery")
+        } else {
+          // Normal mode - load delivery groups
+          if (map.delivery_groups) {
+            try {
+              const groups: DeliveryGroup[] = JSON.parse(map.delivery_groups)
+              const options: {name: string; price: number}[] = []
+              
+              groups.forEach(group => {
+                group.zones.forEach(zone => {
+                  options.push({
+                    name: `${group.name} - ${zone.name}`,
+                    price: parseFloat(zone.charge) || 0
+                  })
+                })
+              })
+              
+              setDeliveryOptions(options)
+            } catch (e) {
+              console.error("Failed to parse delivery groups:", e)
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.error("Failed to load settings:", e)
+    }
   }
-  const variantStock = getVariantStock()
-  const lowAlert = product.low_stock_alert || 5
-  const isVariantOut = variantStock !== null && variantStock <= 0
-  const isVariantLow = variantStock !== null && variantStock > 0 && variantStock <= lowAlert
-  const maxQty = variantStock !== null ? Math.max(0, variantStock) : 999
+
+  const selectedOption = deliveryOptions.find(o => o.name === selectedDelivery)
+  const deliveryFee = freeDeliveryEnabled ? 0 : (selectedOption?.price || 0)
+  const subtotal = product.price * quantity
+  const total = subtotal + deliveryFee
 
   function handleAddToCart() {
-    if (!selectedSize) { setError("Please select a size first"); return }
-    if (!selectedColor) { setError("Please select a color first"); return }
-    if (isVariantOut) { setError("This size/color is out of stock"); return }
-    setError("")
-    fbEvent.addToCart({
-      content_name: product.name,
-      content_ids: [product.id],
-      value: product.price * quantity,
-    })
+    // Validation
+    if (product.sizes && product.sizes.length > 0 && !selectedSize) {
+      alert("Please select a size")
+      return
+    }
+    if (product.colors && product.colors.length > 0 && !selectedColor) {
+      alert("Please select a color")
+      return
+    }
+    if (!selectedDelivery) {
+      alert("Please select delivery option")
+      return
+    }
+
     addItem({
       productId: product.id,
       name: product.name,
-      price: product.price,
-      image: (product.images || [])[0] || "",
+      price: total, // Include delivery in price
       size: selectedSize,
       color: selectedColor,
       quantity,
-      slug: product.slug,
+      image: "",
+      slug: ""
     })
-    setCartAdded(true)
-    setTimeout(() => setCartAdded(false), 2500)
+
+    alert("Added to cart!")
   }
 
-  async function handleSubmit() {
-    // Validate all fields and show inline errors
-    const errs: Record<string,string> = {}
-    if (!selectedSize) errs.size = "Please select a size"
-    if (!selectedColor) errs.color = "Please select a color"
-    if (isVariantOut) errs.color = "This size/color is out of stock"
-    if (!name.trim()) errs.name = "Please enter your full name"
-    if (!phone.trim()) errs.phone = "Please enter your phone number"
-    else if (!/^(\+?88)?0[1][3-9]\d{8}$/.test(phone.replace(/\s/g, ""))) errs.phone = "Enter a valid Bangladesh phone number (e.g. 01712345678)"
-    if (!address.trim()) errs.address = "Please enter your delivery address"
-    setFieldErrors(errs)
-    if (Object.keys(errs).length > 0) {
-      // Scroll to first error
-      const firstField = Object.keys(errs)[0]
-      const el = document.getElementById("field-" + firstField)
-      el?.scrollIntoView({ behavior: "smooth", block: "center" })
-      return
-    }
-    setLoading(true)
-    setError("")
-    try {
-      const orderData: Record<string,any> = {
-        customer_name: name.trim(), phone: phone.trim(), address: address.trim(),
-        product_id: product.id, product_name: product.name,
-        size: selectedSize, color: selectedColor, quantity, total_price: totalPrice,
-        notes: notes.trim(), status: "pending",
-      }
-      if (email.trim()) orderData.email = email.trim()
-      orderData.items = [{
-        product_id: product.id,
-        product_name: product.name,
-        size: selectedSize,
-        color: selectedColor,
-        quantity,
-        price: totalPrice,
-      }]
-      await apiFetchClient("/api/orders", { method: "POST", body: JSON.stringify(orderData) })
-      fbEvent.purchase({
-        value: totalPrice,
-        order_id: product.id + "_" + Date.now(),
-        content_ids: [product.id],
-      })
-      setSuccess(true)
-    } catch (err) {
-      setError("Something went wrong. Please try again or WhatsApp us.")
-      console.error(err)
-    } finally {
-      setLoading(false)
-    }
+  const labelStyle = {
+    display: "block",
+    fontSize: "0.7rem",
+    fontWeight: 700,
+    textTransform: "uppercase" as const,
+    letterSpacing: "0.05em",
+    color: "#999",
+    marginBottom: "0.5rem"
   }
 
-  if (success) {
-    return (
-      <div style={{ border: "2px solid black", padding: "2.5rem", textAlign: "center" }}>
-        <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>✓</div>
-        <h3 style={{ fontSize: "1.25rem", fontWeight: 900, textTransform: "uppercase", marginBottom: "0.75rem" }}>Order Placed!</h3>
-        <p style={{ color: "#555", lineHeight: 1.7, marginBottom: "0.5rem" }}>Thank you <strong>{name}</strong>! Your order for <strong>{product.name}</strong> has been received.</p>
-        <p style={{ color: "#555", lineHeight: 1.7, marginBottom: "1.5rem" }}>We will call you on <strong>{phone}</strong> to confirm shortly.</p>
-        <div style={{ backgroundColor: "#f5f5f5", padding: "1rem", marginBottom: "1.5rem", textAlign: "left" }}>
-          <p style={{ fontSize: "0.8rem", color: "#999", marginBottom: "0.25rem" }}>Order Summary</p>
-          <p style={{ fontWeight: 700 }}>{product.name}</p>
-          <p style={{ fontSize: "0.9rem", color: "#555" }}>Size: {selectedSize} | Color: {selectedColor} | Qty: {quantity}</p>
-          <p style={{ fontWeight: 700, marginTop: "0.5rem" }}>Total: BDT {totalPrice.toLocaleString()}</p>
-        </div>
-        <a href={"https://wa.me/8801935962421?text=" + encodeURIComponent("Hi! I just placed an order for " + product.name + ". My name is " + name)} target="_blank" rel="noopener noreferrer" style={{ display: "inline-block", backgroundColor: "#25D366", color: "white", padding: "0.875rem 2rem", fontWeight: 700, fontSize: "0.8rem", textTransform: "uppercase", textDecoration: "none" }}>Confirm on WhatsApp</a>
-      </div>
-    )
+  const selectStyle = {
+    width: "100%",
+    padding: "0.75rem",
+    border: "1px solid #e0e0e0",
+    fontSize: "0.95rem",
+    backgroundColor: "white",
+    cursor: "pointer"
   }
 
   return (
-    <div>
-      {/* Size */}
-      <div style={{ marginBottom: "1.5rem" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
-          <p style={{ fontSize: "0.75rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase" }}>Size {selectedSize && "— " + selectedSize}</p>
-          <a href="/size-guide" style={{ fontSize: "0.75rem", color: "#999", textDecoration: "underline" }}>Size Guide</a>
-        </div>
-        <div id="field-size" style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-          {product.sizes.map(size => (
-            <button key={size} onClick={() => { setSelectedSize(size); clearFieldError("size") }} style={{ width: "52px", height: "52px", border: selectedSize === size ? "2px solid black" : "1px solid #e0e0e0", backgroundColor: selectedSize === size ? "black" : "white", color: selectedSize === size ? "white" : "black", fontWeight: 700, fontSize: "0.8rem", cursor: "pointer" }}>{size}</button>
-          ))}
-        </div>
-        {fieldErrors.size && <p style={{ color:"#ef4444", fontSize:"0.75rem", marginTop:"0.4rem", fontWeight:600 }}>⚠️ {fieldErrors.size}</p>}
-      </div>
-
-      {/* Color */}
-      <div style={{ marginBottom: "1.5rem" }}>
-        <p style={{ fontSize: "0.75rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "0.75rem" }}>Color {selectedColor && "— " + selectedColor}</p>
-        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-          {product.colors.map(color => (
-            <button key={color} onClick={() => { setSelectedColor(color); clearFieldError("color") }} style={{ padding: "0.5rem 1.25rem", border: selectedColor === color ? "2px solid black" : "1px solid #e0e0e0", backgroundColor: selectedColor === color ? "black" : "white", color: selectedColor === color ? "white" : "black", fontWeight: 600, fontSize: "0.8rem", cursor: "pointer" }}>{color}</button>
-          ))}
-        </div>
-        {fieldErrors.color && <p style={{ color:"#ef4444", fontSize:"0.75rem", marginTop:"0.4rem", fontWeight:600 }}>⚠️ {fieldErrors.color}</p>}
-      </div>
-
-      {/* Stock badge — shows after both selected */}
-      {selectedSize && selectedColor && variantStock !== null && (
-        <div style={{ marginBottom: "1rem", padding: "0.5rem 0.875rem", display: "inline-block", backgroundColor: isVariantOut ? "#fee2e2" : isVariantLow ? "#fffbeb" : "#f0fdf4", border: "1px solid " + (isVariantOut ? "#fca5a5" : isVariantLow ? "#fde68a" : "#bbf7d0"), fontSize: "0.78rem", fontWeight: 700, color: isVariantOut ? "#dc2626" : isVariantLow ? "#d97706" : "#16a34a" }}>
-          {isVariantOut ? "⚠️ Out of stock in this size/color" : isVariantLow ? "⚡ Only " + variantStock + " left!" : "✓ " + variantStock + " in stock"}
+    <div style={{ border: "1px solid #e0e0e0", padding: "2rem", backgroundColor: "white" }}>
+      {/* Free Delivery Badge */}
+      {freeDeliveryEnabled && (
+        <div style={{ 
+          backgroundColor: "#dcfce7", 
+          border: "1px solid #16a34a", 
+          padding: "0.75rem", 
+          marginBottom: "1.5rem",
+          textAlign: "center"
+        }}>
+          <p style={{ fontSize: "0.9rem", fontWeight: 700, color: "#16a34a" }}>
+            🚚 FREE DELIVERY
+          </p>
         </div>
       )}
 
-      {/* Quantity */}
-      <div style={{ marginBottom: "1.5rem" }}>
-        <p style={{ fontSize: "0.75rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "0.75rem" }}>Quantity</p>
-        <div style={{ display: "flex", alignItems: "center" }}>
-          <button onClick={() => setQuantity(Math.max(1, quantity - 1))} style={{ width: "44px", height: "44px", border: "1px solid #e0e0e0", backgroundColor: "white", fontSize: "1.25rem", cursor: "pointer" }}>−</button>
-          <div style={{ width: "60px", height: "44px", border: "1px solid #e0e0e0", borderLeft: "none", borderRight: "none", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700 }}>{quantity}</div>
-          <button onClick={() => setQuantity(Math.min(maxQty, quantity + 1))} disabled={variantStock !== null && quantity >= variantStock} style={{ width: "44px", height: "44px", border: "1px solid #e0e0e0", backgroundColor: "white", fontSize: "1.25rem", cursor: (variantStock !== null && quantity >= variantStock) ? "not-allowed" : "pointer", opacity: (variantStock !== null && quantity >= variantStock) ? 0.4 : 1 }}>+</button>
-          <span style={{ marginLeft: "1rem", fontWeight: 700, fontSize: "1.1rem" }}>BDT {totalPrice.toLocaleString()}</span>
-        </div>
-      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+        {/* Size Selection */}
+        {product.sizes && product.sizes.length > 0 && (
+          <div>
+            <label style={labelStyle}>Size</label>
+            <select
+              value={selectedSize}
+              onChange={e => setSelectedSize(e.target.value)}
+              style={selectStyle}
+            >
+              <option value="">Select Size</option>
+              {product.sizes.map(size => (
+                <option key={size} value={size}>{size}</option>
+              ))}
+            </select>
+          </div>
+        )}
 
-      {/* ── ADD TO CART BUTTON ── */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem", marginBottom: "1.5rem" }}>
+        {/* Color Selection */}
+        {product.colors && product.colors.length > 0 && (
+          <div>
+            <label style={labelStyle}>Color</label>
+            <select
+              value={selectedColor}
+              onChange={e => setSelectedColor(e.target.value)}
+              style={selectStyle}
+            >
+              <option value="">Select Color</option>
+              {product.colors.map(color => (
+                <option key={color} value={color}>{color}</option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {/* Delivery Selection */}
+        <div>
+          <label style={labelStyle}>
+            {freeDeliveryEnabled ? "Delivery" : "Delivery Area"}
+          </label>
+          <select
+            value={selectedDelivery}
+            onChange={e => setSelectedDelivery(e.target.value)}
+            style={selectStyle}
+          >
+            <option value="">Select delivery option</option>
+            {deliveryOptions.map(option => (
+              <option key={option.name} value={option.name}>
+                {freeDeliveryEnabled 
+                  ? option.name 
+                  : `${option.name} — BDT ${option.price}`
+                }
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Quantity */}
+        <div>
+          <label style={labelStyle}>Quantity</label>
+          <div style={{ display: "flex", gap: "0.5rem" }}>
+            <button
+              onClick={() => setQuantity(Math.max(1, quantity - 1))}
+              style={{
+                padding: "0.75rem 1.5rem",
+                backgroundColor: "#f5f5f5",
+                border: "1px solid #e0e0e0",
+                cursor: "pointer",
+                fontWeight: 700,
+                fontSize: "1.25rem"
+              }}
+            >
+              −
+            </button>
+            <input
+              type="number"
+              value={quantity}
+              onChange={e => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+              min="1"
+              style={{
+                flex: 1,
+                textAlign: "center",
+                padding: "0.75rem",
+                border: "1px solid #e0e0e0",
+                fontSize: "1rem",
+                fontWeight: 700
+              }}
+            />
+            <button
+              onClick={() => setQuantity(quantity + 1)}
+              style={{
+                padding: "0.75rem 1.5rem",
+                backgroundColor: "#f5f5f5",
+                border: "1px solid #e0e0e0",
+                cursor: "pointer",
+                fontWeight: 700,
+                fontSize: "1.25rem"
+              }}
+            >
+              +
+            </button>
+          </div>
+        </div>
+
+        {/* Price Breakdown */}
+        <div style={{ paddingTop: "1rem", borderTop: "1px solid #e0e0e0" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem", fontSize: "0.95rem" }}>
+            <span>Product ({quantity}x)</span>
+            <span>BDT {subtotal.toLocaleString()}</span>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.75rem", fontSize: "0.95rem" }}>
+            <span>Delivery</span>
+            <span>
+              {freeDeliveryEnabled 
+                ? <strong style={{ color: "#16a34a" }}>FREE</strong>
+                : selectedDelivery ? `BDT ${deliveryFee.toLocaleString()}` : "—"
+              }
+            </span>
+          </div>
+          <div style={{ 
+            display: "flex", 
+            justifyContent: "space-between", 
+            paddingTop: "0.75rem",
+            borderTop: "2px solid black",
+            fontSize: "1.25rem",
+            fontWeight: 900
+          }}>
+            <span>Total</span>
+            <span>BDT {total.toLocaleString()}</span>
+          </div>
+        </div>
+
+        {/* Add to Cart Button */}
         <button
           onClick={handleAddToCart}
-          disabled={isVariantOut}
           style={{
-            padding: "0.9rem 1rem",
-            backgroundColor: cartAdded ? "#16a34a" : "white",
-            color: cartAdded ? "white" : "black",
-            border: "2px solid " + (cartAdded ? "#16a34a" : "black"),
-            fontWeight: 700,
-            fontSize: "0.82rem",
-            letterSpacing: "0.1em",
-            textTransform: "uppercase",
-            cursor: isVariantOut ? "not-allowed" : "pointer",
-            opacity: isVariantOut ? 0.5 : 1,
-            transition: "all 0.2s",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "0.5rem",
-          }}
-        >
-          {cartAdded ? (
-            <>✓ Added to Cart</>
-          ) : (
-            <>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
-                <line x1="3" y1="6" x2="21" y2="6"/>
-                <path d="M16 10a4 4 0 01-8 0"/>
-              </svg>
-              Add to Cart
-            </>
-          )}
-        </button>
-
-        <button
-          onClick={() => {
-            if (!selectedSize) { setError("Please select a size first"); return }
-            if (!selectedColor) { setError("Please select a color first"); return }
-            setError("")
-            // scroll to order form
-            document.getElementById("order-form-section")?.scrollIntoView({ behavior: "smooth" })
-          }}
-          style={{
-            padding: "0.9rem 1rem",
-            backgroundColor: "var(--theme-btn-bg, black)",
+            width: "100%",
+            padding: "1rem",
+            backgroundColor: "black",
             color: "white",
-            border: "2px solid black",
+            border: "none",
+            fontSize: "1rem",
             fontWeight: 700,
-            fontSize: "0.82rem",
-            letterSpacing: "0.1em",
-            textTransform: "uppercase",
             cursor: "pointer",
+            textTransform: "uppercase",
+            letterSpacing: "0.05em"
           }}
         >
-          Buy Now (COD)
+          Add to Cart — BDT {total.toLocaleString()}
         </button>
       </div>
-
-      {/* Validation error — visible right below buttons */}
-      {error && (
-        <div style={{ display:"flex", alignItems:"center", gap:"0.5rem", padding:"0.65rem 0.875rem", backgroundColor:"#fff0f0", border:"1px solid #fca5a5", borderRadius:"8px", marginTop:"0.5rem", animation:"shake 0.3s ease" }}>
-          <span style={{ fontSize:"1rem", flexShrink:0 }}>⚠️</span>
-          <span style={{ fontSize:"0.82rem", color:"#dc2626", fontWeight:600 }}>{error}</span>
-        </div>
-      )}
-      <style>{`@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-4px)}40%,80%{transform:translateX(4px)}}`}</style>
-
-      {/* Divider */}
-      <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1.5rem" }}>
-        <div style={{ flex: 1, height: "1px", backgroundColor: "#e0e0e0" }} />
-        <span style={{ fontSize: "0.72rem", color: "#999", textTransform: "uppercase", letterSpacing: "0.1em", fontWeight: 600 }}>Or place order directly below</span>
-        <div style={{ flex: 1, height: "1px", backgroundColor: "#e0e0e0" }} />
-      </div>
-
-      {/* Delivery info */}
-      <div id="order-form-section" style={{ borderTop: "1px solid #e0e0e0", paddingTop: "1.5rem" }}>
-        <p style={{ fontSize: "0.75rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "1rem", color: "#999" }}>Delivery Information</p>
-        <div style={{ marginBottom: "1rem" }}>
-          <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, marginBottom: "0.4rem", textTransform: "uppercase" }}>Full Name *</label>
-          <input type="text" id="field-name" value={name} onChange={e => { setName(e.target.value); clearFieldError("name") }} placeholder="Your full name" style={{ width: "100%", border: fieldErrors.name ? "1.5px solid #ef4444" : "1px solid #e0e0e0", padding: "0.75rem 1rem", fontSize: "0.95rem", outline: "none", boxSizing: "border-box" as const }} />
-          {fieldErrors.name && <p style={{ color:"#ef4444", fontSize:"0.75rem", marginTop:"0.3rem", fontWeight:600 }}>⚠️ {fieldErrors.name}</p>}
-        </div>
-        <div style={{ marginBottom: "1rem" }}>
-          <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, marginBottom: "0.4rem", textTransform: "uppercase" }}>Phone Number *</label>
-          <input type="tel" value={phone}
-            onChange={e => {
-              const v = e.target.value.replace(/[^0-9+]/g, "")
-              setPhone(v)
-              setDiscountChecked(false)
-              setIsFlex100(false)
-              if (lookupTimer.current) clearTimeout(lookupTimer.current)
-            }}
-            placeholder="01XXXXXXXXX" style={{ width: "100%", border: fieldErrors.phone ? "1.5px solid #ef4444" : "1px solid #e0e0e0", padding: "0.75rem 1rem", fontSize: "0.95rem", outline: "none", boxSizing: "border-box" as const }} id="field-phone" />
-          {fieldErrors.phone && <p style={{ color:"#ef4444", fontSize:"0.75rem", marginTop:"0.3rem", fontWeight:600 }}>⚠️ {fieldErrors.phone}</p>}
-          {discountChecked && isFlex100 && (
-            <div style={{ backgroundColor: "#fef3c7", border: "1px solid #fbbf24", padding: "0.75rem 0.875rem", marginTop: "0.5rem" }}>
-              <p style={{ fontSize: "0.85rem", color: "#92400e", fontWeight: 900, marginBottom: "0.2rem" }}>🥇 Welcome back{name ? ", " + name : ""}!</p>
-              <p style={{ fontSize: "0.75rem", color: "#92400e", fontWeight: 600 }}>FLEX100 Member — 10% lifetime discount applied ✓</p>
-            </div>
-          )}
-        </div>
-        <div style={{ marginBottom: "1rem" }}>
-          <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, marginBottom: "0.4rem", textTransform: "uppercase" }}>Email <span style={{ color:"#999", fontWeight:400 }}>(Optional)</span></label>
-          <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="your@email.com" style={{ width: "100%", border: "1px solid #e0e0e0", padding: "0.75rem 1rem", fontSize: "0.95rem", outline: "none", boxSizing: "border-box" as const }} />
-        </div>
-        <div style={{ marginBottom: "1rem" }}>
-          <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, marginBottom: "0.4rem", textTransform: "uppercase" }}>Delivery Address *</label>
-          <textarea id="field-address" value={address} onChange={e => { setAddress(e.target.value); clearFieldError("address") }} placeholder="House/Flat, Road, Area, District" rows={3} style={{ width: "100%", border: fieldErrors.address ? "1.5px solid #ef4444" : "1px solid #e0e0e0", padding: "0.75rem 1rem", fontSize: "0.95rem", outline: "none", resize: "vertical" as const, boxSizing: "border-box" as const, fontFamily: "inherit" }} />
-          {fieldErrors.address && <p style={{ color:"#ef4444", fontSize:"0.75rem", marginTop:"0.3rem", fontWeight:600 }}>⚠️ {fieldErrors.address}</p>}
-        </div>
-        <div style={{ marginBottom: "1.5rem" }}>
-          <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, marginBottom: "0.4rem", textTransform: "uppercase" }}>Notes (Optional)</label>
-          <input type="text" value={notes} onChange={e => setNotes(e.target.value)} placeholder="Any special instructions..." style={{ width: "100%", border: "1px solid #e0e0e0", padding: "0.75rem 1rem", fontSize: "0.95rem", outline: "none", boxSizing: "border-box" as const }} />
-        </div>
-      </div>
-
-
-
-      <div style={{ backgroundColor: "#f5f5f5", padding: "1rem", marginBottom: "1.5rem", display: "flex", gap: "0.75rem", alignItems: "flex-start" }}>
-        <span style={{ fontSize: "1.25rem", flexShrink: 0 }}>🚚</span>
-        <div>
-          <p style={{ fontWeight: 700, fontSize: "0.875rem", marginBottom: "0.2rem" }}>Cash on Delivery</p>
-          <p style={{ fontSize: "0.8rem", color: "#666", lineHeight: 1.5 }}>Pay when your order arrives. No advance payment needed.</p>
-        </div>
-      </div>
-
-      <button
-        onClick={handleSubmit}
-        disabled={loading || isVariantOut}
-        style={{ width: "100%", backgroundColor: loading ? "#333" : "black", color: "white", padding: "1.1rem", fontWeight: 700, fontSize: "0.875rem", letterSpacing: "0.15em", textTransform: "uppercase", border: "none", cursor: loading || isVariantOut ? "not-allowed" : "pointer", marginBottom: "1rem", opacity: isVariantOut ? 0.5 : 1 }}
-      >
-        {loading ? "Placing Order..." : "Place Order — BDT " + totalPrice.toLocaleString()}
-      </button>
-
-      <a href={"https://wa.me/8801935962421?text=" + encodeURIComponent("Hi! I want to order " + product.name)} target="_blank" rel="noopener noreferrer" style={{ display: "block", width: "100%", backgroundColor: "#25D366", color: "white", padding: "1rem", fontWeight: 700, fontSize: "0.8rem", textTransform: "uppercase", textDecoration: "none", textAlign: "center" as const, boxSizing: "border-box" as const }}>
-        Or Order via WhatsApp
-      </a>
     </div>
   )
 }

@@ -1,12 +1,18 @@
-import { createClient } from "@/lib/supabase/server"
+import { apiFetchServer } from "@/lib/api/server"
 
+export const dynamic = "force-dynamic"
 export const metadata = { title: "Size Guide | Flextreme" }
 
 async function getSettings() {
-  const supabase = await createClient()
-  const { data } = await supabase.from("settings").select("*")
   const map: Record<string, string> = {}
-  data?.forEach((s: any) => { map[s.key] = s.value })
+  try {
+    const s = await apiFetchServer<{ settings: any[] }>("/api/settings")
+    s.settings?.forEach((r: any) => {
+      map[r.key] = r.value
+    })
+  } catch (e) {
+    console.error("Settings error:", e)
+  }
   return map
 }
 
@@ -50,7 +56,7 @@ export default async function SizeGuidePage() {
   ]
 
   return (
-    <div style={{ paddingTop: "72px" }}>
+    <div style={{ paddingTop: "72px", backgroundColor: "white", flex: 1 }}>
       <div style={{ backgroundColor: "var(--theme-primary, black)", color: "var(--theme-btn-text, white)", padding: "4rem 1.5rem", textAlign: "center" }}>
         <p style={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.3em", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", marginBottom: "0.75rem" }}>Find Your Fit</p>
         <h1 style={{ fontSize: "clamp(2.5rem, 6vw, 5rem)", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.03em", lineHeight: 1 }}>Size Guide</h1>

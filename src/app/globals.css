@@ -1,4 +1,6 @@
-﻿@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Exo+2:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400&display=swap');
+
+@import "tailwindcss";
 
 @layer base {
   :root {
@@ -18,14 +20,16 @@
 
   body {
     background-color: white;
-    color: black;
+    color: #000;
     -webkit-font-smoothing: antialiased;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    font-family: 'Exo 2', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   }
 
   h1, h2, h3, h4, h5, h6 {
+    font-family: 'Oswald', sans-serif;
     font-weight: 700;
-    letter-spacing: -0.025em;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
   }
 }
 
@@ -48,7 +52,7 @@
 
   .btn-secondary {
     background-color: white;
-    color: black;
+    color: #000;
     padding: 0.75rem 2rem;
     font-weight: 700;
     text-transform: uppercase;
@@ -66,7 +70,7 @@
 
   .btn-outline {
     border: 1px solid black;
-    color: black;
+    color: #000;
     padding: 0.5rem 1.5rem;
     font-size: 0.875rem;
     font-weight: 500;
@@ -83,7 +87,8 @@
     font-size: clamp(2rem, 5vw, 3rem);
     font-weight: 900;
     text-transform: uppercase;
-    letter-spacing: -0.025em;
+    letter-spacing: 0.02em;
+    font-family: 'Oswald', sans-serif;
   }
 
   .section-subtitle {
@@ -91,16 +96,18 @@
     font-size: 1.125rem;
     margin-top: 0.75rem;
     font-weight: 300;
+    font-family: 'Exo 2', sans-serif;
   }
 
   .input-field {
     width: 100%;
     border: 1px solid #d1d5db;
     padding: 0.75rem 1rem;
-    color: black;
+    color: #000;
     background-color: white;
     transition: border-color 0.2s;
     outline: none;
+    font-family: 'Exo 2', sans-serif;
   }
 
   .input-field:focus {
@@ -235,4 +242,65 @@ button:active {
     grid-template-columns: 1fr 1fr !important;
     gap: 0.75rem !important;
   }
+}
+
+/* ═══════════════════════════════════════════
+   NAVBAR OFFSET — Navbar is fixed, 72px tall.
+   All non-home, non-admin, non-flexai pages
+   need their content pushed below the navbar.
+
+   The AnnouncementBanner (36px, fixed) also
+   shifts the navbar down by injecting:
+     body .navbar-fixed { top: 36px !important }
+   and renders a 36px spacer div in the flow,
+   so the main element already shifts correctly.
+
+   Each page has paddingTop:72px on its inner div.
+   The <main> wrapper has no extra padding.
+   This is the correct setup — no change needed.
+
+   ONLY the FlexAI page needs special handling
+   because it renders <Navbar /> itself (which
+   is position:fixed) — handled via flexai-root.
+═══════════════════════════════════════════ */
+
+/* FlexAI full-screen layout — fills remaining
+   height after the fixed navbar */
+.flexai-root {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+}
+.flexai-root .flexai-body {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* ══════════════════════════════════════════════════════════
+   FIX WHITE GAPS — Homepage between sections/footer, 
+   Products page below footer
+═══════════════════════════════════════════════════════════ */
+
+/* Ensure no default margins create gaps */
+body > * {
+  margin: 0;
+}
+
+main {
+  margin: 0;
+}
+
+footer {
+  margin: 0;
+}
+
+/* CRITICAL: Force zero gap between main content and footer */
+body, html {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+body > * {
+  margin: 0 !important;
 }

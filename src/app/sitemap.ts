@@ -1,8 +1,13 @@
-import { createClient } from "@/lib/supabase/server"
-
 export default async function sitemap() {
-  const supabase = await createClient()
-  const { data: products } = await supabase.from("products").select("slug, updated_at")
+  let products: { slug: string; updated_at?: string }[] = []
+  try {
+    const base = process.env.NEXT_PUBLIC_SITE_URL || "https://flextremefit.com"
+    const res = await fetch(`${base}/api/products`, { cache: "no-store" })
+    if (res.ok) {
+      const data = await res.json()
+      products = data.products || []
+    }
+  } catch {}
 
   const base = "https://flextremefit.com"
 
@@ -17,7 +22,7 @@ export default async function sitemap() {
     { url: `${base}/flex-ai`, lastModified: new Date(), changeFrequency: "monthly" as const, priority: 0.5 },
   ]
 
-  const productPages = (products || []).map(p => ({
+  const productPages = products.map(p => ({
     url: `${base}/products/${p.slug}`,
     lastModified: p.updated_at ? new Date(p.updated_at) : new Date(),
     changeFrequency: "weekly" as const,

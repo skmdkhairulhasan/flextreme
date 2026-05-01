@@ -32,7 +32,7 @@ export default function CustomerOnlyWrapper({ children }: { children: React.Reac
       </Suspense>
       <AnnouncementBanner />
       <Navbar />
-      <main>{children}</main>
+      <main style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>{children}</main>
       <Footer />
       <ChatBot />
       <CartDrawer />

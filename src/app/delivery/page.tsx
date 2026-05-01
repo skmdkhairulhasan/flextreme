@@ -1,53 +1,46 @@
-import { createClient } from "@/lib/supabase/server"
+import { apiFetchServer } from "@/lib/api/server"
 
 export const metadata = { title: "Delivery Info | Flextreme" }
+export const dynamic = "force-dynamic"
 
 type DeliveryZone = { id: string; name: string; charge: string; days: string }
 type DeliveryGroup = { id: string; name: string; zones: DeliveryZone[] }
 type FaqItem = { id: string; question: string; answer: string }
 
 export default async function DeliveryPage() {
-  const supabase = await createClient()
-  const { data } = await supabase.from("settings").select("*")
   const map: Record<string, string> = {}
-  data?.forEach((s: any) => { map[s.key] = s.value })
+  
+  try {
+    const s = await apiFetchServer<{ settings: any[] }>("/api/settings")
+    s.settings?.forEach((r: any) => {
+      map[r.key] = r.value
+    })
+  } catch (e) {
+    console.error("Settings error:", e)
+  }
 
   const isFreeDelivery = map.free_delivery === "true"
 
   let groups: DeliveryGroup[] = []
   if (map.delivery_groups) {
-    groups = JSON.parse(map.delivery_groups)
-  } else {
-    groups = [
-      { id: "dhaka", name: "Dhaka Division", zones: [
-        { id: "1", name: "Dhaka City", charge: map.delivery_dhaka_city || "60", days: "1-2" },
-        { id: "2", name: "Dhaka District", charge: map.delivery_dhaka_district || "100", days: "2-3" },
-        { id: "3", name: "Narayanganj", charge: map.delivery_narayanganj || "100", days: "2-3" },
-        { id: "4", name: "Gazipur", charge: map.delivery_gazipur || "100", days: "2-3" },
-        { id: "5", name: "Mymensingh", charge: map.delivery_mymensingh || "100", days: "2-3" },
-      ]},
-      { id: "ctg", name: "Chittagong Division", zones: [
-        { id: "6", name: "Chittagong", charge: map.delivery_chittagong || "120", days: "3-4" },
-        { id: "7", name: "Comilla", charge: map.delivery_comilla || "120", days: "2-3" },
-      ]},
-      { id: "others", name: "Other Divisions", zones: [
-        { id: "8", name: "Sylhet", charge: map.delivery_sylhet || "120", days: "3-4" },
-        { id: "9", name: "Rajshahi", charge: map.delivery_rajshahi || "120", days: "3-4" },
-        { id: "10", name: "Khulna", charge: map.delivery_khulna || "120", days: "3-4" },
-        { id: "11", name: "Other Districts", charge: map.delivery_other || "130", days: "3-5" },
-      ]},
-    ]
+    try {
+      groups = JSON.parse(map.delivery_groups)
+    } catch {
+      groups = []
+    }
   }
 
-  const faqs: FaqItem[] = map.faqs ? JSON.parse(map.faqs) : [
-    { id: "1", question: "How do I place an order?", answer: "Visit our Products page, choose your item, select size and color, fill in your details and click Order Now. We confirm via WhatsApp." },
-    { id: "2", question: "What payment methods do you accept?", answer: "Cash on Delivery (COD) only. Pay when your order arrives — no advance payment needed." },
-    { id: "3", question: "How long does delivery take?", answer: "Dhaka City: 1-2 days. Other cities: 3-5 days depending on location." },
-    { id: "4", question: "Can I return or exchange my order?", answer: "Yes! Contact us on WhatsApp within 48 hours of receiving your order and we will arrange an exchange or refund." },
-  ]
+  let faqs: FaqItem[] = []
+  if (map.faqs) {
+    try {
+      faqs = JSON.parse(map.faqs)
+    } catch {
+      faqs = []
+    }
+  }
 
   return (
-    <div style={{ minHeight: "100vh", backgroundColor: "var(--theme-bg, white)", paddingTop: "72px" }}>
+    <div style={{  backgroundColor: "var(--theme-bg, white)", paddingTop: "72px" }}>
 
       {/* Header */}
       <div style={{ backgroundColor: "var(--theme-primary, black)", color: "var(--theme-btn-text, white)", padding: "4rem 1.5rem", textAlign: "center" }}>

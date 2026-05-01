@@ -1,57 +1,112 @@
+"use client"
+import { useState, useEffect } from "react"
 import Link from "next/link"
-import { apiFetchServer } from "@/lib/api/server"
 import { Product } from "@/types"
-import FilterBar from "./FilterBar"
 
-export const metadata = { title: "Products" }
+export default function ProductsPage() {
+  const [allProducts, setAllProducts] = useState<Product[]>([])
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([])
+  const [searchQuery, setSearchQuery] = useState("")
+  const [selectedCategory, setSelectedCategory] = useState("All Categories")
+  const [categories, setCategories] = useState<string[]>([])
 
-export default async function ProductsPage() {
-  const [{ products }, { settings }] = await Promise.all([
-    apiFetchServer<{ products: Product[] }>("/api/products"),
-    apiFetchServer<{ settings: Record<string, string> }>("/api/settings?keys=product_categories"),
-  ])
-  const allProducts = products || []
-
-  // Parse categories — handle both string[] and CategoryGroup[] formats
-  let categoryGroups: { id: string; name: string; subcategories: string[] }[] = []
-  const catRaw = settings?.product_categories
-  if (catRaw) {
-    try {
-      const parsed = JSON.parse(catRaw)
-      if (parsed.length > 0 && typeof parsed[0] === "string") {
-        categoryGroups = parsed.map((name: string) => ({ id: name, name, subcategories: [] }))
-      } else {
-        categoryGroups = parsed
+  useEffect(() => {
+    async function loadProducts() {
+      try {
+        const res = await fetch("/api/products")
+        const data: { products?: Product[] } = await res.json()
+        const products = data.products || []
+        setAllProducts(products)
+        setFilteredProducts(products)
+        
+        // Extract unique categories
+        const cats = ["All Categories", ...Array.from(new Set(products.map(p => p.category).filter((category): category is string => Boolean(category))))]
+        setCategories(cats)
+      } catch (e) {
+        console.error("Products fetch error:", e)
       }
-    } catch {}
-  }
+    }
+    loadProducts()
+  }, [])
+
+  useEffect(() => {
+    let filtered = allProducts
+
+    // Filter by category
+    if (selectedCategory !== "All Categories") {
+      filtered = filtered.filter(p => p.category === selectedCategory)
+    }
+
+    // Filter by search query
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase()
+      filtered = filtered.filter(p => 
+        p.name.toLowerCase().includes(q) ||
+        p.category?.toLowerCase().includes(q) ||
+        p.description?.toLowerCase().includes(q)
+      )
+    }
+
+    setFilteredProducts(filtered)
+  }, [searchQuery, selectedCategory, allProducts])
 
   return (
-    <div style={{ paddingTop: "72px", minHeight: "100vh", backgroundColor: "white" }}>
-      {/* Header — exactly as original */}
+    <div style={{ paddingTop: "72px", backgroundColor: "white", flex: 1 }}>
+      {/* Header */}
       <div style={{ backgroundColor: "var(--theme-btn-bg, black)", color: "var(--theme-btn-text, white)", padding: "4rem 1.5rem", textAlign: "center" }}>
         <p style={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.3em", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", marginBottom: "0.75rem" }}>The Collection</p>
         <h1 style={{ fontSize: "clamp(2.5rem, 6vw, 5rem)", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.03em", lineHeight: 1 }}>All Products</h1>
-        <p style={{ color: "rgba(255,255,255,0.5)", marginTop: "1rem" }}>{allProducts.length} products available</p>
+        <p style={{ color: "rgba(255,255,255,0.5)", marginTop: "1rem" }}>{filteredProducts.length} products available</p>
       </div>
 
-      {/* Filter bar — only shown if categories exist */}
-      {categoryGroups.length > 0 && (
-        <FilterBar categoryGroups={categoryGroups} />
-      )}
+      {/* Search & Filter Bar */}
+      <div style={{ backgroundColor: "#f9fafb", borderBottom: "1px solid #e5e7eb", padding: "1.5rem" }}>
+        <div style={{ maxWidth: "1280px", margin: "0 auto", display: "flex", gap: "1rem", flexWrap: "wrap" }}>
+          <input
+            type="text"
+            placeholder="Search products..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={{
+              flex: 1,
+              minWidth: "250px",
+              padding: "0.75rem 1rem",
+              border: "1px solid #d1d5db",
+              borderRadius: "6px",
+              fontSize: "0.875rem",
+              outline: "none"
+            }}
+          />
+          <select
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            style={{
+              padding: "0.75rem 1rem",
+              border: "1px solid #d1d5db",
+              borderRadius: "6px",
+              fontSize: "0.875rem",
+              backgroundColor: "white",
+              cursor: "pointer",
+              minWidth: "180px"
+            }}
+          >
+            {categories.map(cat => (
+              <option key={cat} value={cat}>{cat}</option>
+            ))}
+          </select>
+        </div>
+      </div>
 
-      {/* Products grid — exactly as original */}
+      {/* Products grid */}
       <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "4rem 1.5rem" }}>
-        {allProducts.length === 0 ? (
+        {filteredProducts.length === 0 ? (
           <div style={{ textAlign: "center", padding: "4rem", color: "#999" }}>
-            <p>No products found. Check your Supabase connection.</p>
+            <p>No products found.</p>
           </div>
         ) : (
-          <div id="products-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "2.5rem" }}>
-            {allProducts.map((product) => (
-              <div key={product.id} data-subcategory={(product as any).subcategory || ""}>
-                <ProductCard product={product} />
-              </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "2.5rem" }}>
+            {filteredProducts.map((product) => (
+              <ProductCard key={product.id} product={product} />
             ))}
           </div>
         )}
@@ -63,6 +118,7 @@ export default async function ProductsPage() {
 function ProductCard({ product }: { product: Product }) {
   const image = product.images && product.images[0] ? product.images[0] : "https://images.unsplash.com/photo-1571945153237-4929e783af4a?w=800"
   const discount = product.original_price ? Math.round(((product.original_price - product.price) / product.original_price) * 100) : null
+  
   return (
     <Link href={"/products/" + product.slug} style={{ textDecoration: "none", color: "inherit", display: "block" }}>
       <div>
@@ -73,7 +129,7 @@ function ProductCard({ product }: { product: Product }) {
           )}
         </div>
         <div>
-          <p style={{ fontSize: "0.65rem", color: "#999", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: "0.3rem" }}>{product.category}{(product as any).subcategory ? " · " + (product as any).subcategory : ""}</p>
+          <p style={{ fontSize: "0.65rem", color: "#999", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: "0.3rem" }}>{product.category}</p>
           <h3 style={{ fontSize: "1rem", fontWeight: 700, textTransform: "uppercase", marginBottom: "0.5rem" }}>{product.name}</h3>
           <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "0.75rem" }}>
             <span style={{ fontSize: "1.1rem", fontWeight: 700 }}>BDT {product.price.toLocaleString()}</span>

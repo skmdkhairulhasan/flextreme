@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/server"
+import type { Order, Product } from "@/types"
+import { classifyText } from "@/lib/nlpClient"
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 function smart(raw: string) {
@@ -19,6 +20,20 @@ function tdee(w: number, h: number, age: number, activity: number) {
   const bmr = 10 * w + 6.25 * h - 5 * age + 5
   const mult = [1.2, 1.375, 1.55, 1.725, 1.9][Math.min(activity - 1, 4)]
   return Math.round(bmr * mult)
+}
+
+function getBaseUrl() {
+  return (process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3000").replace(/\/$/, "")
+}
+
+function assignSettings(target: Record<string, string>, settings: Record<string, string> | { key: string; value: string }[] | undefined) {
+  if (Array.isArray(settings)) {
+    settings.forEach(setting => {
+      if (setting.key) target[setting.key] = setting.value
+    })
+    return
+  }
+  Object.assign(target, settings || {})
 }
 
 // ── Number extractor ──────────────────────────────────────────────────────────
@@ -46,12 +61,19 @@ export async function POST(req: NextRequest) {
 
     const msg = smart(message)
     const state: State = rawState || {}
-    const supabase = await createClient()
+    const nlpResult = await classifyText(message).catch(() => null)
+    const externalIntent = typeof nlpResult?.intent === "string" ? nlpResult.intent : null
 
     // ── SETTINGS ──────────────────────────────────────────────────────────────
-    const { data: settings } = await supabase.from("settings").select("key,value")
     const s: Record<string,string> = {}
-    ;(settings || []).forEach((r: any) => s[r.key] = r.value)
+    try {
+      const base = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
+      const settingsRes = await fetch(`${base}/api/settings`, { cache: "no-store" })
+      if (settingsRes.ok) {
+        const { settings } = await settingsRes.json()
+        assignSettings(s, settings)
+      }
+    } catch {}
 
     // ────────────────────────────────────────────────────────────────────────
     // STEP MACHINE — if we're mid-conversation, handle the step first
@@ -261,10 +283,14 @@ Want a workout or diet plan based on this?`,
     if (digits.length >= 10 && !has(msg, ["height","weight","cm","kg","year"])) {
       const local = digits.startsWith("0") ? digits : "0" + digits.slice(-10)
       const withCountry = "88" + local.replace(/^0/, "")
-      const { data } = await supabase.from("orders").select("*")
-        .or(`phone.eq.${digits},phone.eq.${local},phone.eq.${withCountry}`)
-        .order("created_at", { ascending: false }).limit(5)
+      const ordersRes = await fetch(`${getBaseUrl()}/api/orders`, { cache: "no-store" })
+      const { orders = [] }: { orders?: Order[] } = ordersRes.ok ? await ordersRes.json() : {}
+      const data = orders
+        .filter(order => [digits, local, withCountry].includes(order.phone))
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+        .slice(0, 5)
       if (data && data.length > 0) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const reply = "📦 **Your recent orders:**\n\n" + data.map((o: any, i: number) => {
           const statusEmoji = { delivered:"✅", shipped:"🚚", processing:"⚙️", confirmed:"✓", cancelled:"❌" }[o.status as string] || "⏳"
           let line = `**ORDER ${i+1}**\n👕 ${o.product_name}\n🔘 Status: ${statusEmoji} ${(o.status||"pending").toUpperCase()}\n📦 Qty: ${o.quantity} | Size: ${o.size} | Color: ${o.color}`
@@ -277,12 +303,12 @@ Want a workout or diet plan based on this?`,
     }
 
     // ── ORDER INTENT ──
-    if (has(msg, ["my order","track","find my order","check my order","where is my","parcel","shipment","order status"]) || (has(msg,["order","package"]) && has(msg,["track","find","check","where","status","tell"]))) {
+    if (externalIntent === "find_order" || has(msg, ["my order","track","find my order","check my order","where is my","parcel","shipment","order status"]) || (has(msg,["order","package"]) && has(msg,["track","find","check","where","status","tell"]))) {
       return NextResponse.json({ reply: "Sure! Send me the **phone number** you used when placing your order and I'll look it up right away. 📦", state: { step: "order_phone" } })
     }
 
     // ── BMI — step by step ──
-    if (has(msg, ["bmi","body mass","body fat","how fat","am i fat","am i overweight","check my weight","check my bmi","mbi","bim","my bmi"])) {
+    if (externalIntent === "bmi_calc" || has(msg, ["bmi","body mass","body fat","how fat","am i fat","am i overweight","check my weight","check my bmi","mbi","bim","my bmi"])) {
       // If they already gave height+weight in same message
       const nums = extractNums(msg)
       const heightM = msg.match(/(\d{2,3})\s*cm/)
@@ -326,17 +352,17 @@ Want a workout or diet plan based on this?`,
     }
 
     // ── WORKOUT ──
-    if (has(msg, ["workout","gym","exercise","training","routine","plan","lift","muscle","build muscle","gain muscle","get fit","build my"])) {
+    if (externalIntent === "workout_plan" || has(msg, ["workout","gym","exercise","training","routine","plan","lift","muscle","build muscle","gain muscle","get fit","build my"])) {
       return NextResponse.json({ reply: "Let's build your workout plan! 💪\n\nFirst — what's your **height in cm**? (e.g. 175)", state: { step: "height", intent: "workout" } })
     }
 
     // ── DIET ──
-    if (has(msg, ["diet","meal plan","diet plan","diet chart","food plan","eating plan","nutrition plan","what to eat","meal chart"])) {
+    if (externalIntent === "diet_chart" || has(msg, ["diet","meal plan","diet plan","diet chart","food plan","eating plan","nutrition plan","what to eat","meal chart"])) {
       return NextResponse.json({ reply: "Let's build your diet plan! 🥗\n\nFirst — what's your **height in cm**? (e.g. 175)", state: { step: "height", intent: "diet" } })
     }
 
     // ── DELIVERY ──
-    if (has(msg, ["delivery","charge","shipping","how long","arrive","days","free delivery"])) {
+    if (externalIntent === "delivery_info" || has(msg, ["delivery","charge","shipping","how long","arrive","days","free delivery"])) {
       if (s.free_delivery === "true") {
         return NextResponse.json({ reply: "🚚 **FREE DELIVERY** nationwide!\n\nWe deliver across all Bangladesh for FREE.\n✓ Cash on Delivery — pay when it arrives\n✓ Zero advance payment\n\n🏙️ Khulna City: 1-2 days\n🗺️ Near Khulna: 2-3 days\n🇧🇩 All Bangladesh: 3-5 days", state: {} })
       }
@@ -344,9 +370,11 @@ Want a workout or diet plan based on this?`,
     }
 
     // ── PRODUCTS ──
-    if (has(msg, ["product","show","browse","what do you sell","collection","shop","see products","show products","view products"])) {
-      const { data: products } = await supabase.from("products").select("name,price,slug").eq("in_stock", true).limit(5)
+    if (externalIntent === "product_browse" || has(msg, ["product","show","browse","what do you sell","collection","shop","see products","show products","view products"])) {
+      const productsRes = await fetch(`${getBaseUrl()}/api/products?in_stock=true&limit=5`, { cache: "no-store" })
+      const { products = [] }: { products?: Product[] } = productsRes.ok ? await productsRes.json() : {}
       if (products && products.length > 0) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const list = products.map((p:any) => `👕 **${p.name}** — BDT ${p.price}\n   → /products/${p.slug}`).join("\n\n")
         return NextResponse.json({ reply: "Here's our collection:\n\n" + list + "\n\nAll sweat-wicking, 4-way stretch compression fit. 🔥", state: {} })
       }
@@ -354,7 +382,7 @@ Want a workout or diet plan based on this?`,
     }
 
     // ── SIZE ──
-    if (has(msg, ["size","which size","what size","fit me","size guide","chest measurement"])) {
+    if (externalIntent === "size_help" || has(msg, ["size","which size","what size","fit me","size guide","chest measurement"])) {
       const m = msg.match(/(\d{2,3})/)
       if (m) {
         const n2 = parseInt(m[1])
@@ -367,7 +395,7 @@ Want a workout or diet plan based on this?`,
     }
 
     // ── SUPPLEMENTS ──
-    if (has(msg, ["supplement","protein","creatine","whey","bcaa","pre workout","pre-workout","vitamin","mass gainer"])) {
+    if (externalIntent === "supplement" || has(msg, ["supplement","protein","creatine","whey","bcaa","pre workout","pre-workout","vitamin","mass gainer"])) {
       return NextResponse.json({ reply: "💊 **SUPPLEMENT GUIDE**\n\n✅ Worth it:\n• Whey Protein — 25-30g post-workout\n• Creatine Monohydrate — 5g daily (most proven)\n• Multivitamin — with breakfast\n• Fish Oil Omega-3 — 2-3g daily\n\n❌ Skip these:\n• Fat burners — mostly caffeine + hype\n• Test boosters — rarely work\n• BCAA — pointless if you take protein\n\n💡 Truth: Sleep + food beats every supplement.", state: {} })
     }
 
@@ -375,7 +403,7 @@ Want a workout or diet plan based on this?`,
     const bodyParts = ["knee","back","shoulder","wrist","ankle","elbow","hip","neck","hamstring","quad","calf"]
     const painWords = ["pain","injury","hurt","sore","ache","sprain","strain","injured","pulled","torn","swollen"]
     const hasInjury = (bodyParts.some(b=>msg.includes(b)) && painWords.some(p=>msg.includes(p))) || (has(msg,["i have","i got","i feel"]) && painWords.some(p=>msg.includes(p)))
-    if (hasInjury) {
+    if (externalIntent === "injury_help" || hasInjury) {
       const area = bodyParts.find(b=>msg.includes(b)) || "injured area"
       const advice: Record<string,string> = {
         knee: "🦵 **Knee injury** — avoid squats, lunges, leg press for now.\n\n✓ Train upper body\n✓ Swimming or cycling (low impact)\n✓ Hip thrusts (pain-free range)\n\nIce 15 min after training. See a physio if sharp pain.",
@@ -414,7 +442,7 @@ Want a workout or diet plan based on this?`,
     }
 
     // ── GREETING ──
-    if (has(msg, ["hi","hello","hey","how are you","howdy","good morning","good evening","sup","what's up","wassup","hiya"])) {
+    if (externalIntent === "greeting" || has(msg, ["hi","hello","hey","how are you","howdy","good morning","good evening","sup","what's up","wassup","hiya"])) {
       return NextResponse.json({ reply: "Hey! 👋 I'm Flex — your AI fitness & shopping assistant.\n\nI can help with:\n🚚 Order tracking\n💪 Workout plans\n🥗 Diet charts\n📊 BMI calculator\n📏 Size guide\n💊 Supplements\n👕 Products\n\nWhat do you need?", state: {} })
     }
 

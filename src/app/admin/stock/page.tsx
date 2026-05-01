@@ -1,6 +1,6 @@
 "use client"
+import React from "react"
 import { useEffect, useState } from "react"
-import { createClient } from "@/lib/supabase/client"
 
 type Product = {
   id: string
@@ -23,12 +23,10 @@ type Order = {
   status: string
 }
 
-// Key format: "Size_Color"
 function matrixKey(size: string, color: string) {
   return size.trim() + "_" + color.trim()
 }
 
-// Outside component — prevents focus loss on re-render
 function StockTable({
   product,
   soldMatrix,
@@ -76,7 +74,6 @@ function StockTable({
 
   function getVal(size: string, color: string): string {
     const k = matrixKey(size, color)
-    // try exact, then case-insensitive
     if (matrix[k] !== undefined) return String(matrix[k])
     const found = Object.keys(matrix).find(mk => mk.toLowerCase() === k.toLowerCase())
     return found ? String(matrix[found]) : ""
@@ -98,308 +95,243 @@ function StockTable({
   const gridCols = "110px " + colW.repeat(colors.length) + "80px"
 
   return (
-    <div>
-      {/* Controls row */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0.75rem 1rem", backgroundColor: "#f9f9f9", borderBottom: "1px solid #e0e0e0", flexWrap: "wrap", gap: "0.75rem" }}>
-        <div style={{ display: "flex", gap: "1.5rem", flexWrap: "wrap", fontSize: "0.78rem" }}>
-          <span>Total Stock: <strong style={{ color: "#0369a1" }}>{totalStock}</strong></span>
-          <span>Total Sold: <strong style={{ color: "#16a34a" }}>{totalSold}</strong></span>
-          <span>Remaining: <strong style={{ color: totalStock - totalSold <= 0 ? "#dc2626" : "#111" }}>{totalStock - totalSold}</strong></span>
-        </div>
-        <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
-          <label style={{ fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", color: "#555" }}>Low Stock Alert:</label>
-          <input
-            type="number"
-            min="1"
-            value={lowAlert || ""}
-            onChange={e => onAlertChange(Number(e.target.value) || 5)}
-            style={{ width: "55px", border: "1px solid #e0e0e0", padding: "0.3rem 0.5rem", fontSize: "0.82rem", outline: "none", textAlign: "center" }}
-          />
+    <div style={{ border: "1px solid #e0e0e0", backgroundColor: "white" }}>
+      <div style={{ padding: "1rem", borderBottom: "1px solid #f0f0f0" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+            {product.images?.[0] && (
+              <img src={product.images[0]} alt={product.name} style={{ width: "50px", height: "50px", objectFit: "cover", border: "1px solid #e0e0e0" }} />
+            )}
+            <div>
+              <h3 style={{ fontSize: "0.95rem", fontWeight: 700, marginBottom: "0.25rem" }}>{product.name}</h3>
+              <p style={{ fontSize: "0.75rem", color: "#999" }}>{product.category}</p>
+            </div>
+          </div>
           <button
             onClick={onSave}
             disabled={saving}
-            style={{ padding: "0.4rem 1.25rem", backgroundColor: saved ? "#16a34a" : "black", color: "white", border: "none", fontWeight: 700, fontSize: "0.72rem", cursor: saving ? "not-allowed" : "pointer", textTransform: "uppercase", minWidth: "80px", transition: "all 0.2s" }}
+            style={{
+              padding: "0.5rem 1.5rem",
+              backgroundColor: saved ? "#16a34a" : saving ? "#999" : "black",
+              color: "white",
+              border: "none",
+              fontSize: "0.75rem",
+              fontWeight: 700,
+              cursor: saving ? "not-allowed" : "pointer",
+              textTransform: "uppercase"
+            }}
           >
-            {saving ? "Saving..." : saved ? "Saved ✓" : "Save"}
+            {saved ? "Saved ✓" : saving ? "Saving..." : "Save"}
           </button>
+        </div>
+
+        <div style={{ display: "flex", gap: "1rem", fontSize: "0.75rem", color: "#666" }}>
+          <span>Total Stock: <strong>{totalStock}</strong></span>
+          <span>Sold: <strong>{totalSold}</strong></span>
+          <span>Remaining: <strong>{totalStock - totalSold}</strong></span>
         </div>
       </div>
 
-      <div style={{ overflowX: "auto" }}>
-        {/* Header — colors */}
-        <div style={{ display: "grid", gridTemplateColumns: gridCols, backgroundColor: "#000", color: "white", minWidth: "400px" }}>
-          <div style={{ padding: "0.5rem 0.75rem", fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase" }}>Size</div>
-          {colors.map(c => (
-            <div key={c} style={{ padding: "0.5rem 0.6rem", fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase", textAlign: "center" }}>{c}</div>
+      <div style={{ padding: "1rem", overflowX: "auto" }}>
+        <div style={{ display: "grid", gridTemplateColumns: gridCols, gap: "0.5rem", minWidth: "600px" }}>
+          <div style={{ fontWeight: 700, fontSize: "0.75rem", padding: "0.5rem", color: "#999" }}>SIZE / COLOR</div>
+          {colors.map(color => (
+            <div key={color} style={{ fontWeight: 700, fontSize: "0.75rem", padding: "0.5rem", textAlign: "center", color: "#999" }}>
+              {color}
+            </div>
           ))}
-          <div style={{ padding: "0.5rem 0.6rem", fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase", textAlign: "center", backgroundColor: "#333" }}>Total</div>
-        </div>
+          <div style={{ fontWeight: 700, fontSize: "0.75rem", padding: "0.5rem", textAlign: "center", color: "#999" }}>TOTAL</div>
 
-        {/* Size rows — 3 sub-rows: Stock / Sold / Remaining */}
-        {sizes.map((size, si) => {
-          const rowTotal = colors.reduce((s, c) => {
-            const v = getVal(size, c)
-            return s + (v === "" ? 0 : Number(v))
-          }, 0)
-          const rowSold = colors.reduce((s, c) => s + getSold(size, c), 0)
-          const rowRemaining = rowTotal - rowSold
-
-          return (
-            <div key={size} style={{ borderBottom: "2px solid #e0e0e0", backgroundColor: si % 2 === 0 ? "white" : "#fafafa" }}>
-              {/* Stock input row */}
-              <div style={{ display: "grid", gridTemplateColumns: gridCols, alignItems: "center", minWidth: "400px" }}>
-                <div style={{ padding: "0.5rem 0.75rem" }}>
-                  <span style={{ fontWeight: 800, fontSize: "0.88rem" }}>{size}</span>
-                  <div style={{ fontSize: "0.6rem", color: "#aaa", textTransform: "uppercase", marginTop: "0.1rem" }}>Stock</div>
+          {sizes.map(size => {
+            const rowTotal = colors.reduce((sum, color) => {
+              const v = getVal(size, color)
+              return sum + (v === "" ? 0 : Number(v))
+            }, 0)
+            
+            return (
+              <React.Fragment key={size}>
+                <div style={{ fontWeight: 600, fontSize: "0.85rem", padding: "0.5rem", backgroundColor: "#f9f9f9" }}>
+                  {size}
                 </div>
                 {colors.map(color => {
-                  const v = getVal(size, color)
-                  const n = v === "" ? null : Number(v)
                   const sold = getSold(size, color)
-                  const remaining = n !== null ? Math.max(0, n - sold) : null
-                  const isOut = remaining !== null && remaining === 0
-                  const isLow = remaining !== null && remaining > 0 && remaining <= lowAlert
+                  const remaining = getRemaining(size, color)
+                  const val = getVal(size, color)
+                  
                   return (
-                    <div key={color} style={{ padding: "0.35rem 0.3rem", textAlign: "center" }}>
+                    <div key={color} style={{ position: "relative" }}>
                       <input
                         type="number"
-                        min="0"
-                        value={v}
+                        value={val}
                         onChange={e => setVal(size, color, e.target.value)}
-                        placeholder="∞"
+                        placeholder="0"
                         style={{
-                          width: "64px",
-                          border: "1px solid " + (isOut ? "#fca5a5" : isLow ? "#fed7aa" : "#e0e0e0"),
-                          padding: "0.35rem 0.4rem",
+                          width: "100%",
+                          padding: "0.5rem",
+                          border: "1px solid #e0e0e0",
                           fontSize: "0.85rem",
-                          fontWeight: 700,
-                          textAlign: "center",
-                          outline: "none",
-                          backgroundColor: isOut ? "#fff5f5" : isLow ? "#fffbeb" : "white",
-                          color: isOut ? "#dc2626" : isLow ? "#d97706" : "#111",
-                          boxSizing: "border-box" as const,
+                          textAlign: "center"
                         }}
                       />
+                      {sold > 0 && (
+                        <div style={{ fontSize: "0.65rem", color: "#dc2626", marginTop: "0.25rem", textAlign: "center" }}>
+                          Sold: {sold} | Left: {remaining !== null ? remaining : "-"}
+                        </div>
+                      )}
                     </div>
                   )
                 })}
-                <div style={{ padding: "0.35rem 0.6rem", textAlign: "center", fontWeight: 700, fontSize: "0.85rem", backgroundColor: "#f0f0f0" }}>
-                  {rowTotal || "—"}
+                <div style={{ fontWeight: 700, fontSize: "0.85rem", padding: "0.5rem", textAlign: "center", backgroundColor: "#f9f9f9" }}>
+                  {rowTotal}
                 </div>
-              </div>
-
-              {/* Sold row */}
-              <div style={{ display: "grid", gridTemplateColumns: gridCols, alignItems: "center", minWidth: "400px", backgroundColor: "rgba(22,163,74,0.04)" }}>
-                <div style={{ padding: "0.25rem 0.75rem" }}>
-                  <div style={{ fontSize: "0.6rem", color: "#16a34a", textTransform: "uppercase", fontWeight: 700 }}>Sold</div>
-                </div>
-                {colors.map(color => (
-                  <div key={color} style={{ padding: "0.25rem 0.3rem", textAlign: "center", fontSize: "0.78rem", color: "#16a34a", fontWeight: 600 }}>
-                    {getSold(size, color) || "—"}
-                  </div>
-                ))}
-                <div style={{ padding: "0.25rem 0.6rem", textAlign: "center", fontSize: "0.78rem", color: "#16a34a", fontWeight: 700, backgroundColor: "#f0f0f0" }}>
-                  {rowSold || "—"}
-                </div>
-              </div>
-
-              {/* Remaining row */}
-              <div style={{ display: "grid", gridTemplateColumns: gridCols, alignItems: "center", minWidth: "400px", backgroundColor: "rgba(0,0,0,0.02)" }}>
-                <div style={{ padding: "0.25rem 0.75rem 0.5rem" }}>
-                  <div style={{ fontSize: "0.6rem", color: "#666", textTransform: "uppercase", fontWeight: 700 }}>Left</div>
-                </div>
-                {colors.map(color => {
-                  const rem = getRemaining(size, color)
-                  const isOut = rem !== null && rem === 0
-                  const isLow = rem !== null && rem > 0 && rem <= lowAlert
-                  return (
-                    <div key={color} style={{ padding: "0.25rem 0.3rem 0.5rem", textAlign: "center", fontSize: "0.78rem", fontWeight: 700, color: isOut ? "#dc2626" : isLow ? "#d97706" : rem !== null ? "#0369a1" : "#ccc" }}>
-                      {rem !== null ? (isOut ? "OUT" : rem) : "∞"}
-                    </div>
-                  )
-                })}
-                <div style={{ padding: "0.25rem 0.6rem 0.5rem", textAlign: "center", fontSize: "0.78rem", fontWeight: 700, color: rowRemaining <= 0 && rowTotal > 0 ? "#dc2626" : "#0369a1", backgroundColor: "#f0f0f0" }}>
-                  {rowTotal > 0 ? (rowRemaining <= 0 ? "OUT" : rowRemaining) : "∞"}
-                </div>
-              </div>
-            </div>
-          )
-        })}
-
-        {/* Column totals */}
-        <div style={{ display: "grid", gridTemplateColumns: gridCols, backgroundColor: "#111", color: "white", minWidth: "400px" }}>
-          <div style={{ padding: "0.5rem 0.75rem", fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase" }}>Color Total</div>
-          {colors.map(color => {
-            const colTotal = sizes.reduce((s, sz) => {
-              const v = getVal(sz, color)
-              return s + (v === "" ? 0 : Number(v))
-            }, 0)
-            const colSold = sizes.reduce((s, sz) => s + getSold(sz, color), 0)
-            return (
-              <div key={color} style={{ padding: "0.5rem 0.3rem", textAlign: "center" }}>
-                <div style={{ fontSize: "0.82rem", fontWeight: 700 }}>{colTotal}</div>
-                <div style={{ fontSize: "0.62rem", color: "#aaa" }}>{colSold} sold</div>
-              </div>
+              </React.Fragment>
             )
           })}
-          <div style={{ padding: "0.5rem 0.6rem", textAlign: "center", backgroundColor: "#000" }}>
-            <div style={{ fontSize: "0.9rem", fontWeight: 900 }}>{totalStock}</div>
-            <div style={{ fontSize: "0.62rem", color: "#aaa" }}>{totalSold} sold</div>
-          </div>
+        </div>
+
+        <div style={{ marginTop: "1.5rem", padding: "1rem", backgroundColor: "#f0f9ff", border: "1px solid #bae6fd" }}>
+          <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 700, marginBottom: "0.5rem", color: "#0369a1" }}>
+            Low Stock Alert Threshold
+          </label>
+          <input
+            type="number"
+            value={lowAlert}
+            onChange={e => onAlertChange(Number(e.target.value) || 0)}
+            style={{ width: "150px", padding: "0.5rem", border: "1px solid #bae6fd", fontSize: "0.85rem" }}
+          />
+          <p style={{ fontSize: "0.7rem", color: "#0369a1", marginTop: "0.5rem" }}>
+            You'll be alerted when stock for any size/color falls below this number.
+          </p>
         </div>
       </div>
     </div>
   )
 }
 
-export default function StockPage() {
+export default function AdminStock() {
   const [products, setProducts] = useState<Product[]>([])
-  const [soldData, setSoldData] = useState<Record<string, Record<string, number>>>({})
-  const [matrices, setMatrices] = useState<Record<string, Record<string, number>>>({})
-  const [alerts, setAlerts] = useState<Record<string, number>>({})
-  const [saving, setSaving] = useState<string | null>(null)
-  const [saved, setSaved] = useState<string | null>(null)
+  const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
-  const [search, setSearch] = useState("")
+  const [editingMatrices, setEditingMatrices] = useState<Record<string, Record<string, number>>>({})
+  const [editingAlerts, setEditingAlerts] = useState<Record<string, number>>({})
+  const [saving, setSaving] = useState<Record<string, boolean>>({})
+  const [saved, setSaved] = useState<Record<string, boolean>>({})
 
-  useEffect(() => { fetchAll() }, [])
+  useEffect(() => {
+    loadData()
+  }, [])
 
-  async function fetchAll() {
-    const supabase = createClient()
-    const [{ data: prods }, { data: orders }] = await Promise.all([
-      supabase.from("products").select("id, name, images, sizes, colors, stock_matrix, stock_quantity, low_stock_alert, in_stock, category").order("name"),
-      supabase.from("orders").select("product_id, size, color, quantity, status"),
-    ])
+  async function loadData() {
+    try {
+      const [productsRes, ordersRes] = await Promise.all([
+        fetch("/api/products"),
+        fetch("/api/orders"),
+      ])
 
-    const productList = prods || []
-    setProducts(productList)
+      const productsData = await productsRes.json()
+      const ordersData = await ordersRes.json()
 
-    // Build initial matrices from DB
-    const mats: Record<string, Record<string, number>> = {}
-    const alrt: Record<string, number> = {}
-    productList.forEach((p: Product) => {
-      mats[p.id] = p.stock_matrix || {}
-      alrt[p.id] = p.low_stock_alert || 5
-    })
-    setMatrices(mats)
-    setAlerts(alrt)
+      const prods = productsData.products || []
+      const ords = ordersData.orders || []
 
-    // Calculate sold per product per size_color from confirmed+ orders
-    const sold: Record<string, Record<string, number>> = {}
-    const countedStatuses = ["confirmed", "processing", "shipped", "delivered"]
-    ;(orders || []).filter((o: Order) => countedStatuses.includes(o.status)).forEach((o: Order) => {
-      if (!sold[o.product_id]) sold[o.product_id] = {}
-      const k = matrixKey(o.size || "", o.color || "")
-      sold[o.product_id][k] = (sold[o.product_id][k] || 0) + (o.quantity || 1)
-    })
-    setSoldData(sold)
+      setProducts(prods)
+      setOrders(ords)
+
+      const matrices: Record<string, Record<string, number>> = {}
+      const alerts: Record<string, number> = {}
+
+      prods.forEach((p: Product) => {
+        matrices[p.id] = p.stock_matrix || {}
+        alerts[p.id] = p.low_stock_alert ?? 5
+      })
+
+      setEditingMatrices(matrices)
+      setEditingAlerts(alerts)
+    } catch (e) {
+      console.error("Failed to load stock data:", e)
+    }
     setLoading(false)
   }
 
   async function saveProduct(productId: string) {
-    setSaving(productId)
-    const supabase = createClient()
-    const matrix = matrices[productId] || {}
-    const lowAlert = alerts[productId] || 5
-    const totalQty = Object.values(matrix).reduce((s, v) => s + (Number(v) || 0), 0)
+    setSaving(prev => ({ ...prev, [productId]: true }))
 
-    await supabase.from("products").update({
-      stock_matrix: matrix,
-      stock_quantity: totalQty > 0 ? totalQty : null,
-      low_stock_alert: lowAlert,
-      in_stock: totalQty > 0 || Object.keys(matrix).length === 0,
-    }).eq("id", productId)
+    try {
+      await fetch("/api/products", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: productId,
+          stock_matrix: editingMatrices[productId],
+          low_stock_alert: editingAlerts[productId],
+        }),
+      })
 
-    setSaving(null)
-    setSaved(productId)
-    setTimeout(() => setSaved(null), 2000)
+      setSaved(prev => ({ ...prev, [productId]: true }))
+      setTimeout(() => {
+        setSaved(prev => ({ ...prev, [productId]: false }))
+      }, 2000)
+    } catch (e) {
+      console.error("Save failed:", e)
+    }
+
+    setSaving(prev => ({ ...prev, [productId]: false }))
   }
 
-  const filtered = products.filter(p => p.name.toLowerCase().includes(search.toLowerCase()))
+  function getSoldMatrix(product: Product): Record<string, number> {
+    const sold: Record<string, number> = {}
+    const counted = ["confirmed", "processing", "shipped", "delivered"]
 
-  // Summary
-  const totalUnits = Object.values(matrices).reduce((s, m) => s + Object.values(m).reduce((s2, v) => s2 + (Number(v) || 0), 0), 0)
-  const totalSoldAll = Object.values(soldData).reduce((s, m) => s + Object.values(m).reduce((s2, v) => s2 + (Number(v) || 0), 0), 0)
+    orders.forEach(order => {
+      if (order.product_id === product.id && counted.includes(order.status)) {
+        const k = matrixKey(order.size || "", order.color || "")
+        sold[k] = (sold[k] || 0) + (order.quantity || 1)
+      }
+    })
 
-  if (loading) return <div style={{ textAlign: "center", padding: "4rem", color: "#999" }}>Loading stock data...</div>
+    return sold
+  }
+
+  if (loading) {
+    return (
+      <div style={{ padding: "2rem" }}>
+        <h1>Stock Management</h1>
+        <p>Loading...</p>
+      </div>
+    )
+  }
 
   return (
-    <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1.5rem", flexWrap: "wrap", gap: "1rem" }}>
-        <div>
-          <h1 style={{ fontSize: "1.75rem", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.02em" }}>Stock Management</h1>
-          <p style={{ color: "#666", fontSize: "0.875rem", marginTop: "0.25rem" }}>Set your initial stock per size & color. Sold quantities are calculated from confirmed orders automatically.</p>
-        </div>
-        <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
-          <div style={{ display: "flex", gap: "1.5rem", fontSize: "0.82rem", backgroundColor: "white", border: "1px solid #e0e0e0", padding: "0.75rem 1.25rem" }}>
-            <span>Total Stock: <strong style={{ color: "#0369a1" }}>{totalUnits}</strong></span>
-            <span>Total Sold: <strong style={{ color: "#16a34a" }}>{totalSoldAll}</strong></span>
-            <span>Remaining: <strong>{totalUnits - totalSoldAll}</strong></span>
-          </div>
-        </div>
+    <div style={{ padding: "2rem" }}>
+      <div style={{ marginBottom: "2rem" }}>
+        <h1 style={{ fontSize: "2rem", fontWeight: 900, textTransform: "uppercase" }}>Stock Management</h1>
+        <p style={{ color: "#666", fontSize: "0.875rem", marginTop: "0.5rem" }}>
+          Manage inventory for each product size and color
+        </p>
       </div>
 
-      {/* Search */}
-      <input
-        value={search}
-        onChange={e => setSearch(e.target.value)}
-        placeholder="Search products..."
-        style={{ width: "100%", border: "1px solid #e0e0e0", padding: "0.75rem 1rem", fontSize: "0.875rem", outline: "none", marginBottom: "1.25rem", boxSizing: "border-box" as const }}
-      />
-
-
-
-      {filtered.length === 0 && (
-        <div style={{ textAlign: "center", padding: "3rem", border: "1px dashed #e0e0e0", color: "#999" }}>No products found.</div>
-      )}
-
-      {filtered.map(product => (
-        <div key={product.id} style={{ border: "1px solid #e0e0e0", marginBottom: "1.5rem", backgroundColor: "white" }}>
-          {/* Product header */}
-          <div style={{ padding: "1rem 1.25rem", display: "flex", alignItems: "center", gap: "1rem", borderBottom: "1px solid #f0f0f0" }}>
-            <div style={{ width: "48px", height: "48px", backgroundColor: "#f5f5f5", flexShrink: 0, overflow: "hidden" }}>
-              {product.images?.[0] && <img src={product.images[0]} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
-            </div>
-            <div style={{ flex: 1 }}>
-              <p style={{ fontWeight: 800, fontSize: "0.95rem" }}>{product.name}</p>
-              <p style={{ fontSize: "0.72rem", color: "#999" }}>{product.category} · {(product.sizes || []).join(", ")} · {(product.colors || []).join(", ")}</p>
-            </div>
-            <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
-              {(() => {
-                const m = matrices[product.id] || {}
-                const sold = soldData[product.id] || {}
-                const total = Object.values(m).reduce((s, v) => s + (Number(v) || 0), 0)
-                const soldTotal = Object.values(sold).reduce((s, v) => s + (Number(v) || 0), 0)
-                const remaining = total - soldTotal
-                const hasLow = Object.keys(m).some(k => {
-                  const rem = (m[k] || 0) - (sold[k] || 0)
-                  return rem >= 0 && rem <= (alerts[product.id] || 5) && m[k] > 0
-                })
-                return (
-                  <>
-                    {total === 0 && <span style={{ fontSize: "0.72rem", color: "#999", fontStyle: "italic" }}>No stock set</span>}
-                    {total > 0 && remaining <= 0 && <span style={{ fontSize: "0.72rem", fontWeight: 700, color: "#dc2626", backgroundColor: "#fee2e2", padding: "0.2rem 0.6rem" }}>OUT OF STOCK</span>}
-                    {total > 0 && remaining > 0 && hasLow && <span style={{ fontSize: "0.72rem", fontWeight: 700, color: "#d97706", backgroundColor: "#fffbeb", padding: "0.2rem 0.6rem" }}>⚠️ LOW STOCK</span>}
-                    {total > 0 && remaining > 0 && !hasLow && <span style={{ fontSize: "0.72rem", fontWeight: 700, color: "#16a34a", backgroundColor: "#f0fdf4", padding: "0.2rem 0.6rem" }}>✓ IN STOCK</span>}
-                  </>
-                )
-              })()}
-            </div>
-          </div>
-
-          <StockTable
-            product={product}
-            soldMatrix={soldData[product.id] || {}}
-            matrix={matrices[product.id] || {}}
-            lowAlert={alerts[product.id] || 5}
-            onMatrixChange={m => setMatrices(prev => ({ ...prev, [product.id]: m }))}
-            onAlertChange={n => setAlerts(prev => ({ ...prev, [product.id]: n }))}
-            onSave={() => saveProduct(product.id)}
-            saving={saving === product.id}
-            saved={saved === product.id}
-          />
+      {products.length === 0 ? (
+        <div style={{ textAlign: "center", padding: "4rem", border: "1px solid #e0e0e0", backgroundColor: "white" }}>
+          <p style={{ color: "#999" }}>No products found. Add products first.</p>
         </div>
-      ))}
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+          {products.map(product => (
+            <StockTable
+              key={product.id}
+              product={product}
+              soldMatrix={getSoldMatrix(product)}
+              matrix={editingMatrices[product.id] || {}}
+              lowAlert={editingAlerts[product.id] || 5}
+              onMatrixChange={m => setEditingMatrices(prev => ({ ...prev, [product.id]: m }))}
+              onAlertChange={n => setEditingAlerts(prev => ({ ...prev, [product.id]: n }))}
+              onSave={() => saveProduct(product.id)}
+              saving={saving[product.id] || false}
+              saved={saved[product.id] || false}
+            />
+          ))}
+        </div>
+      )}
     </div>
   )
 }

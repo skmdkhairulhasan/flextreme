@@ -1,36 +1,80 @@
-import { apiFetchServer } from "@/lib/api/server"
-import { Product } from "@/types"
+﻿import { Product } from "@/types"
 import { notFound } from "next/navigation"
 import OrderForm from "@/components/products/OrderForm"
 import ImageGallery from "@/components/products/ImageGallery"
 import ReviewForm from "@/components/products/ReviewForm"
 import ProductReviews from "@/components/products/ProductReviews"
 
+async function getProduct(slug: string): Promise<Product | null> {
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
+    const res = await fetch(baseUrl + "/api/products?slug=" + slug, { cache: "no-store" })
+    if (!res.ok) return null
+    const data = await res.json()
+    return data.products && data.products.length > 0 ? data.products[0] : null
+  } catch {
+    return null
+  }
+}
+
+async function getSoldOrders(productId: string): Promise<any[]> {
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
+    const res = await fetch(baseUrl + "/api/orders?product_id=" + productId + "&status=confirmed,processing,shipped,delivered", { cache: "no-store" })
+    if (!res.ok) return []
+    const data = await res.json()
+    return data.orders || []
+  } catch {
+    return []
+  }
+}
+
 export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
-  const { product } = await apiFetchServer<{ product: Product & { stock_matrix?: Record<string, number>, low_stock_alert?: number, stock_quantity?: number | null } }>(`/api/products/${encodeURIComponent(slug)}`)
+  const product = await getProduct(slug)
   if (!product) notFound()
-  const p = product as Product
-  const productWithStock = product as any
+  const p = product
+
+  const soldOrders = await getSoldOrders(p.id)
+
+  let computedMatrix: Record<string, number> | null = null
+  const pAny = p as any
+  if (pAny.stock_matrix && soldOrders) {
+    computedMatrix = { ...pAny.stock_matrix } as Record<string, number>
+    for (const order of soldOrders) {
+      if (!order.size || !order.color) continue
+      const key = order.size.trim() + "_" + order.color.trim()
+      const matrix = computedMatrix as Record<string, number>
+      const matchedKey = Object.keys(matrix).find(
+        k => k.toLowerCase() === key.toLowerCase()
+      ) || key
+      if (matchedKey in matrix) {
+        matrix[matchedKey] = Math.max(0, (matrix[matchedKey] || 0) - (order.quantity || 1))
+      }
+    }
+  }
+
+  const productWithStock = { ...p, stock_matrix: computedMatrix || pAny.stock_matrix } as any
 
   return (
-    <div style={{
+    <div style={{ 
       paddingTop: "clamp(60px, 10vh, 80px)",
       minHeight: "100dvh",
       backgroundColor: "var(--theme-bg, white)",
       overflowX: "hidden"
     }}>
       <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "1.5rem" }}>
-        <div style={{
-          display: "flex",
-          gap: "0.5rem",
-          alignItems: "center",
-          marginBottom: "1.5rem",
-          fontSize: "0.75rem",
+        
+        <div style={{ 
+          display: "flex", 
+          gap: "0.5rem", 
+          alignItems: "center", 
+          marginBottom: "1.5rem", 
+          fontSize: "0.75rem", 
           color: "#999",
           overflowX: "auto",
           whiteSpace: "nowrap",
-          scrollbarWidth: "none"
+          scrollbarWidth: "none" 
         }}>
           <a href="/" style={{ color: "#999", textDecoration: "none" }}>Home</a>
           <span>/</span>
@@ -50,9 +94,9 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             .product-grid { gap: 2rem; }
           }
           @media (max-width: 768px) {
-            .product-grid {
-              grid-template-columns: 1fr;
-              gap: 2.5rem;
+            .product-grid { 
+              grid-template-columns: 1fr; 
+              gap: 2.5rem; 
             }
             .product-title {
               font-size: 1.75rem !important;
@@ -67,10 +111,10 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               <div style={{ marginTop: "1.5rem" }}>
                 <p style={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: "0.75rem", color: "#999" }}>Product Video</p>
                 <div style={{ position: "relative", width: "100%", backgroundColor: "#000", aspectRatio: "16/9" }}>
-                  <video
-                    src={p.video_url}
-                    controls
-                    style={{ width: "100%", height: "100%", objectFit: "contain" }}
+                  <video 
+                    src={p.video_url} 
+                    controls 
+                    style={{ width: "100%", height: "100%", objectFit: "contain" }} 
                   />
                 </div>
               </div>
@@ -80,7 +124,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           <div style={{ display: "flex", flexDirection: "column" }}>
             <p style={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", color: "#999", marginBottom: "0.5rem" }}>{p.category}</p>
             <h1 className="product-title" style={{ fontSize: "2.5rem", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.02em", lineHeight: 1.1, marginBottom: "1rem" }}>{p.name}</h1>
-
+            
             <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "1rem", marginBottom: "1rem" }}>
               <span style={{ fontSize: "1.75rem", fontWeight: 900 }}>BDT {p.price.toLocaleString()}</span>
               {(p as any).original_price && (
@@ -105,8 +149,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               )}
             </div>
 
-            <p style={{ color: "#555", lineHeight: 1.7, fontSize: "0.95rem", marginBottom: "2rem", paddingBottom: "2rem", borderBottom: "1px solid #e0e0e0" }}>{p.description}</p>
-
+            <div style={{ color: "#555", lineHeight: 1.7, fontSize: "0.95rem", marginBottom: "2rem", paddingBottom: "2rem", borderBottom: "1px solid #e0e0e0" }}dangerouslySetInnerHTML={{ __html: p.description || "" }}/>
+            
             <div style={{ marginBottom: "2rem", paddingBottom: "2rem", borderBottom: "1px solid #e0e0e0" }}>
               <p style={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: "1rem", color: "#999" }}>Performance Features</p>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>

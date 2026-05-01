@@ -1,8 +1,15 @@
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Exo+2:wght@300;400;500;600;700;800;900&display=swap');
+
 .flexai-layout{
   background:#0a0a0a;
   color:white;
   min-height:100vh;
-  font-family:system-ui,sans-serif;
+  font-family:'Exo 2',system-ui,sans-serif;
+}
+
+.flexai-layout h1,.flexai-layout h2,.flexai-layout h3,.flexai-layout .flexai-logo{
+  font-family:'Oswald',sans-serif;
+  letter-spacing:.1em;
 }
 
 .flexai-root{
@@ -24,9 +31,11 @@
   display:flex;
   align-items:center;
   gap:8px;
-  font-weight:900;
+  font-weight:700;
   letter-spacing:.15em;
   font-size:13px;
+  text-transform:uppercase;
+  font-family:'Oswald',sans-serif;
 }
 
 .bot{
@@ -37,6 +46,7 @@
   align-items:center;
   justify-content:center;
   border:2px solid rgba(255,255,255,.2);
+  background:black;
 }
 
 .flexai-body{
@@ -73,6 +83,7 @@
   letter-spacing:.18em;
   opacity:.4;
   margin-bottom:10px;
+  font-family:'Oswald',sans-serif;
 }
 
 .suggestion{
@@ -86,6 +97,7 @@
   font-size:12px;
   margin-bottom:6px;
   cursor:pointer;
+  font-family:'Exo 2',sans-serif;
 }
 
 .suggestion:hover{
@@ -114,6 +126,8 @@
   text-align:center;
   padding-top:14px;
   border-top:1px solid rgba(255,255,255,.08);
+  font-family:'Oswald',sans-serif;
+  letter-spacing:.1em;
 }
 
 .hamburger{
@@ -148,6 +162,7 @@
   border:1px solid rgba(255,255,255,.1);
   border-radius:10px;
   min-width:160px;
+  z-index:100;
 }
 
 .menu a{
@@ -163,10 +178,7 @@
 }
 
 @media(max-width:768px){
-
-  .flexai-left,
-  .flexai-right{
+  .flexai-left,.flexai-right{
     display:none;
   }
-
 }

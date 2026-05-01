@@ -1,7 +1,7 @@
-﻿"use client"
+"use client"
 import { useEffect, useState, useRef } from "react"
-import { createClient } from "@/lib/supabase/client"
 import { useParams, useRouter } from "next/navigation"
+import RichTextEditor from "@/components/admin/RichTextEditor"
 import { uploadToCloudinary } from "@/lib/cloudinary"
 
 export default function EditProduct() {
@@ -49,42 +49,55 @@ export default function EditProduct() {
   }, [id])
 
   async function loadCategories() {
-    const supabase = createClient()
-    const { data } = await supabase.from("settings").select("value").eq("key", "product_categories").single()
-    if (data?.value) {
-      try {
-        const parsed = JSON.parse(data.value)
-        if (parsed.length > 0 && typeof parsed[0] === "string") {
-          setCategoryGroups(parsed.map((name: string) => ({ id: name, name, subcategories: [] })))
-        } else {
-          setCategoryGroups(parsed)
-        }
-      } catch {}
+    try {
+      const res = await fetch("/api/settings")
+      const data = await res.json()
+      const map: Record<string, string> = {}
+      if (data.settings && Array.isArray(data.settings)) {
+        data.settings.forEach((s: any) => { if (s.key) map[s.key] = s.value })
+      }
+      if (map.product_categories) {
+        try {
+          const parsed = JSON.parse(map.product_categories)
+          if (parsed.length > 0 && typeof parsed[0] === "string") {
+            setCategoryGroups(parsed.map((name: string) => ({ id: name, name, subcategories: [] })))
+          } else {
+            setCategoryGroups(parsed)
+          }
+        } catch {}
+      }
+    } catch (e) {
+      console.error("Load categories error:", e)
     }
   }
 
   async function fetchProduct() {
-    const supabase = createClient()
-    const { data } = await supabase.from("products").select("*").eq("id", id).single()
-    if (data) {
-      setForm({
-        name: data.name || "",
-        slug: data.slug || "",
-        price: String(data.price || ""),
-        original_price: String(data.original_price || ""),
-        description: data.description || "",
-        category: data.category || "tops",
-        subcategory: data.subcategory || "",
-        sizes: (data.sizes || []).join(","),
-        colors: (data.colors || []).join(","),
-        images: data.images || [],
-        video_url: data.video_url || "",
-        is_featured: data.is_featured || false,
-        in_stock: data.in_stock !== false,
-        stock_quantity: data.stock_quantity !== null && data.stock_quantity !== undefined ? String(data.stock_quantity) : "",
-        low_stock_alert: data.low_stock_alert !== null && data.low_stock_alert !== undefined ? String(data.low_stock_alert) : "5",
-        stock_matrix: data.stock_matrix || {},
-      })
+    try {
+      const res = await fetch(`/api/products?id=${id}`)
+      const data = await res.json()
+      const product = data.products?.[0]
+      if (product) {
+        setForm({
+          name: product.name || "",
+          slug: product.slug || "",
+          price: String(product.price || ""),
+          original_price: String(product.original_price || ""),
+          description: product.description || "",
+          category: product.category || "tops",
+          subcategory: product.subcategory || "",
+          sizes: (product.sizes || []).join(","),
+          colors: (product.colors || []).join(","),
+          images: product.images || [],
+          video_url: product.video_url || "",
+          is_featured: product.is_featured || false,
+          in_stock: product.in_stock !== false,
+          stock_quantity: product.stock_quantity !== null && product.stock_quantity !== undefined ? String(product.stock_quantity) : "",
+          low_stock_alert: product.low_stock_alert !== null && product.low_stock_alert !== undefined ? String(product.low_stock_alert) : "5",
+          stock_matrix: product.stock_matrix || {},
+        })
+      }
+    } catch (e) {
+      console.error("Fetch product error:", e)
     }
     setLoading(false)
   }
@@ -141,7 +154,6 @@ export default function EditProduct() {
   async function handleSave() {
     if (!form.name || !form.slug || !form.price) { alert("Name, slug and price are required"); return }
     setSaving(true)
-    const supabase = createClient()
     const data = {
       name: form.name,
       slug: form.slug,
@@ -159,21 +171,33 @@ export default function EditProduct() {
       stock_quantity: Object.keys(form.stock_matrix).length > 0 ? Object.values(form.stock_matrix).reduce((s, v) => s + (v || 0), 0) : (form.stock_quantity !== "" ? Number(form.stock_quantity) : null),
       low_stock_alert: form.low_stock_alert !== "" ? Number(form.low_stock_alert) : 5,
       stock_matrix: form.stock_matrix,
-      updated_at: new Date().toISOString(),
     }
-    if (isNew) {
-      const { error } = await supabase.from("products").insert(data)
-      if (error) { alert("Error: " + error.message); setSaving(false); return }
-    } else {
-      const { error } = await supabase.from("products").update(data).eq("id", id)
-      if (error) { alert("Error: " + error.message); setSaving(false); return }
+    try {
+      if (isNew) {
+        const res = await fetch("/api/products", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        })
+        if (!res.ok) { alert("Error creating product"); setSaving(false); return }
+      } else {
+        const res = await fetch("/api/products", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id, ...data }),
+        })
+        if (!res.ok) { alert("Error updating product"); setSaving(false); return }
+      }
+      setSaving(false)
+      setSaved(true)
+      setTimeout(() => {
+        setSaved(false)
+        if (isNew) router.push("/admin/products")
+      }, 1500)
+    } catch (error) {
+      alert("Save failed")
+      setSaving(false)
     }
-    setSaving(false)
-    setSaved(true)
-    setTimeout(() => {
-      setSaved(false)
-      if (isNew) router.push("/admin/products")
-    }, 1500)
   }
 
   const inputStyle = { width: "100%", border: "1px solid #e0e0e0", padding: "0.75rem 1rem", fontSize: "0.9rem", outline: "none", boxSizing: "border-box" as const, fontFamily: "inherit" }
@@ -281,7 +305,7 @@ export default function EditProduct() {
               </div>
             ) : (
               <div onClick={() => videoInputRef.current?.click()} style={{ border: "2px dashed #e0e0e0", padding: "2.5rem", textAlign: "center", cursor: "pointer", color: "#999" }}>
-                <p style={{ fontSize: "1.5rem", marginBottom: "0.5rem" }}>Play</p>
+                <p style={{ fontSize: "1.5rem", marginBottom: "0.5rem" }}>▶</p>
                 <p style={{ fontSize: "0.875rem", fontWeight: 600 }}>Click to upload video</p>
                 <p style={{ fontSize: "0.75rem", marginTop: "0.25rem" }}>MP4, MOV, WEBM supported</p>
               </div>
@@ -314,18 +338,17 @@ export default function EditProduct() {
                 <select value={form.category} onChange={e => setForm(prev => ({ ...prev, category: e.target.value, subcategory: "" }))} style={{ ...inputStyle, backgroundColor: "white" }}>
                   <option value="">— Select category</option>
                   {categoryGroups.map(g => (
-                    <option key={g.id} value={g.name}>{g.name.replace(/-/g, " ").replace(/\w/g, l => l.toUpperCase())}</option>
+                    <option key={g.id} value={g.name}>{g.name.replace(/-/g, " ").replace(/\b\w/g, l => l.toUpperCase())}</option>
                   ))}
                 </select>
               </div>
-              {/* Subcategory — shown when selected category has subcategories */}
               {form.category && (categoryGroups.find(g => g.name === form.category)?.subcategories?.length ?? 0) > 0 && (
                 <div>
                   <label style={labelStyle}>Subcategory</label>
                   <select value={form.subcategory} onChange={e => setForm(prev => ({ ...prev, subcategory: e.target.value }))} style={{ ...inputStyle, backgroundColor: "white" }}>
                     <option value="">— None (show in all {form.category})</option>
                     {categoryGroups.find(g => g.name === form.category)!.subcategories.map(sub => (
-                      <option key={sub} value={sub}>{sub.replace(/-/g, " ").replace(/\w/g, l => l.toUpperCase())}</option>
+                      <option key={sub} value={sub}>{sub.replace(/-/g, " ").replace(/\b\w/g, l => l.toUpperCase())}</option>
                     ))}
                   </select>
                   <p style={{ fontSize: "0.68rem", color: "#999", marginTop: "0.3rem" }}>
@@ -335,7 +358,7 @@ export default function EditProduct() {
               )}
               <div>
                 <label style={labelStyle}>Description</label>
-                <textarea value={form.description} onChange={e => setForm(prev => ({ ...prev, description: e.target.value }))} rows={5} placeholder="Describe the product..." style={inputStyle} />
+                <RichTextEditor value={form.description} onChange={value => setForm(prev => ({ ...prev, description: value }))} placeholder="Describe the product with formatting..." minHeight="300px" />
               </div>
             </div>
           </div>

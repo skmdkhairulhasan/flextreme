@@ -1,13 +1,21 @@
-import { createClient } from "@/lib/supabase/server"
+import { apiFetchServer } from "@/lib/api/server"
+
 import ContactForm from "@/components/ui/ContactForm"
 
+export const dynamic = "force-dynamic"
 export const metadata = { title: "Contact Us | Flextreme" }
 
 export default async function ContactPage() {
-  const supabase = await createClient()
-  const { data } = await supabase.from("settings").select("*")
   const s: Record<string, string> = {}
-  data?.forEach((r: any) => { s[r.key] = r.value })
+  
+  try {
+    const res = await apiFetchServer<{ settings: any[] }>("/api/settings")
+    res.settings?.forEach((r: any) => {
+      s[r.key] = r.value
+    })
+  } catch (e) {
+    console.error("Settings error:", e)
+  }
 
   const email = s.store_email || ""
   const phone = s.store_phone || ""
@@ -15,7 +23,7 @@ export default async function ContactPage() {
   const address = s.store_address || ""
 
   return (
-    <div style={{ paddingTop: "72px", minHeight: "100vh", backgroundColor: "var(--theme-bg, white)" }}>
+    <div style={{ paddingTop: "72px", backgroundColor: "var(--theme-bg, white)", flex: 1 }}>
 
       {/* Header */}
       <div style={{ backgroundColor: "var(--theme-primary, black)", color: "var(--theme-btn-text, white)", padding: "5rem 1.5rem", textAlign: "center" }}>
