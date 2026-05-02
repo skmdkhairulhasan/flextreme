@@ -4,22 +4,49 @@ import OrderForm from "@/components/products/OrderForm"
 import ImageGallery from "@/components/products/ImageGallery"
 import ReviewForm from "@/components/products/ReviewForm"
 import ProductReviews from "@/components/products/ProductReviews"
-import { apiFetchServer } from "@/lib/api/server"
+import sql from "@/lib/db"
+
+function parseJsonField(value: unknown, fallback: unknown) {
+  if (value == null) return fallback
+  if (typeof value !== "string") return value
+  try {
+    return JSON.parse(value)
+  } catch {
+    return fallback
+  }
+}
+
+function normalizeProduct(row: any): Product {
+  return {
+    ...row,
+    sizes: parseJsonField(row.sizes, []),
+    colors: parseJsonField(row.colors, []),
+    images: parseJsonField(row.images, []),
+    stock_matrix: parseJsonField(row.stock_matrix, {}),
+  } as Product
+}
 
 async function getProduct(slug: string): Promise<Product | null> {
   try {
-    const data = await apiFetchServer<{ products: Product[] }>("/api/products?slug=" + encodeURIComponent(slug))
-    return data.products && data.products.length > 0 ? data.products[0] : null
-  } catch {
+    const rows = await sql`SELECT * FROM products WHERE slug = ${slug} LIMIT 1`
+    return rows.length > 0 ? normalizeProduct(rows[0]) : null
+  } catch (error) {
+    console.error("Product page fetch error:", error)
     return null
   }
 }
 
 async function getSoldOrders(productId: string): Promise<any[]> {
   try {
-    const data = await apiFetchServer<{ orders: any[] }>("/api/orders?product_id=" + encodeURIComponent(productId) + "&status=confirmed,processing,shipped,delivered")
-    return data.orders || []
-  } catch {
+    return await sql`
+      SELECT *
+      FROM orders
+      WHERE product_id = ${productId}::uuid
+        AND status = ANY(${["confirmed", "processing", "shipped", "delivered"]})
+      ORDER BY created_at DESC
+    `
+  } catch (error) {
+    console.error("Product page sold orders error:", error)
     return []
   }
 }
