@@ -13,6 +13,11 @@ type Profile = {
   step?: string
 }
 
+function sameMessages(a: Message[], b: Message[]) {
+  if (a.length !== b.length) return false
+  return a.every((msg, i) => msg.role === b[i]?.role && msg.content === b[i]?.content)
+}
+
 const DEFAULT_CHATBOT_MESSAGES: Message[] = [
   { role: "assistant", content: "Hey! I'm Flex â€” your AI fitness & shopping assistant.\n\nðŸšš Track your order\nðŸ‘• Browse & shop products\nðŸ“ Size recommendation\nðŸ’ª Workout plans\nðŸ¥— Diet charts\nðŸ“Š BMI calculator\nðŸ’Š Supplements\n\nWhat do you need? ðŸ’ª" }
 ]
@@ -231,6 +236,7 @@ export default function ChatBot() {
     const unsubscribe = subscribeChat(() => {
       const updated = loadChat<Message>()
       if (!updated.length) return
+      if (sameMessages(updated, messagesRef.current)) return
       chatSyncingRef.current = true
       messagesRef.current = updated
       setMessages(updated)

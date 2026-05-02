@@ -449,6 +449,84 @@ const DEFAULT_COLUMNS: SizeColumn[] = [
   { id: "hips", name: "Hips", description: "Measure around the fullest part of your hips and seat." },
 ]
 
+interface BusinessHoursEditorProps {
+  hours: Array<{day: string, hours: string}>
+  saving: boolean
+  saved: boolean
+  onUpdate: (h: Array<{day: string, hours: string}>) => void
+  onSave: () => void
+  requestConfirm: (msg: string, onOk: () => void) => void
+}
+
+function BusinessHoursEditor({ hours, saving, saved, onUpdate, onSave, requestConfirm }: BusinessHoursEditorProps) {
+  function add() {
+    onUpdate([...hours, { day: "New Day", hours: "9:00 AM – 5:00 PM" }])
+  }
+
+  function remove(i: number) {
+    const h = hours[i]
+    requestConfirm("Delete <strong>" + (h?.day || "this") + "</strong> hours?", () => {
+      onUpdate(hours.filter((_, j) => j !== i))
+    })
+  }
+
+  function update(i: number, field: "day" | "hours", value: string) {
+    onUpdate(hours.map((h, j) => j === i ? { ...h, [field]: value } : h))
+  }
+
+  return (
+    <div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+        <p style={{ fontSize: "0.8rem", color: "#666" }}>
+          Set your business hours shown on the contact page
+        </p>
+        <div style={{ display: "flex", gap: "0.75rem" }}>
+          <button onClick={add} style={{ padding: "0.6rem 1.25rem", backgroundColor: "black", color: "white", border: "none", fontWeight: 700, fontSize: "0.78rem", textTransform: "uppercase", cursor: "pointer" }}>
+            + Add Hours
+          </button>
+          <button onClick={onSave} disabled={saving} style={{ padding: "0.6rem 1.25rem", backgroundColor: saved ? "#16a34a" : "#111", color: "white", border: "none", fontWeight: 700, fontSize: "0.78rem", cursor: saving ? "not-allowed" : "pointer", minWidth: "100px", transition: "all 0.2s" }}>
+            {saving ? "Saving..." : saved ? "Saved ✓" : "Save"}
+          </button>
+        </div>
+      </div>
+
+      {hours.length === 0 && (
+        <div style={{ textAlign: "center", padding: "3rem", border: "2px dashed #e0e0e0", color: "#999" }}>
+          No business hours set. Click "+ Add Hours" to add your opening hours.
+        </div>
+      )}
+
+      {hours.map((h, i) => (
+        <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 1fr auto", gap: "0.75rem", marginBottom: "0.75rem", padding: "1rem", border: "1px solid #e0e0e0", backgroundColor: "white" }}>
+          <div>
+            <label style={{ display: "block", fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", marginBottom: "0.4rem", color: "#555" }}>Day(s)</label>
+            <input
+              value={h.day}
+              onChange={e => update(i, "day", e.target.value)}
+              placeholder="e.g. Monday – Friday"
+              style={{ width: "100%", border: "1px solid #e0e0e0", padding: "0.6rem 0.75rem", fontSize: "0.875rem", outline: "none", boxSizing: "border-box" }}
+            />
+          </div>
+          <div>
+            <label style={{ display: "block", fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", marginBottom: "0.4rem", color: "#555" }}>Hours</label>
+            <input
+              value={h.hours}
+              onChange={e => update(i, "hours", e.target.value)}
+              placeholder="e.g. 9:00 AM – 5:00 PM"
+              style={{ width: "100%", border: "1px solid #e0e0e0", padding: "0.6rem 0.75rem", fontSize: "0.875rem", outline: "none", boxSizing: "border-box" }}
+            />
+          </div>
+          <div style={{ display: "flex", alignItems: "flex-end" }}>
+            <button onClick={() => remove(i)} style={{ width: "40px", height: "40px", backgroundColor: "#fff0f0", border: "1px solid #ffcccc", color: "#cc0000", cursor: "pointer", fontSize: "0.9rem", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900 }}>
+              ✕
+            </button>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 export default function AdminSettings() {
   const [settings, setSettings] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(true)
@@ -474,6 +552,12 @@ export default function AdminSettings() {
   const [faqs, setFaqs] = useState<FaqItem[]>([])
   const [faqSaving, setFaqSaving] = useState(false)
   const [faqSaved, setFaqSaved] = useState(false)
+  const [businessHours, setBusinessHours] = useState<Array<{day: string, hours: string}>>([
+    { day: "Saturday – Thursday", hours: "9:00 AM – 9:00 PM" },
+    { day: "Friday", hours: "2:00 PM – 9:00 PM" },
+  ])
+  const [businessHoursSaving, setBusinessHoursSaving] = useState(false)
+  const [businessHoursSaved, setBusinessHoursSaved] = useState(false)
   const [activeTab, setActiveTab] = useState("hero")
 
   useEffect(() => { fetchSettings() }, [])
@@ -554,6 +638,10 @@ export default function AdminSettings() {
       { id: "faq3", question: "How long does delivery take?", answer: "Dhaka City: 1-2 days. Dhaka District: 2-3 days. Other cities: 3-5 days depending on location." },
       { id: "faq4", question: "Can I return or exchange my order?", answer: "Yes! If there is any issue with your order, contact us on WhatsApp within 48 hours of receiving it and we will arrange an exchange or refund." },
     ])
+    // Load business hours
+    if (map.business_hours) {
+      setBusinessHours(JSON.parse(map.business_hours))
+    }
     } catch (e) { console.error("Failed to load settings", e) }
     setLoading(false)
   }
@@ -613,6 +701,18 @@ export default function AdminSettings() {
     })
     setFaqSaving(false); setFaqSaved(true)
     setTimeout(() => setFaqSaved(false), 2000)
+  }
+
+  async function saveBusinessHours() {
+    setBusinessHoursSaving(true)
+    await fetch("/api/settings", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ key: "business_hours", value: JSON.stringify(businessHours) }),
+    })
+    setBusinessHoursSaving(false)
+    setBusinessHoursSaved(true)
+    setTimeout(() => setBusinessHoursSaved(false), 2000)
   }
 
   function updateTable(id: string, updated: SizeTable) {
@@ -964,8 +1064,8 @@ export default function AdminSettings() {
     { id: "delivery", label: "Delivery & FAQ" },
     { id: "about", label: "About Page" },
     { id: "banner", label: "📢 Banner" },
-    { id: "content", label: "Content" },
     { id: "social", label: "Social" },
+    { id: "contact_page", label: "📞 Contact Page" },
   ]
 
   if (loading) return <div style={{ textAlign: "center", padding: "4rem", color: "#999" }}>Loading settings...</div>
@@ -1243,21 +1343,27 @@ export default function AdminSettings() {
         </div>
       )}
 
-      {/* CONTENT TAB */}
-      {activeTab === "content" && (
-        <>
-          <Section title="About Page" subtitle="Text shown on the About page">
-            <SettingRow label="Short Brand Story" settingKey="about_story" multiline />
-            <SettingRow label="Full Brand Story" settingKey="brand_story" multiline />
+      {activeTab === "contact_page" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+          <Section title="Contact Information" subtitle="Email, phone, and address shown on contact page">
+            <SettingRow label="Store Email" settingKey="store_email" hint="e.g. hello@flextreme.com" />
+            <SettingRow label="Store Phone" settingKey="store_phone" hint="e.g. +8801935962421" />
+            <SettingRow label="Store Address" settingKey="store_address" multiline hint="Full address shown on contact page" />
           </Section>
-          <div style={{ marginTop: "1.5rem" }}>
-            <Section title="Call to Action" subtitle="Final section on the homepage">
-              <SettingRow label="CTA Headline" settingKey="cta_headline" />
-              <SettingRow label="CTA Subtext" settingKey="cta_subtext" multiline />
-            </Section>
-          </div>
-        </>
+
+          <Section title="Business Hours" subtitle="Opening hours shown on contact page">
+            <BusinessHoursEditor
+              hours={businessHours}
+              saving={businessHoursSaving}
+              saved={businessHoursSaved}
+              onUpdate={setBusinessHours}
+              onSave={saveBusinessHours}
+              requestConfirm={requestConfirm}
+            />
+          </Section>
+        </div>
       )}
+
 
       {/* SOCIAL TAB */}
       {activeTab === "banner" && (

@@ -14,6 +14,11 @@ type Profile = {
   step?: string
 }
 
+function sameMessages(a: Message[], b: Message[]) {
+  if (a.length !== b.length) return false
+  return a.every((msg, i) => msg.role === b[i]?.role && msg.content === b[i]?.content)
+}
+
 const SUGGESTIONS = [
   "Find my order 🚚",
   "Build my full plan 💪",
@@ -262,6 +267,7 @@ export default function FlexAIPage() {
     const unsubscribe = subscribeChat(() => {
       const updated = loadChat<Message>()
       if (!updated.length) return
+      if (sameMessages(updated, messagesRef.current)) return
       chatSyncingRef.current = true
       messagesRef.current = updated
       setMessages(updated)

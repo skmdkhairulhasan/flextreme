@@ -53,6 +53,9 @@ interface ProductShowcaseHeroProps {
   glowSettings?: GlowSettings
 }
 
+const AUTO_ROTATE_DELAY_MS = 3000
+const POINTER_IDLE_DELAY_MS = 3000
+
 export default function ProductShowcaseHero({
   products = [],
   heading,
@@ -118,17 +121,13 @@ export default function ProductShowcaseHero({
   const pauseAfterInteraction = useCallback(() => {
     setIsPaused(true)
     if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current)
-    resumeTimerRef.current = setTimeout(() => setIsPaused(false), 3600)
-  }, [])
-
-  const pauseForHover = useCallback(() => {
-    if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current)
-    setIsPaused(true)
+    resumeTimerRef.current = setTimeout(() => setIsPaused(false), POINTER_IDLE_DELAY_MS)
   }, [])
 
   const slideTo = useCallback((targetIndex: number, direction: "next" | "prev") => {
     if (totalProducts <= 1 || targetIndex === currentIndex || isAnimatingRef.current) return
     const normalizedTarget = (targetIndex + totalProducts) % totalProducts
+    isAnimatingRef.current = true
     setPreviousIndex(currentIndex)
     setSlideDirection(direction)
     setCurrentIndex(normalizedTarget)
@@ -160,6 +159,7 @@ export default function ProductShowcaseHero({
     window.setTimeout(() => { transitionBurstRef.current = 0 }, 800)
 
     window.setTimeout(() => {
+      isAnimatingRef.current = false
       setIsAnimating(false)
       setPreviousIndex(null)
     }, 900)
@@ -174,6 +174,15 @@ export default function ProductShowcaseHero({
     const prevIndex = (currentIndex - 1 + totalProducts) % totalProducts
     slideTo(prevIndex, "prev")
   }, [currentIndex, slideTo, totalProducts])
+
+  const pauseForPointerActivity = useCallback(() => {
+    if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current)
+    setIsPaused(true)
+    resumeTimerRef.current = setTimeout(() => {
+      setIsPaused(false)
+      if (!isAnimatingRef.current && pointerIdRef.current === null) nextSlide()
+    }, POINTER_IDLE_DELAY_MS)
+  }, [nextSlide])
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768)
@@ -437,7 +446,7 @@ export default function ProductShowcaseHero({
     if (isPaused || isAnimating || totalProducts <= 1) return
     const timer = window.setTimeout(() => {
       nextSlide()
-    }, 5000)
+    }, AUTO_ROTATE_DELAY_MS)
     return () => window.clearTimeout(timer)
   }, [isAnimating, isPaused, nextSlide, totalProducts])
 
@@ -502,7 +511,7 @@ export default function ProductShowcaseHero({
     <section
       ref={heroRef}
       className="cinematic-hero"
-      onMouseEnter={pauseForHover}
+      onPointerMove={pauseForPointerActivity}
       onMouseLeave={pauseAfterInteraction}
     >
       <canvas 
