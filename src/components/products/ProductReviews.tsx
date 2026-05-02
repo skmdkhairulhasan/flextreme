@@ -1,14 +1,36 @@
-import { apiFetchServer } from "@/lib/api/server"
+import sql from "@/lib/db"
+
+function normalizeReview(row: any) {
+  return {
+    ...row,
+    review_text: row.comment || row.review_text || "",
+    customer_location: row.customer_location || "",
+    photo_url: row.photo_url || null,
+  }
+}
 
 export default async function ProductReviews({ productId }: { productId: string }) {
-  const { reviews } = await apiFetchServer<{ reviews: any[] }>(`/api/reviews?product_id=${encodeURIComponent(productId)}&status=approved`)
+  let allReviews: any[] = []
 
-  const allReviews = reviews || []
-  const avgRating = allReviews.length > 0
-    ? (allReviews.reduce((sum, r) => sum + r.rating, 0) / allReviews.length).toFixed(1)
-    : null
+  try {
+    const rows = await sql`
+      SELECT r.*, p.name AS product_name
+      FROM reviews r
+      LEFT JOIN products p ON p.id = r.product_id
+      WHERE r.product_id = ${productId}::uuid
+        AND r.approved = true
+      ORDER BY r.created_at DESC
+    `
+    allReviews = rows.map(normalizeReview)
+  } catch (error) {
+    console.error("ProductReviews fetch error:", error)
+  }
 
   if (allReviews.length === 0) return null
+
+  const avgRating = allReviews.length > 0
+    ? (allReviews.reduce((sum, r) => sum + (r.rating || 0), 0) / allReviews.length).toFixed(1)
+    : null
 
   return (
     <div style={{ marginTop: "3rem", paddingTop: "3rem", borderTop: "1px solid #e0e0e0" }}>
@@ -36,13 +58,19 @@ export default async function ProductReviews({ productId }: { productId: string 
                 )}
               </div>
               <div style={{ textAlign: "right" }}>
-                <div style={{ color: "#f0a500", fontSize: "0.9rem" }}>{"★".repeat(review.rating)}<span style={{ color: "#e0e0e0" }}>{"★".repeat(5 - review.rating)}</span></div>
+                <div style={{ color: "#f0a500", fontSize: "0.9rem" }}>
+                  {"★".repeat(review.rating || 0)}
+                  <span style={{ color: "#e0e0e0" }}>{"★".repeat(5 - (review.rating || 0))}</span>
+                </div>
                 <p style={{ fontSize: "0.7rem", color: "#bbb", marginTop: "0.2rem" }}>
                   {new Date(review.created_at).toLocaleDateString("en-BD", { year: "numeric", month: "short", day: "numeric" })}
                 </p>
               </div>
             </div>
             <p style={{ fontSize: "0.9rem", color: "#444", lineHeight: 1.7 }}>{review.review_text}</p>
+            {review.photo_url && (
+              <img src={review.photo_url} alt="Review photo" style={{ marginTop: "0.75rem", maxWidth: "200px", borderRadius: "4px" }} />
+            )}
             <div style={{ marginTop: "0.75rem", display: "flex", alignItems: "center", gap: "0.4rem" }}>
               <span style={{ width: "16px", height: "16px", backgroundColor: "black", borderRadius: "50%", display: "inline-flex", alignItems: "center", justifyContent: "center", color: "white", fontSize: "0.55rem", flexShrink: 0 }}>v</span>
               <span style={{ fontSize: "0.7rem", color: "#666", fontWeight: 600 }}>Verified Purchase</span>

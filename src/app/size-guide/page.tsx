@@ -1,15 +1,13 @@
-import { apiFetchServer } from "@/lib/api/server"
+import sql from "@/lib/db"
 
 export const dynamic = "force-dynamic"
 export const metadata = { title: "Size Guide | Flextreme" }
 
-async function getSettings() {
+async function getSettings(): Promise<Record<string, string>> {
   const map: Record<string, string> = {}
   try {
-    const s = await apiFetchServer<{ settings: any[] }>("/api/settings")
-    s.settings?.forEach((r: any) => {
-      map[r.key] = r.value
-    })
+    const rows = await sql`SELECT key, value FROM settings ORDER BY key`
+    rows.forEach((r: any) => { map[r.key] = r.value })
   } catch (e) {
     console.error("Settings error:", e)
   }
@@ -19,7 +17,6 @@ async function getSettings() {
 export default async function SizeGuidePage() {
   const settings = await getSettings()
 
-  // Read from new size_tables JSON (set by admin Size Guide tab)
   let sizeTables: any[] = []
   if (settings.size_tables) {
     try { sizeTables = JSON.parse(settings.size_tables) } catch {}
@@ -77,7 +74,6 @@ export default async function SizeGuidePage() {
               <span style={{ fontSize: "0.78rem", color: "#999", border: "1px solid #e0e0e0", padding: "0.25rem 0.75rem", textTransform: "uppercase" }}>{table.unit || "cm"}</span>
             </div>
 
-            {/* Column descriptions */}
             {table.columns?.some((c: any) => c.description) && (
               <div style={{ display: "grid", gridTemplateColumns: `repeat(${table.columns.length}, 1fr)`, gap: "1rem", marginBottom: "1.5rem" }}>
                 {table.columns.map((col: any) => col.description ? (
@@ -89,8 +85,8 @@ export default async function SizeGuidePage() {
               </div>
             )}
 
-            {/* Size table */}
-            <style>{".scroll-hint{display:none}@media(max-width:768px){.scroll-hint{display:block}}"}</style><p className="scroll-hint" style={{ fontSize: "0.72rem", color: "#999", marginBottom: "0.5rem" }}>← Scroll sideways to see all columns →</p>
+            <style>{".scroll-hint{display:none}@media(max-width:768px){.scroll-hint{display:block}}"}</style>
+            <p className="scroll-hint" style={{ fontSize: "0.72rem", color: "#999", marginBottom: "0.5rem" }}>← Scroll sideways to see all columns →</p>
             <div style={{ border: "1px solid #e0e0e0", overflowX: "auto", WebkitOverflowScrolling: "touch" as any }}>
               <table style={{ width: "100%", borderCollapse: "collapse", minWidth: `${(table.columns?.length + 1) * 120}px` }}>
                 <thead>
@@ -120,7 +116,6 @@ export default async function SizeGuidePage() {
           </div>
         ))}
 
-        {/* How to measure */}
         <div style={{ marginTop: "2rem" }}>
           <h2 style={{ fontSize: "1.25rem", fontWeight: 900, textTransform: "uppercase", marginBottom: "1.5rem" }}>How to Measure</h2>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "1.5rem" }}>

@@ -1,4 +1,4 @@
-import { apiFetchServer } from "@/lib/api/server"
+import sql from "@/lib/db"
 
 export const metadata = { title: "Delivery Info | Flextreme" }
 export const dynamic = "force-dynamic"
@@ -9,12 +9,10 @@ type FaqItem = { id: string; question: string; answer: string }
 
 export default async function DeliveryPage() {
   const map: Record<string, string> = {}
-  
+
   try {
-    const s = await apiFetchServer<{ settings: any[] }>("/api/settings")
-    s.settings?.forEach((r: any) => {
-      map[r.key] = r.value
-    })
+    const rows = await sql`SELECT key, value FROM settings ORDER BY key`
+    rows.forEach((r: any) => { map[r.key] = r.value })
   } catch (e) {
     console.error("Settings error:", e)
   }
@@ -23,26 +21,17 @@ export default async function DeliveryPage() {
 
   let groups: DeliveryGroup[] = []
   if (map.delivery_groups) {
-    try {
-      groups = JSON.parse(map.delivery_groups)
-    } catch {
-      groups = []
-    }
+    try { groups = JSON.parse(map.delivery_groups) } catch { groups = [] }
   }
 
   let faqs: FaqItem[] = []
   if (map.faqs) {
-    try {
-      faqs = JSON.parse(map.faqs)
-    } catch {
-      faqs = []
-    }
+    try { faqs = JSON.parse(map.faqs) } catch { faqs = [] }
   }
 
   return (
-    <div style={{  backgroundColor: "var(--theme-bg, white)", paddingTop: "72px" }}>
+    <div style={{ backgroundColor: "var(--theme-bg, white)", paddingTop: "72px" }}>
 
-      {/* Header */}
       <div style={{ backgroundColor: "var(--theme-primary, black)", color: "var(--theme-btn-text, white)", padding: "4rem 1.5rem", textAlign: "center" }}>
         <p style={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.3em", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", marginBottom: "1rem" }}>Bangladesh Wide</p>
         <h1 style={{ fontSize: "clamp(2.5rem, 6vw, 4rem)", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.03em", margin: 0 }}>Delivery Info</h1>
@@ -53,7 +42,6 @@ export default async function DeliveryPage() {
 
       <div style={{ maxWidth: "900px", margin: "0 auto", padding: "4rem 1.5rem" }}>
 
-        {/* Banner */}
         {isFreeDelivery ? (
           <div style={{ backgroundColor: "#f0fdf4", border: "2px solid #86efac", padding: "2.5rem 2rem", marginBottom: "2.5rem", textAlign: "center" }}>
             <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>🚚</div>
@@ -73,8 +61,12 @@ export default async function DeliveryPage() {
               </div>
             </div>
 
-            {/* Delivery zones table */}
-            {groups.map(group => (
+            {groups.length === 0 ? (
+              <div style={{ textAlign: "center", padding: "3rem", color: "#999", border: "1px dashed #e0e0e0" }}>
+                <p style={{ fontSize: "0.95rem" }}>No delivery zones set up yet.</p>
+                <p style={{ fontSize: "0.82rem", marginTop: "0.5rem" }}>Add them in Admin → Settings → Delivery.</p>
+              </div>
+            ) : groups.map(group => (
               <div key={group.id} style={{ marginBottom: "2rem" }}>
                 <h2 style={{ fontSize: "0.8rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", color: "#666", marginBottom: "0.75rem" }}>{group.name}</h2>
                 <div style={{ border: "1px solid #e0e0e0", overflow: "hidden" }}>
@@ -107,7 +99,6 @@ export default async function DeliveryPage() {
           </>
         )}
 
-        {/* FAQ Section */}
         {faqs.length > 0 && (
           <div style={{ marginTop: "3rem" }}>
             <div style={{ marginBottom: "1.5rem" }}>
@@ -128,11 +119,10 @@ export default async function DeliveryPage() {
           </div>
         )}
 
-        {/* Contact strip */}
         <div style={{ marginTop: "3rem", backgroundColor: "var(--theme-primary, black)", color: "var(--theme-btn-text, white)", padding: "2rem", textAlign: "center" }}>
           <p style={{ fontWeight: 700, fontSize: "0.95rem", marginBottom: "0.5rem" }}>Still have questions?</p>
           <p style={{ color: "rgba(255,255,255,0.6)", fontSize: "0.85rem", marginBottom: "1rem" }}>Our team is available 9am–9pm daily</p>
-          <a href={"https://wa.me/" + (map.whatsapp_number || "8801935962421")} target="_blank" rel="noopener noreferrer" style={{ display: "inline-block", backgroundColor: "#25D366", color: "var(--theme-btn-text, white)", padding: "0.75rem 2rem", fontWeight: 700, fontSize: "0.82rem", textDecoration: "none", letterSpacing: "0.08em", textTransform: "uppercase" }}>
+          <a href={"https://wa.me/" + (map.whatsapp_number || "8801935962421")} target="_blank" rel="noopener noreferrer" style={{ display: "inline-block", backgroundColor: "#25D366", color: "white", padding: "0.75rem 2rem", fontWeight: 700, fontSize: "0.82rem", textDecoration: "none", letterSpacing: "0.08em", textTransform: "uppercase" }}>
             WhatsApp Us
           </a>
         </div>

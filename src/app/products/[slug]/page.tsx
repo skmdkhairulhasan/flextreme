@@ -1,4 +1,4 @@
-﻿import { Product } from "@/types"
+import { Product } from "@/types"
 import { notFound } from "next/navigation"
 import OrderForm from "@/components/products/OrderForm"
 import ImageGallery from "@/components/products/ImageGallery"
@@ -6,14 +6,12 @@ import ReviewForm from "@/components/products/ReviewForm"
 import ProductReviews from "@/components/products/ProductReviews"
 import sql from "@/lib/db"
 
+export const dynamic = "force-dynamic"
+
 function parseJsonField(value: unknown, fallback: unknown) {
   if (value == null) return fallback
   if (typeof value !== "string") return value
-  try {
-    return JSON.parse(value)
-  } catch {
-    return fallback
-  }
+  try { return JSON.parse(value) } catch { return fallback }
 }
 
 function normalizeProduct(row: any): Product {
@@ -26,50 +24,37 @@ function normalizeProduct(row: any): Product {
   } as Product
 }
 
-async function getProduct(slug: string): Promise<Product | null> {
-  try {
-    const rows = await sql`SELECT * FROM products WHERE slug = ${slug} LIMIT 1`
-    return rows.length > 0 ? normalizeProduct(rows[0]) : null
-  } catch (error) {
-    console.error("Product page fetch error:", error)
-    return null
-  }
-}
-
-async function getSoldOrders(productId: string): Promise<any[]> {
-  try {
-    return await sql`
-      SELECT *
-      FROM orders
-      WHERE product_id = ${productId}::uuid
-        AND status = ANY(${["confirmed", "processing", "shipped", "delivered"]})
-      ORDER BY created_at DESC
-    `
-  } catch (error) {
-    console.error("Product page sold orders error:", error)
-    return []
-  }
-}
-
 export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
-  const product = await getProduct(slug)
+
+  let product: Product | null = null
+  try {
+    const rows = await sql`SELECT * FROM products WHERE slug = ${slug} LIMIT 1`
+    if (rows.length > 0) product = normalizeProduct(rows[0])
+  } catch (err) {
+    console.error("Product fetch error:", err)
+  }
   if (!product) notFound()
   const p = product
 
-  const soldOrders = await getSoldOrders(p.id)
+  let soldOrders: any[] = []
+  try {
+    soldOrders = await sql`
+      SELECT size, color, quantity FROM orders
+      WHERE product_id = ${p.id}::uuid
+        AND status = ANY(${["confirmed", "processing", "shipped", "delivered"]})
+    `
+  } catch {}
 
   let computedMatrix: Record<string, number> | null = null
   const pAny = p as any
-  if (pAny.stock_matrix && soldOrders) {
+  if (pAny.stock_matrix && soldOrders.length > 0) {
     computedMatrix = { ...pAny.stock_matrix } as Record<string, number>
     for (const order of soldOrders) {
       if (!order.size || !order.color) continue
       const key = order.size.trim() + "_" + order.color.trim()
       const matrix = computedMatrix as Record<string, number>
-      const matchedKey = Object.keys(matrix).find(
-        k => k.toLowerCase() === key.toLowerCase()
-      ) || key
+      const matchedKey = Object.keys(matrix).find(k => k.toLowerCase() === key.toLowerCase()) || key
       if (matchedKey in matrix) {
         matrix[matchedKey] = Math.max(0, (matrix[matchedKey] || 0) - (order.quantity || 1))
       }
@@ -79,24 +64,18 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const productWithStock = { ...p, stock_matrix: computedMatrix || pAny.stock_matrix } as any
 
   return (
-    <div style={{ 
+    <div style={{
       paddingTop: "clamp(60px, 10vh, 80px)",
       minHeight: "100dvh",
       backgroundColor: "var(--theme-bg, white)",
-      overflowX: "hidden"
+      overflowX: "hidden",
     }}>
       <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "1.5rem" }}>
-        
-        <div style={{ 
-          display: "flex", 
-          gap: "0.5rem", 
-          alignItems: "center", 
-          marginBottom: "1.5rem", 
-          fontSize: "0.75rem", 
-          color: "#999",
-          overflowX: "auto",
-          whiteSpace: "nowrap",
-          scrollbarWidth: "none" 
+
+        <div style={{
+          display: "flex", gap: "0.5rem", alignItems: "center",
+          marginBottom: "1.5rem", fontSize: "0.75rem", color: "#999",
+          overflowX: "auto", whiteSpace: "nowrap", scrollbarWidth: "none",
         }}>
           <a href="/" style={{ color: "#999", textDecoration: "none" }}>Home</a>
           <span>/</span>
@@ -116,44 +95,38 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             .product-grid { gap: 2rem; }
           }
           @media (max-width: 768px) {
-            .product-grid { 
-              grid-template-columns: 1fr; 
-              gap: 2.5rem; 
-            }
-            .product-title {
-              font-size: 1.75rem !important;
-            }
+            .product-grid { grid-template-columns: 1fr; gap: 2.5rem; }
+            .product-title { font-size: 1.75rem !important; }
           }
         `}</style>
 
         <div className="product-grid">
+
+          {/* Left: Images + Video */}
           <div style={{ width: "100%", overflow: "hidden" }}>
             <ImageGallery images={p.images || []} productName={p.name} />
             {p.video_url && (
               <div style={{ marginTop: "1.5rem" }}>
                 <p style={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: "0.75rem", color: "#999" }}>Product Video</p>
                 <div style={{ position: "relative", width: "100%", backgroundColor: "#000", aspectRatio: "16/9" }}>
-                  <video 
-                    src={p.video_url} 
-                    controls 
-                    style={{ width: "100%", height: "100%", objectFit: "contain" }} 
-                  />
+                  <video src={p.video_url} controls style={{ width: "100%", height: "100%", objectFit: "contain" }} />
                 </div>
               </div>
             )}
           </div>
 
+          {/* Right: Product info + Order form */}
           <div style={{ display: "flex", flexDirection: "column" }}>
             <p style={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", color: "#999", marginBottom: "0.5rem" }}>{p.category}</p>
             <h1 className="product-title" style={{ fontSize: "2.5rem", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.02em", lineHeight: 1.1, marginBottom: "1rem" }}>{p.name}</h1>
-            
+
             <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "1rem", marginBottom: "1rem" }}>
               <span style={{ fontSize: "1.75rem", fontWeight: 900 }}>BDT {p.price.toLocaleString()}</span>
-              {(p as any).original_price && (
+              {pAny.original_price && (
                 <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                  <span style={{ fontSize: "1.1rem", color: "#999", textDecoration: "line-through" }}>BDT {(p as any).original_price.toLocaleString()}</span>
+                  <span style={{ fontSize: "1.1rem", color: "#999", textDecoration: "line-through" }}>BDT {pAny.original_price.toLocaleString()}</span>
                   <span style={{ backgroundColor: "var(--theme-primary, black)", color: "var(--theme-btn-text, white)", padding: "0.2rem 0.6rem", fontSize: "0.75rem", fontWeight: 700 }}>
-                    {Math.round((((p as any).original_price - p.price) / (p as any).original_price) * 100)}% OFF
+                    {Math.round(((pAny.original_price - p.price) / pAny.original_price) * 100)}% OFF
                   </span>
                 </div>
               )}
@@ -161,18 +134,17 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
             <div style={{ marginBottom: "1.5rem" }}>
               {!p.in_stock ? (
-                <span style={{ display: "inline-block", fontSize: "0.8rem", fontWeight: 700, color: "#dc2626", backgroundColor: "#fee2e2", padding: "0.3rem 0.875rem", border: "1px solid #fca5a5" }}>
-                  SOLD OUT
-                </span>
+                <span style={{ display: "inline-block", fontSize: "0.8rem", fontWeight: 700, color: "#dc2626", backgroundColor: "#fee2e2", padding: "0.3rem 0.875rem", border: "1px solid #fca5a5" }}>SOLD OUT</span>
               ) : (
-                <span style={{ display: "inline-block", fontSize: "0.8rem", fontWeight: 700, color: "#16a34a", backgroundColor: "#f0fdf4", padding: "0.3rem 0.875rem", border: "1px solid #bbf7d0" }}>
-                  ✓ In Stock
-                </span>
+                <span style={{ display: "inline-block", fontSize: "0.8rem", fontWeight: 700, color: "#16a34a", backgroundColor: "#f0fdf4", padding: "0.3rem 0.875rem", border: "1px solid #bbf7d0" }}>✓ In Stock</span>
               )}
             </div>
 
-            <div style={{ color: "#555", lineHeight: 1.7, fontSize: "0.95rem", marginBottom: "2rem", paddingBottom: "2rem", borderBottom: "1px solid #e0e0e0" }}dangerouslySetInnerHTML={{ __html: p.description || "" }}/>
-            
+            <div
+              style={{ color: "#555", lineHeight: 1.7, fontSize: "0.95rem", marginBottom: "2rem", paddingBottom: "2rem", borderBottom: "1px solid #e0e0e0" }}
+              dangerouslySetInnerHTML={{ __html: p.description || "" }}
+            />
+
             <div style={{ marginBottom: "2rem", paddingBottom: "2rem", borderBottom: "1px solid #e0e0e0" }}>
               <p style={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: "1rem", color: "#999" }}>Performance Features</p>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
@@ -186,6 +158,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             </div>
 
             <OrderForm product={productWithStock} />
+
             <div style={{ marginTop: "1.5rem" }}>
               <ReviewForm productId={p.id} productName={p.name} />
             </div>
