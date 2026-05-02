@@ -1,5 +1,5 @@
 function getApiBaseUrl() {
-  const base = process.env.API_BASE_URL || process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3000"
+  const base = process.env.API_BASE_URL || process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_API_BASE_URL || (process.env.NODE_ENV === "production" ? "https://flextremefit.com" : "http://localhost:3000")
   return base.replace(/\/$/, "")
 }
 

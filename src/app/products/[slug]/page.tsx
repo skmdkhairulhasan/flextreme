@@ -4,13 +4,11 @@ import OrderForm from "@/components/products/OrderForm"
 import ImageGallery from "@/components/products/ImageGallery"
 import ReviewForm from "@/components/products/ReviewForm"
 import ProductReviews from "@/components/products/ProductReviews"
+import { apiFetchServer } from "@/lib/api/server"
 
 async function getProduct(slug: string): Promise<Product | null> {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
-    const res = await fetch(baseUrl + "/api/products?slug=" + slug, { cache: "no-store" })
-    if (!res.ok) return null
-    const data = await res.json()
+    const data = await apiFetchServer<{ products: Product[] }>("/api/products?slug=" + encodeURIComponent(slug))
     return data.products && data.products.length > 0 ? data.products[0] : null
   } catch {
     return null
@@ -19,10 +17,7 @@ async function getProduct(slug: string): Promise<Product | null> {
 
 async function getSoldOrders(productId: string): Promise<any[]> {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
-    const res = await fetch(baseUrl + "/api/orders?product_id=" + productId + "&status=confirmed,processing,shipped,delivered", { cache: "no-store" })
-    if (!res.ok) return []
-    const data = await res.json()
+    const data = await apiFetchServer<{ orders: any[] }>("/api/orders?product_id=" + encodeURIComponent(productId) + "&status=confirmed,processing,shipped,delivered")
     return data.orders || []
   } catch {
     return []
