@@ -1,23 +1,28 @@
 import { NextRequest, NextResponse } from "next/server"
+import sql from "@/lib/db"
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
+    const phone = body.phone || body.customer_phone
 
-    const res = await fetch("https://api.flextremefit.com/customers/check", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(body),
+    if (!phone) {
+      return NextResponse.json({ error: "Phone required" }, { status: 400 })
+    }
+
+    const rows = await sql`SELECT * FROM customers WHERE phone = ${phone} LIMIT 1`
+    const customer = rows[0] || null
+
+    return NextResponse.json({
+      exists: Boolean(customer),
+      customer,
+      flex100: Boolean(customer?.flex100),
+      vip: Boolean(customer?.vip),
     })
-
-    const data = await res.json()
-
-    return NextResponse.json(data)
   } catch (error) {
+    console.error("Customer check POST error:", error)
     return NextResponse.json(
-      { error: "Something went wrong" },
+      { error: "Failed to check customer" },
       { status: 500 }
     )
   }

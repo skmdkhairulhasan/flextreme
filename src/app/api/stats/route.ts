@@ -1,59 +1,29 @@
 import { NextResponse } from "next/server"
+import sql from "@/lib/db"
 
 export async function GET() {
   try {
-    // Import the actual arrays from other routes
-    // Since we can't import across route files in Next.js App Router,
-    // we'll fetch from the actual API endpoints
-    
-    const [productsRes, ordersRes, reviewsRes] = await Promise.all([
-      fetch("http://localhost:3000/api/products", { cache: "no-store" }),
-      fetch("http://localhost:3000/api/orders", { cache: "no-store" }),
-      fetch("http://localhost:3000/api/reviews", { cache: "no-store" }),
-    ]).catch(() => [null, null, null])
+    const [products, orders, customers, reviews, rating, revenue] = await Promise.all([
+      sql`SELECT COUNT(*) as count FROM products`,
+      sql`SELECT COUNT(*) as count FROM orders`,
+      sql`SELECT COUNT(*) as count FROM customers`,
+      sql`SELECT COUNT(*) as count FROM reviews`,
+      sql`SELECT COALESCE(AVG(rating), 0) as avg_rating FROM reviews WHERE approved = true`,
+      sql`SELECT COALESCE(SUM(total_price), 0) as total_revenue FROM orders WHERE status = ANY(${["confirmed", "processing", "shipped", "delivered"]})`,
+    ])
 
-    let productCount = 0
-    let orderCount = 0
-    let reviewCount = 0
-    let avgRating = 0
-
-    if (productsRes) {
-      const data = await productsRes.json()
-      productCount = data.products?.length || 0
-    }
-
-    if (ordersRes) {
-      const data = await ordersRes.json()
-      orderCount = data.orders?.length || 0
-    }
-
-    if (reviewsRes) {
-      const data = await reviewsRes.json()
-      const reviews = data.reviews || []
-      reviewCount = reviews.length
-      
-      if (reviewCount > 0) {
-        const approvedReviews = reviews.filter((r: any) => r.status === "approved")
-        if (approvedReviews.length > 0) {
-          const totalRating = approvedReviews.reduce((sum: number, r: any) => sum + (r.rating || 0), 0)
-          avgRating = totalRating / approvedReviews.length
-        }
-      }
-    }
+    const avgRating = Number(rating[0]?.avg_rating || 0)
 
     return NextResponse.json({
-      productCount,
-      orderCount,
-      reviewCount,
+      productCount: Number(products[0]?.count || 0),
+      orderCount: Number(orders[0]?.count || 0),
+      customerCount: Number(customers[0]?.count || 0),
+      reviewCount: Number(reviews[0]?.count || 0),
       avgRating: Math.round(avgRating * 10) / 10,
+      totalRevenue: Number(revenue[0]?.total_revenue || 0),
     })
   } catch (error) {
-    console.error("Stats error:", error)
-    return NextResponse.json({
-      productCount: 0,
-      orderCount: 0,
-      reviewCount: 0,
-      avgRating: 0,
-    })
+    console.error("Stats GET error:", error)
+    return NextResponse.json({ error: "Failed to fetch stats" }, { status: 500 })
   }
 }

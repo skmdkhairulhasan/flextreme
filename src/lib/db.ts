@@ -1,12 +1,5 @@
-import postgres from "postgres"
+import { neon } from "@neondatabase/serverless"
 
-const connectionString = process.env.DATABASE_URL!
-
-const sql = postgres(connectionString, {
-  ssl: "require",
-  max: 1,
-  idle_timeout: 20,
-  connect_timeout: 10,
-})
+const sql = neon(process.env.DATABASE_URL!)
 
 export default sql
