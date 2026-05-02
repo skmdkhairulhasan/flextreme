@@ -4305,7 +4305,7 @@
       "format": "cjs"
     },
     ".open-next/server-functions/default/.next/server/app/api/hero-products/route.js": {
-      "bytes": 8224,
+      "bytes": 7759,
       "imports": [
         {
           "path": ".open-next/server-functions/default/node_modules/next/dist/shared/lib/router/utils/app-paths.js",
@@ -4499,7 +4499,7 @@
       "format": "cjs"
     },
     ".open-next/server-functions/default/.next/server/app/api/orders/[id]/route.js": {
-      "bytes": 9267,
+      "bytes": 10186,
       "imports": [
         {
           "path": ".open-next/server-functions/default/node_modules/next/dist/shared/lib/router/utils/app-paths.js",
@@ -4550,7 +4550,7 @@
       "format": "cjs"
     },
     ".open-next/server-functions/default/.next/server/app/products/[slug]/page.js": {
-      "bytes": 51908,
+      "bytes": 54275,
       "imports": [
         {
           "path": ".open-next/server-functions/default/node_modules/next/dist/shared/lib/router/utils/app-paths.js",
@@ -9760,7 +9760,7 @@
           "bytesInOutput": 51445
         },
         ".open-next/server-functions/default/.next/server/app/api/hero-products/route.js": {
-          "bytesInOutput": 8341
+          "bytesInOutput": 7863
         },
         ".open-next/server-functions/default/.next/server/app/api/flex-ai-chat/route.js": {
           "bytesInOutput": 29638
@@ -9772,10 +9772,10 @@
           "bytesInOutput": 7268
         },
         ".open-next/server-functions/default/.next/server/app/api/orders/[id]/route.js": {
-          "bytesInOutput": 9396
+          "bytesInOutput": 10330
         },
         ".open-next/server-functions/default/.next/server/app/products/[slug]/page.js": {
-          "bytesInOutput": 52669
+          "bytesInOutput": 55113
         },
         ".open-next/server-functions/default/.next/server/app/admin/customers/page.js": {
           "bytesInOutput": 32703
@@ -10042,7 +10042,7 @@
           "bytesInOutput": 66893
         }
       },
-      "bytes": 4449258
+      "bytes": 4452158
     }
   }
 }

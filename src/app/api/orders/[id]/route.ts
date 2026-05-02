@@ -47,25 +47,47 @@ export async function PATCH(
     const body = await req.json()
     const [oldOrder] = await sql`SELECT phone FROM orders WHERE id = ${id}::uuid LIMIT 1`
 
-    const [order] = await sql`
-      UPDATE orders SET
-        name = COALESCE(${body.name ?? body.customer_name ?? null}, name),
-        phone = COALESCE(${body.phone ?? null}, phone),
-        email = COALESCE(${body.email ?? null}, email),
-        address = COALESCE(${body.address ?? null}, address),
-        product_id = COALESCE(${body.product_id ? sql`${body.product_id}::uuid` : null}, product_id),
-        product_name = COALESCE(${body.product_name ?? null}, product_name),
-        size = COALESCE(${body.size ?? null}, size),
-        color = COALESCE(${body.color ?? null}, color),
-        quantity = COALESCE(${body.quantity ?? null}, quantity),
-        total_price = COALESCE(${body.total_price ?? null}, total_price),
-        status = COALESCE(${body.status ?? null}, status),
-        notes = COALESCE(${body.notes ?? null}, notes),
-        tracking_url = COALESCE(${body.tracking_url ?? null}, tracking_url),
-        updated_at = NOW()
-      WHERE id = ${id}::uuid
-      RETURNING *
-    `
+    // Build update fields — handle product_id cast separately to avoid nested sql`` bug
+    const productId = body.product_id ?? null
+
+    const [order] = productId
+      ? await sql`
+          UPDATE orders SET
+            name = COALESCE(${body.name ?? body.customer_name ?? null}, name),
+            phone = COALESCE(${body.phone ?? null}, phone),
+            email = COALESCE(${body.email ?? null}, email),
+            address = COALESCE(${body.address ?? null}, address),
+            product_id = ${productId}::uuid,
+            product_name = COALESCE(${body.product_name ?? null}, product_name),
+            size = COALESCE(${body.size ?? null}, size),
+            color = COALESCE(${body.color ?? null}, color),
+            quantity = COALESCE(${body.quantity ?? null}, quantity),
+            total_price = COALESCE(${body.total_price ?? null}, total_price),
+            status = COALESCE(${body.status ?? null}, status),
+            notes = COALESCE(${body.notes ?? null}, notes),
+            tracking_url = COALESCE(${body.tracking_url ?? null}, tracking_url),
+            updated_at = NOW()
+          WHERE id = ${id}::uuid
+          RETURNING *
+        `
+      : await sql`
+          UPDATE orders SET
+            name = COALESCE(${body.name ?? body.customer_name ?? null}, name),
+            phone = COALESCE(${body.phone ?? null}, phone),
+            email = COALESCE(${body.email ?? null}, email),
+            address = COALESCE(${body.address ?? null}, address),
+            product_name = COALESCE(${body.product_name ?? null}, product_name),
+            size = COALESCE(${body.size ?? null}, size),
+            color = COALESCE(${body.color ?? null}, color),
+            quantity = COALESCE(${body.quantity ?? null}, quantity),
+            total_price = COALESCE(${body.total_price ?? null}, total_price),
+            status = COALESCE(${body.status ?? null}, status),
+            notes = COALESCE(${body.notes ?? null}, notes),
+            tracking_url = COALESCE(${body.tracking_url ?? null}, tracking_url),
+            updated_at = NOW()
+          WHERE id = ${id}::uuid
+          RETURNING *
+        `
 
     if (!order) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 })

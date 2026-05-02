@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server"
 import sql from "@/lib/db"
-import initialHeroProducts from "../../../../data/hero-products.json"
 
 type HeroProduct = {
   image: string
@@ -12,19 +11,14 @@ type HeroProduct = {
   glowPulse?: boolean
 }
 
-function defaultProducts(): HeroProduct[] {
-  const payload = initialHeroProducts as { products?: HeroProduct[] } | HeroProduct[]
-  return Array.isArray(payload) ? payload : payload.products || []
-}
-
 function parseProducts(value: string | null | undefined): HeroProduct[] {
-  if (!value) return defaultProducts()
+  if (!value) return []
   try {
     const parsed = JSON.parse(value)
     if (Array.isArray(parsed)) return parsed
     if (Array.isArray(parsed.products)) return parsed.products
   } catch {}
-  return defaultProducts()
+  return []
 }
 
 export async function GET() {
