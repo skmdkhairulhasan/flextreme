@@ -48,20 +48,37 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const [order] = await sql`
-      INSERT INTO orders (
-        name, phone, email, address, product_id, product_name,
-        size, color, quantity, total_price, status, notes, tracking_url
-      ) VALUES (
-        ${body.customer_name || body.name},
-        ${body.phone}, ${body.email ?? null}, ${body.address ?? null},
-        ${body.product_id ? sql`${body.product_id}::uuid` : null},
-        ${body.product_name ?? null}, ${body.size ?? null}, ${body.color ?? null},
-        ${body.quantity || 1}, ${body.total_price || 0},
-        ${body.status || "pending"}, ${body.notes || ""}, ${body.tracking_url ?? null}
-      )
-      RETURNING *
-    `
+    const productId = body.product_id ?? null
+
+    // Split into two queries to avoid nested sql`` template (not supported by neon)
+    const [order] = productId
+      ? await sql`
+          INSERT INTO orders (
+            name, phone, email, address, product_id, product_name,
+            size, color, quantity, total_price, status, notes, tracking_url
+          ) VALUES (
+            ${body.customer_name || body.name},
+            ${body.phone}, ${body.email ?? null}, ${body.address ?? null},
+            ${productId}::uuid,
+            ${body.product_name ?? null}, ${body.size ?? null}, ${body.color ?? null},
+            ${body.quantity || 1}, ${body.total_price || 0},
+            ${body.status || "pending"}, ${body.notes || ""}, ${body.tracking_url ?? null}
+          )
+          RETURNING *
+        `
+      : await sql`
+          INSERT INTO orders (
+            name, phone, email, address, product_name,
+            size, color, quantity, total_price, status, notes, tracking_url
+          ) VALUES (
+            ${body.customer_name || body.name},
+            ${body.phone}, ${body.email ?? null}, ${body.address ?? null},
+            ${body.product_name ?? null}, ${body.size ?? null}, ${body.color ?? null},
+            ${body.quantity || 1}, ${body.total_price || 0},
+            ${body.status || "pending"}, ${body.notes || ""}, ${body.tracking_url ?? null}
+          )
+          RETURNING *
+        `
 
     // Auto-create customer if doesn't exist
     const existing = await sql`SELECT id FROM customers WHERE phone = ${body.phone}`

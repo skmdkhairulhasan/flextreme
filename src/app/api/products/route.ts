@@ -1,14 +1,31 @@
 import { NextRequest, NextResponse } from "next/server"
 import sql from "@/lib/db"
 
+function parseJsonField(value: unknown, fallback: unknown) {
+  if (value == null) return fallback
+  if (typeof value !== "string") return value
+  try { return JSON.parse(value) } catch { return fallback }
+}
+
+function normalizeProduct(row: any) {
+  return {
+    ...row,
+    sizes: parseJsonField(row.sizes, []),
+    colors: parseJsonField(row.colors, []),
+    images: parseJsonField(row.images, []),
+    stock_matrix: parseJsonField(row.stock_matrix, {}),
+  }
+}
+
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)
     const featured = searchParams.get("featured")
-    const limit = searchParams.get("limit")
+    const limitParam = searchParams.get("limit")
     const inStock = searchParams.get("in_stock")
     const id = searchParams.get("id")
     const slug = searchParams.get("slug")
+    const limit = limitParam ? parseInt(limitParam) : null
 
     let rows
 
@@ -16,17 +33,25 @@ export async function GET(req: NextRequest) {
       rows = await sql`SELECT * FROM products WHERE id = ${id}::uuid ORDER BY created_at DESC`
     } else if (slug) {
       rows = await sql`SELECT * FROM products WHERE slug = ${slug} ORDER BY created_at DESC`
+    } else if (featured === "true" && inStock === "true" && limit) {
+      rows = await sql`SELECT * FROM products WHERE is_featured = true AND in_stock = true ORDER BY created_at DESC LIMIT ${limit}`
     } else if (featured === "true" && inStock === "true") {
-      rows = await sql`SELECT * FROM products WHERE is_featured = true AND in_stock = true ORDER BY created_at DESC ${limit ? sql`LIMIT ${parseInt(limit)}` : sql``}`
+      rows = await sql`SELECT * FROM products WHERE is_featured = true AND in_stock = true ORDER BY created_at DESC`
+    } else if (featured === "true" && limit) {
+      rows = await sql`SELECT * FROM products WHERE is_featured = true ORDER BY created_at DESC LIMIT ${limit}`
     } else if (featured === "true") {
-      rows = await sql`SELECT * FROM products WHERE is_featured = true ORDER BY created_at DESC ${limit ? sql`LIMIT ${parseInt(limit)}` : sql``}`
+      rows = await sql`SELECT * FROM products WHERE is_featured = true ORDER BY created_at DESC`
+    } else if (inStock === "true" && limit) {
+      rows = await sql`SELECT * FROM products WHERE in_stock = true ORDER BY created_at DESC LIMIT ${limit}`
     } else if (inStock === "true") {
-      rows = await sql`SELECT * FROM products WHERE in_stock = true ORDER BY created_at DESC ${limit ? sql`LIMIT ${parseInt(limit)}` : sql``}`
+      rows = await sql`SELECT * FROM products WHERE in_stock = true ORDER BY created_at DESC`
+    } else if (limit) {
+      rows = await sql`SELECT * FROM products ORDER BY created_at DESC LIMIT ${limit}`
     } else {
-      rows = await sql`SELECT * FROM products ORDER BY created_at DESC ${limit ? sql`LIMIT ${parseInt(limit)}` : sql``}`
+      rows = await sql`SELECT * FROM products ORDER BY created_at DESC`
     }
 
-    return NextResponse.json({ products: rows })
+    return NextResponse.json({ products: rows.map(normalizeProduct) })
   } catch (error) {
     console.error("Products GET error:", error)
     return NextResponse.json({ error: "Failed to fetch products" }, { status: 500 })
@@ -52,7 +77,7 @@ export async function POST(req: NextRequest) {
       )
       RETURNING *
     `
-    return NextResponse.json({ success: true, product })
+    return NextResponse.json({ success: true, product: normalizeProduct(product) })
   } catch (error) {
     console.error("Products POST error:", error)
     return NextResponse.json({ error: "Failed to create product" }, { status: 500 })
@@ -84,7 +109,7 @@ export async function PATCH(req: NextRequest) {
       WHERE id = ${id}::uuid
       RETURNING *
     `
-    return NextResponse.json({ success: true, product })
+    return NextResponse.json({ success: true, product: normalizeProduct(product) })
   } catch (error) {
     console.error("Products PATCH error:", error)
     return NextResponse.json({ error: "Failed to update product" }, { status: 500 })

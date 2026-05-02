@@ -1,11 +1,10 @@
-﻿import Link from "next/link"
+import Link from "next/link"
 import ReviewsSection from "@/components/ui/ReviewsSection"
 import ProductShowcaseHero from "@/components/ui/ProductShowcaseHero"
-import { apiFetchServer } from "@/lib/api/server"
 import { Product } from "@/types"
 import BrandStamp from "@/components/ui/BrandStamp"
+import sql from "@/lib/db"
 
-type SettingItem = { key: string; value: string }
 type HeroProduct = {
   image: string
   label?: string
@@ -29,24 +28,10 @@ function parseNumber(value: string | undefined, fallback: number, min: number, m
   return Math.min(max, Math.max(min, parsed))
 }
 
-function normalizeSettings(settings: Record<string, string> | SettingItem[] | undefined) {
-  if (Array.isArray(settings)) {
-    return settings.reduce<Record<string, string>>((map, setting) => {
-      if (setting.key) map[setting.key] = setting.value
-      return map
-    }, {})
-  }
-  return settings || {}
-}
-
-async function getHeroProducts() {
-  const { products } = await apiFetchServer<{ products: HeroProduct[] }>("/api/hero-products")
-  return products || []
-}
-
-async function getSettings() {
-  const { settings } = await apiFetchServer<{ settings: Record<string, string> | SettingItem[] }>("/api/settings")
-  return normalizeSettings(settings)
+function parseJsonField(value: unknown, fallback: unknown) {
+  if (value == null) return fallback
+  if (typeof value !== "string") return value
+  try { return JSON.parse(value) } catch { return fallback }
 }
 
 // Renders **bold**, _italic_, <u>underline</u> and \n line breaks
@@ -66,7 +51,10 @@ function renderRichText(text: string) {
 }
 
 export const dynamic = "force-dynamic"
+
 export default async function HomePage() {
+  // ── Direct DB queries — no HTTP round-trips, works on Cloudflare Workers ──
+
   let heroProducts: HeroProduct[] = []
   let products: Product[] = []
   let settings: Record<string, string> = {}
@@ -74,42 +62,76 @@ export default async function HomePage() {
   let stats: SiteStats = { productCount: 0, orderCount: 0, reviewCount: 0, avgRating: 0 }
 
   try {
-    heroProducts = await getHeroProducts()
+    const rows = await sql`SELECT key, value FROM settings ORDER BY key`
+    rows.forEach((r: any) => { settings[r.key] = r.value })
+
+    // Parse hero products from settings
+    const heroValue = settings["hero_products"]
+    if (heroValue) {
+      try {
+        const parsed = JSON.parse(heroValue)
+        heroProducts = Array.isArray(parsed) ? parsed : (parsed.products || [])
+      } catch {}
+    }
   } catch (e) {
-    console.error("Hero products error:", e)
+    console.error("Settings/hero error:", e)
   }
 
   try {
-    const res = await apiFetchServer<{ products: Product[] }>("/api/products?featured=true&limit=4")
-    products = res?.products || []
+    const rows = await sql`
+      SELECT * FROM products
+      WHERE is_featured = true
+      ORDER BY created_at DESC
+      LIMIT 4
+    `
+    products = rows.map((r: any) => ({
+      ...r,
+      sizes: parseJsonField(r.sizes, []),
+      colors: parseJsonField(r.colors, []),
+      images: parseJsonField(r.images, []),
+      stock_matrix: parseJsonField(r.stock_matrix, {}),
+    })) as Product[]
   } catch (e) {
     console.error("Products error:", e)
   }
 
   try {
-    settings = await getSettings()
-  } catch (e) {
-    console.error("Settings error:", e)
-  }
-
-  try {
-    const res = await apiFetchServer<{ reviews: unknown[] }>("/api/reviews?status=approved&limit=6")
-    reviews = res?.reviews || []
+    const rows = await sql`
+      SELECT r.*, p.name AS product_name
+      FROM reviews r
+      LEFT JOIN products p ON p.id = r.product_id
+      WHERE r.approved = true
+      ORDER BY r.created_at DESC
+      LIMIT 6
+    `
+    reviews = rows
   } catch (e) {
     console.error("Reviews error:", e)
   }
 
   try {
-    stats = { ...stats, ...(await apiFetchServer<Partial<SiteStats>>("/api/stats")) }
+    const [products_count, orders_count, customers_count, reviews_count, rating_row, revenue_row] = await Promise.all([
+      sql`SELECT COUNT(*) as count FROM products`,
+      sql`SELECT COUNT(*) as count FROM orders`,
+      sql`SELECT COUNT(*) as count FROM customers`,
+      sql`SELECT COUNT(*) as count FROM reviews`,
+      sql`SELECT COALESCE(AVG(rating), 0) as avg_rating FROM reviews WHERE approved = true`,
+      sql`SELECT COALESCE(SUM(total_price), 0) as total_revenue FROM orders WHERE status = ANY(${["confirmed", "processing", "shipped", "delivered"]})`,
+    ])
+    stats = {
+      productCount: Number(products_count[0]?.count || 0),
+      orderCount: Number(orders_count[0]?.count || 0),
+      reviewCount: Number(reviews_count[0]?.count || 0),
+      avgRating: Math.round(Number(rating_row[0]?.avg_rating || 0) * 10) / 10,
+    }
   } catch (e) {
     console.error("Stats error:", e)
   }
-  
+
   const featuredProducts = products || []
   const totalProducts = stats.productCount || featuredProducts.length
   const approvedReviews = reviews || []
   const totalOrders = stats.orderCount || 0
-  const allApprovedReviews = approvedReviews
   const avgRating = stats.avgRating || 5
   const avgRatingDisplay = avgRating.toFixed(1) + " / 5"
   const heroBgType = settings.hero_bg_type || "color"
@@ -122,7 +144,7 @@ export default async function HomePage() {
     color: settings.glow_color || "",
   }
   const customerCount = totalOrders > 0
-    ? (totalOrders >= 1000 ? (Math.floor(totalOrders / 100) * 100) + "+" : totalOrders >= 100 ? totalOrders + "+" : totalOrders > 0 ? totalOrders + "+" : "Growing")
+    ? (totalOrders >= 1000 ? (Math.floor(totalOrders / 100) * 100) + "+" : totalOrders >= 100 ? totalOrders + "+" : totalOrders + "+")
     : "Growing"
 
   return (
@@ -143,13 +165,13 @@ export default async function HomePage() {
       <ReviewsSection reviews={approvedReviews} />
       <WhyFlextreme settings={settings} />
       <PerformanceFeatures settings={settings} />
-      <BrandStory settings={settings} totalProducts={totalProducts} customerCount={customerCount} avgRating={avgRatingDisplay} totalReviews={allApprovedReviews.length} />
+      <BrandStory settings={settings} totalProducts={totalProducts} customerCount={customerCount} avgRating={avgRatingDisplay} totalReviews={approvedReviews.length} />
       <FinalCTA settings={settings} />
     </div>
   )
 }
 
-// ALL YOUR EXISTING COMPONENTS BELOW - UNCHANGED
+// ── UI Components — unchanged from original ──────────────────────────────────
 
 function HeroSection({ settings }: { settings: Record<string, string> }) {
   const bgType = settings.hero_bg_type || "color"

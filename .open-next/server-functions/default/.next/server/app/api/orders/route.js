@@ -7,23 +7,35 @@
       total_orders = ${parseInt(b.total_orders)},
       total_spent = ${parseFloat(b.total_spent)}
     WHERE phone = ${a}
-  `}async function x(a){try{let b,{searchParams:c}=a.nextUrl,d=c.get("product_id"),e=c.get("status"),f=c.get("phone");if(f)b=await (0,v.A)`SELECT * FROM orders WHERE phone = ${f} ORDER BY created_at DESC`;else if(d&&e){let a=e.split(",");b=await (0,v.A)`SELECT * FROM orders WHERE product_id = ${d}::uuid AND status = ANY(${a}) ORDER BY created_at DESC`}else if(d)b=await (0,v.A)`SELECT * FROM orders WHERE product_id = ${d}::uuid ORDER BY created_at DESC`;else if(e){let a=e.split(",");b=await (0,v.A)`SELECT * FROM orders WHERE status = ANY(${a}) ORDER BY created_at DESC`}else b=await (0,v.A)`SELECT * FROM orders ORDER BY created_at DESC`;return u.NextResponse.json({orders:b})}catch(a){return console.error("Orders GET error:",a),u.NextResponse.json({error:"Failed to fetch orders"},{status:500})}}async function y(a){try{let b=await a.json(),[c]=await (0,v.A)`
-      INSERT INTO orders (
-        name, phone, email, address, product_id, product_name,
-        size, color, quantity, total_price, status, notes, tracking_url
-      ) VALUES (
-        ${b.customer_name||b.name},
-        ${b.phone}, ${b.email??null}, ${b.address??null},
-        ${b.product_id?(0,v.A)`${b.product_id}::uuid`:null},
-        ${b.product_name??null}, ${b.size??null}, ${b.color??null},
-        ${b.quantity||1}, ${b.total_price||0},
-        ${b.status||"pending"}, ${b.notes||""}, ${b.tracking_url??null}
-      )
-      RETURNING *
-    `,d=await (0,v.A)`SELECT id FROM customers WHERE phone = ${b.phone}`;if(0===d.length){let a=await (0,v.A)`SELECT COUNT(*) as c FROM customers`;await (0,v.A)`
+  `}async function x(a){try{let b,{searchParams:c}=a.nextUrl,d=c.get("product_id"),e=c.get("status"),f=c.get("phone");if(f)b=await (0,v.A)`SELECT * FROM orders WHERE phone = ${f} ORDER BY created_at DESC`;else if(d&&e){let a=e.split(",");b=await (0,v.A)`SELECT * FROM orders WHERE product_id = ${d}::uuid AND status = ANY(${a}) ORDER BY created_at DESC`}else if(d)b=await (0,v.A)`SELECT * FROM orders WHERE product_id = ${d}::uuid ORDER BY created_at DESC`;else if(e){let a=e.split(",");b=await (0,v.A)`SELECT * FROM orders WHERE status = ANY(${a}) ORDER BY created_at DESC`}else b=await (0,v.A)`SELECT * FROM orders ORDER BY created_at DESC`;return u.NextResponse.json({orders:b})}catch(a){return console.error("Orders GET error:",a),u.NextResponse.json({error:"Failed to fetch orders"},{status:500})}}async function y(a){try{let b=await a.json(),c=b.product_id??null,[d]=c?await (0,v.A)`
+          INSERT INTO orders (
+            name, phone, email, address, product_id, product_name,
+            size, color, quantity, total_price, status, notes, tracking_url
+          ) VALUES (
+            ${b.customer_name||b.name},
+            ${b.phone}, ${b.email??null}, ${b.address??null},
+            ${c}::uuid,
+            ${b.product_name??null}, ${b.size??null}, ${b.color??null},
+            ${b.quantity||1}, ${b.total_price||0},
+            ${b.status||"pending"}, ${b.notes||""}, ${b.tracking_url??null}
+          )
+          RETURNING *
+        `:await (0,v.A)`
+          INSERT INTO orders (
+            name, phone, email, address, product_name,
+            size, color, quantity, total_price, status, notes, tracking_url
+          ) VALUES (
+            ${b.customer_name||b.name},
+            ${b.phone}, ${b.email??null}, ${b.address??null},
+            ${b.product_name??null}, ${b.size??null}, ${b.color??null},
+            ${b.quantity||1}, ${b.total_price||0},
+            ${b.status||"pending"}, ${b.notes||""}, ${b.tracking_url??null}
+          )
+          RETURNING *
+        `,e=await (0,v.A)`SELECT id FROM customers WHERE phone = ${b.phone}`;if(0===e.length){let a=await (0,v.A)`SELECT COUNT(*) as c FROM customers`;await (0,v.A)`
         INSERT INTO customers (name, phone, email, flex100)
         VALUES (${b.customer_name||b.name}, ${b.phone}, ${b.email??null}, ${100>parseInt(a[0].c)})
-      `}return await w(b.phone),u.NextResponse.json({order:c})}catch(a){return console.error("Orders POST error:",a),u.NextResponse.json({error:"Failed to create order"},{status:500})}}async function z(a){try{let{id:b,...c}=await a.json(),[d]=await (0,v.A)`SELECT phone FROM orders WHERE id = ${b}::uuid`,[e]=await (0,v.A)`
+      `}return await w(b.phone),u.NextResponse.json({order:d})}catch(a){return console.error("Orders POST error:",a),u.NextResponse.json({error:"Failed to create order"},{status:500})}}async function z(a){try{let{id:b,...c}=await a.json(),[d]=await (0,v.A)`SELECT phone FROM orders WHERE id = ${b}::uuid`,[e]=await (0,v.A)`
       UPDATE orders SET
         name = COALESCE(${c.name??null}, name),
         phone = COALESCE(${c.phone??null}, phone),
