@@ -96,19 +96,30 @@ export default async function HomePage() {
   }
 
   try {
-    const rows = await sql`
+    // Featured reviews first, fill rest with recent approved (up to 6 total)
+    const featuredRows = await sql`
       SELECT r.*, p.name AS product_name
-      FROM reviews r
-      LEFT JOIN products p ON p.id = r.product_id
-      WHERE r.approved = true
+      FROM reviews r LEFT JOIN products p ON p.id = r.product_id
+      WHERE r.approved = true AND r.featured = true
       ORDER BY r.created_at DESC
-      LIMIT 6
     `
-    reviews = rows.map((r: any) => ({
+    const remaining = Math.max(0, 6 - featuredRows.length)
+    let otherRows: any[] = []
+    if (remaining > 0) {
+      otherRows = await sql`
+        SELECT r.*, p.name AS product_name
+        FROM reviews r LEFT JOIN products p ON p.id = r.product_id
+        WHERE r.approved = true AND (r.featured = false OR r.featured IS NULL)
+        ORDER BY r.created_at DESC
+        LIMIT ${remaining}
+      `
+    }
+    reviews = [...featuredRows, ...otherRows].map((r: any) => ({
       ...r,
       review_text: r.comment || r.review_text || "",
       customer_location: r.customer_location || "",
       photo_url: r.photo_url || null,
+      featured: r.featured === true,
     }))
   } catch (e) {
     console.error("Reviews error:", e)

@@ -5,58 +5,105 @@ function normalizeReview(row: any) {
   return {
     ...row,
     product_name: row.product_name || "",
-    customer_name: row.customer_name || row.name || "",
+    customer_name: row.customer_name || "",
     customer_location: row.customer_location || "",
     comment: row.comment || "",
     review_text: row.comment || row.review_text || "",
     photo_url: row.photo_url || null,
     rating: Number(row.rating) || 5,
+    featured: row.featured === true || row.featured === "true",
     status: row.status || (row.approved ? "approved" : "pending"),
-    approved: row.approved ?? (row.status === "approved"),
+    approved: row.approved === true || row.status === "approved",
   }
 }
 
+// Auto-add any missing columns — safe to call repeatedly
+let columnsReady = false
 async function ensureColumns() {
+  if (columnsReady) return
+  try {
+    await sql`ALTER TABLE reviews ALTER COLUMN product_id DROP NOT NULL`
+  } catch {}
   try {
     await sql`ALTER TABLE reviews ADD COLUMN IF NOT EXISTS photo_url TEXT`
+  } catch {}
+  try {
     await sql`ALTER TABLE reviews ADD COLUMN IF NOT EXISTS customer_location TEXT`
+  } catch {}
+  try {
     await sql`ALTER TABLE reviews ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'pending'`
-    await sql`UPDATE reviews SET status = 'approved' WHERE approved = true AND (status IS NULL OR status = 'pending')`
-  } catch { /* columns already exist */ }
+  } catch {}
+  try {
+    await sql`ALTER TABLE reviews ADD COLUMN IF NOT EXISTS featured BOOLEAN NOT NULL DEFAULT false`
+  } catch {}
+  try {
+    await sql`UPDATE reviews SET status = 'approved' WHERE approved = true AND status = 'pending'`
+  } catch {}
+  columnsReady = true
 }
-
-let columnsEnsured = false
 
 export async function GET(request: NextRequest) {
   try {
-    if (!columnsEnsured) { await ensureColumns(); columnsEnsured = true }
+    await ensureColumns()
 
     const { searchParams } = request.nextUrl
-    const statusFilter = searchParams.get("status")
-    const limit        = searchParams.get("limit")
-    const productId    = searchParams.get("product_id")
-    const limitNum     = limit ? Math.max(1, parseInt(limit, 10) || 1) : null
+    const statusFilter  = searchParams.get("status")   // approved | pending | rejected
+    const featuredOnly  = searchParams.get("featured") === "true"
+    const limit         = searchParams.get("limit")
+    const productId     = searchParams.get("product_id")
+    const limitNum      = limit ? Math.max(1, parseInt(limit, 10) || 1) : null
 
+    // Fetch all matching rows — filter in JS to stay safe across schema versions
     let rows: any[]
 
     if (productId) {
       rows = limitNum
-        ? await sql`SELECT r.*, p.name AS product_name FROM reviews r LEFT JOIN products p ON p.id = r.product_id WHERE r.product_id = ${productId}::uuid ORDER BY r.created_at DESC LIMIT ${limitNum}`
-        : await sql`SELECT r.*, p.name AS product_name FROM reviews r LEFT JOIN products p ON p.id = r.product_id WHERE r.product_id = ${productId}::uuid ORDER BY r.created_at DESC`
+        ? await sql`
+            SELECT r.*, p.name AS product_name
+            FROM reviews r
+            LEFT JOIN products p ON p.id = r.product_id
+            WHERE r.product_id = ${productId}::uuid
+            ORDER BY r.featured DESC, r.created_at DESC
+            LIMIT ${limitNum}
+          `
+        : await sql`
+            SELECT r.*, p.name AS product_name
+            FROM reviews r
+            LEFT JOIN products p ON p.id = r.product_id
+            WHERE r.product_id = ${productId}::uuid
+            ORDER BY r.featured DESC, r.created_at DESC
+          `
     } else {
       rows = limitNum
-        ? await sql`SELECT r.*, p.name AS product_name FROM reviews r LEFT JOIN products p ON p.id = r.product_id ORDER BY r.created_at DESC LIMIT ${limitNum}`
-        : await sql`SELECT r.*, p.name AS product_name FROM reviews r LEFT JOIN products p ON p.id = r.product_id ORDER BY r.created_at DESC`
+        ? await sql`
+            SELECT r.*, p.name AS product_name
+            FROM reviews r
+            LEFT JOIN products p ON p.id = r.product_id
+            ORDER BY r.featured DESC, r.created_at DESC
+            LIMIT ${limitNum}
+          `
+        : await sql`
+            SELECT r.*, p.name AS product_name
+            FROM reviews r
+            LEFT JOIN products p ON p.id = r.product_id
+            ORDER BY r.featured DESC, r.created_at DESC
+          `
     }
 
     let reviews = rows.map(normalizeReview)
 
+    // Status filter
     if (statusFilter === "approved") {
       reviews = reviews.filter(r => r.approved === true || r.status === "approved")
     } else if (statusFilter === "pending") {
       reviews = reviews.filter(r => r.status === "pending" && r.approved !== true)
     } else if (statusFilter === "rejected") {
       reviews = reviews.filter(r => r.status === "rejected")
+    }
+
+    // Featured filter
+    if (featuredOnly) {
+      reviews = reviews.filter(r => r.featured === true)
     }
 
     return NextResponse.json({ reviews })
@@ -68,7 +115,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    if (!columnsEnsured) { await ensureColumns(); columnsEnsured = true }
+    await ensureColumns()
 
     const body         = await request.json()
     const initStatus   = body.status === "approved" ? "approved" : "pending"
@@ -85,7 +132,7 @@ export async function POST(request: NextRequest) {
       const rows = await sql`
         INSERT INTO reviews (
           product_id, customer_name, phone, rating, comment,
-          approved, status, photo_url, customer_location
+          approved, status, photo_url, customer_location, featured
         ) VALUES (
           ${body.product_id}::uuid,
           ${customerName},
@@ -95,16 +142,18 @@ export async function POST(request: NextRequest) {
           ${initApproved},
           ${initStatus},
           ${photoUrl},
-          ${location}
+          ${location},
+          false
         )
         RETURNING *
       `
       review = rows[0]
     } else {
+      // No product linked — from /reviews/write standalone page
       const rows = await sql`
         INSERT INTO reviews (
           customer_name, phone, rating, comment,
-          approved, status, photo_url, customer_location
+          approved, status, photo_url, customer_location, featured
         ) VALUES (
           ${customerName},
           ${body.phone ?? null},
@@ -113,7 +162,8 @@ export async function POST(request: NextRequest) {
           ${initApproved},
           ${initStatus},
           ${photoUrl},
-          ${location}
+          ${location},
+          false
         )
         RETURNING *
       `
@@ -122,7 +172,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      review: normalizeReview({ ...review, product_name: productName || "" })
+      review: normalizeReview({ ...review, product_name: productName || "" }),
     })
   } catch (error) {
     console.error("Reviews POST error:", error)
@@ -136,6 +186,7 @@ export async function PATCH(request: NextRequest) {
     const { id, ...updates } = body
     if (!id) return NextResponse.json({ error: "Review ID required" }, { status: 400 })
 
+    // Sync status + approved boolean
     let newStatus: string | null = null
     let newApproved: boolean | null = null
     if (updates.status !== undefined) {
@@ -146,6 +197,8 @@ export async function PATCH(request: NextRequest) {
       newStatus   = newApproved ? "approved" : "pending"
     }
 
+    const newFeatured = updates.featured !== undefined ? Boolean(updates.featured) : null
+
     const rows = await sql`
       UPDATE reviews SET
         customer_name     = COALESCE(${updates.customer_name     ?? null}, customer_name),
@@ -155,7 +208,8 @@ export async function PATCH(request: NextRequest) {
         photo_url         = COALESCE(${updates.photo_url         ?? null}, photo_url),
         customer_location = COALESCE(${updates.customer_location ?? null}, customer_location),
         status            = COALESCE(${newStatus},   status),
-        approved          = COALESCE(${newApproved}, approved)
+        approved          = COALESCE(${newApproved}, approved),
+        featured          = COALESCE(${newFeatured}, featured)
       WHERE id = ${id}::uuid
       RETURNING *
     `
