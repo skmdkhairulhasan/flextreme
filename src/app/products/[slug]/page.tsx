@@ -70,13 +70,86 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       backgroundColor: "var(--theme-bg, white)",
       overflowX: "hidden",
     }}>
-      <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "1.5rem" }}>
+      {/* 
+        KEY MOBILE FIX: All responsive styles in a single <style> block.
+        Using clamp() on font sizes instead of fixed px so nothing overflows.
+        The grid collapses to 1fr on mobile — right col goes below left col, no overlap.
+      */}
+      <style>{`
+        .product-outer {
+          max-width: 1280px;
+          margin: 0 auto;
+          padding: 1.25rem;
+          box-sizing: border-box;
+        }
+        .product-breadcrumbs {
+          display: flex;
+          gap: 0.5rem;
+          align-items: center;
+          margin-bottom: 1.5rem;
+          font-size: 0.75rem;
+          color: #999;
+          overflow-x: auto;
+          white-space: nowrap;
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+        }
+        .product-breadcrumbs::-webkit-scrollbar { display: none; }
+        .product-grid {
+          display: grid;
+          grid-template-columns: 1.2fr 1fr;
+          gap: 3.5rem;
+          align-items: start;
+          width: 100%;
+        }
+        .product-left {
+          width: 100%;
+          min-width: 0;
+          overflow: hidden;
+        }
+        .product-right {
+          width: 100%;
+          min-width: 0;
+          display: flex;
+          flex-direction: column;
+        }
+        .product-title {
+          font-size: clamp(1.5rem, 4vw, 2.5rem);
+          font-weight: 900;
+          text-transform: uppercase;
+          letter-spacing: -0.02em;
+          line-height: 1.1;
+          margin-bottom: 1rem;
+          word-break: break-word;
+        }
+        .perf-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 0.75rem;
+        }
+        @media (max-width: 900px) {
+          .product-grid {
+            grid-template-columns: 1fr;
+            gap: 2rem;
+          }
+          .product-right {
+            /* Right col below left on mobile — no overlap */
+            order: 2;
+          }
+          .product-left {
+            order: 1;
+          }
+        }
+        @media (max-width: 480px) {
+          .product-outer { padding: 1rem; }
+          .perf-grid { grid-template-columns: 1fr; }
+        }
+      `}</style>
 
-        <div style={{
-          display: "flex", gap: "0.5rem", alignItems: "center",
-          marginBottom: "1.5rem", fontSize: "0.75rem", color: "#999",
-          overflowX: "auto", whiteSpace: "nowrap", scrollbarWidth: "none",
-        }}>
+      <div className="product-outer">
+
+        {/* Breadcrumbs */}
+        <div className="product-breadcrumbs">
           <a href="/" style={{ color: "#999", textDecoration: "none" }}>Home</a>
           <span>/</span>
           <a href="/products" style={{ color: "#999", textDecoration: "none" }}>Products</a>
@@ -84,26 +157,10 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           <span style={{ color: "black", fontWeight: 600 }}>{p.name}</span>
         </div>
 
-        <style>{`
-          .product-grid {
-            display: grid;
-            grid-template-columns: 1.2fr 1fr;
-            gap: 4rem;
-            align-items: start;
-          }
-          @media (max-width: 1024px) {
-            .product-grid { gap: 2rem; }
-          }
-          @media (max-width: 768px) {
-            .product-grid { grid-template-columns: 1fr; gap: 2.5rem; }
-            .product-title { font-size: 1.75rem !important; }
-          }
-        `}</style>
-
         <div className="product-grid">
 
           {/* Left: Images + Video */}
-          <div style={{ width: "100%", overflow: "hidden" }}>
+          <div className="product-left">
             <ImageGallery images={p.images || []} productName={p.name} />
             {p.video_url && (
               <div style={{ marginTop: "1.5rem" }}>
@@ -115,56 +172,77 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             )}
           </div>
 
-          {/* Right: Product info + Order form */}
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            <p style={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", color: "#999", marginBottom: "0.5rem" }}>{p.category}</p>
-            <h1 className="product-title" style={{ fontSize: "2.5rem", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.02em", lineHeight: 1.1, marginBottom: "1rem" }}>{p.name}</h1>
+          {/* Right: Info + Order form */}
+          <div className="product-right">
 
-            <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "1rem", marginBottom: "1rem" }}>
-              <span style={{ fontSize: "1.75rem", fontWeight: 900 }}>BDT {p.price.toLocaleString()}</span>
+            {/* Category */}
+            <p style={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", color: "#999", marginBottom: "0.5rem" }}>
+              {p.category}
+            </p>
+
+            {/* Name */}
+            <h1 className="product-title">{p.name}</h1>
+
+            {/* Price */}
+            <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "0.75rem", marginBottom: "1rem" }}>
+              <span style={{ fontSize: "clamp(1.4rem, 3vw, 1.75rem)", fontWeight: 900 }}>
+                BDT {p.price.toLocaleString()}
+              </span>
               {pAny.original_price && (
-                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                  <span style={{ fontSize: "1.1rem", color: "#999", textDecoration: "line-through" }}>BDT {pAny.original_price.toLocaleString()}</span>
-                  <span style={{ backgroundColor: "var(--theme-primary, black)", color: "var(--theme-btn-text, white)", padding: "0.2rem 0.6rem", fontSize: "0.75rem", fontWeight: 700 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
+                  <span style={{ fontSize: "1rem", color: "#999", textDecoration: "line-through" }}>
+                    BDT {pAny.original_price.toLocaleString()}
+                  </span>
+                  <span style={{ backgroundColor: "var(--theme-primary, black)", color: "var(--theme-btn-text, white)", padding: "0.2rem 0.5rem", fontSize: "0.72rem", fontWeight: 700 }}>
                     {Math.round(((pAny.original_price - p.price) / pAny.original_price) * 100)}% OFF
                   </span>
                 </div>
               )}
             </div>
 
-            <div style={{ marginBottom: "1.5rem" }}>
+            {/* Stock badge */}
+            <div style={{ marginBottom: "1.25rem" }}>
               {!p.in_stock ? (
                 <span style={{ display: "inline-block", fontSize: "0.8rem", fontWeight: 700, color: "#dc2626", backgroundColor: "#fee2e2", padding: "0.3rem 0.875rem", border: "1px solid #fca5a5" }}>SOLD OUT</span>
               ) : (
-                <span style={{ display: "inline-block", fontSize: "0.8rem", fontWeight: 700, color: "#16a34a", backgroundColor: "#f0fdf4", padding: "0.3rem 0.875rem", border: "1px solid #bbf7d0" }}>✓ In Stock</span>
+                <span style={{ display: "inline-block", fontSize: "0.8rem", fontWeight: 700, color: "#16a34a", backgroundColor: "#f0fdf4", padding: "0.3rem 0.875rem", border: "1px solid #bbf7d0" }}>
+                  ✓ In Stock{pAny.stock_quantity ? ` (${pAny.stock_quantity} available)` : ""}
+                </span>
               )}
             </div>
 
+            {/* Description */}
             <div
-              style={{ color: "#555", lineHeight: 1.7, fontSize: "0.95rem", marginBottom: "2rem", paddingBottom: "2rem", borderBottom: "1px solid #e0e0e0" }}
+              style={{ color: "#555", lineHeight: 1.7, fontSize: "0.95rem", marginBottom: "1.75rem", paddingBottom: "1.75rem", borderBottom: "1px solid #e0e0e0", wordBreak: "break-word" }}
               dangerouslySetInnerHTML={{ __html: p.description || "" }}
             />
 
-            <div style={{ marginBottom: "2rem", paddingBottom: "2rem", borderBottom: "1px solid #e0e0e0" }}>
-              <p style={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: "1rem", color: "#999" }}>Performance Features</p>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
+            {/* Performance features */}
+            <div style={{ marginBottom: "1.75rem", paddingBottom: "1.75rem", borderBottom: "1px solid #e0e0e0" }}>
+              <p style={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: "1rem", color: "#999" }}>
+                Performance Features
+              </p>
+              <div className="perf-grid">
                 {["Compression Fit", "Sweat-Wicking", "4-Way Stretch", "Muscle Definition"].map((f) => (
                   <div key={f} style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.85rem", fontWeight: 500 }}>
-                    <span style={{ width: "18px", height: "18px", backgroundColor: "var(--theme-primary, black)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--theme-btn-text, white)", fontSize: "0.6rem", flexShrink: 0 }}>✓</span>
+                    <span style={{ width: "18px", height: "18px", minWidth: "18px", backgroundColor: "var(--theme-primary, black)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--theme-btn-text, white)", fontSize: "0.6rem" }}>✓</span>
                     {f}
                   </div>
                 ))}
               </div>
             </div>
 
+            {/* Order form */}
             <OrderForm product={productWithStock} />
 
+            {/* Review form */}
             <div style={{ marginTop: "1.5rem" }}>
               <ReviewForm productId={p.id} productName={p.name} />
             </div>
           </div>
         </div>
 
+        {/* Reviews */}
         <div style={{ marginTop: "4rem" }}>
           <ProductReviews productId={p.id} />
         </div>

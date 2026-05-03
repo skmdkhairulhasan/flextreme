@@ -50,14 +50,17 @@
         ORDER BY r.created_at DESC
       `).map(w);return c&&"approved"!==c&&(g=g.filter(a=>a.status===c)),u.NextResponse.json({reviews:g})}catch(a){return console.error("Reviews GET error:",a),u.NextResponse.json({error:"Failed to fetch reviews"},{status:500})}}async function y(a){try{let b=await a.json(),[c]=await (0,v.A)`
       INSERT INTO reviews (
-        product_id, customer_name, phone, rating, comment, approved
+        product_id, customer_name, phone, rating, comment, approved,
+        photo_url, customer_location
       ) VALUES (
         ${b.product_id}::uuid,
         ${b.customer_name||b.name||""},
         ${b.phone??null},
         ${b.rating||5},
         ${b.comment||b.review_text||""},
-        ${"approved"===b.status||!0===b.approved}
+        ${"approved"===b.status||!0===b.approved},
+        ${b.photo_url??null},
+        ${b.customer_location??null}
       )
       RETURNING *
     `;return u.NextResponse.json({review:w({...c,product_name:b.product_name||""})})}catch(a){return console.error("Reviews POST error:",a),u.NextResponse.json({error:"Failed to create review"},{status:500})}}async function z(a){try{let{id:b,...c}=await a.json();if(!b)return u.NextResponse.json({error:"Review ID required"},{status:400});let d=void 0!==c.status?"approved"===c.status:c.approved??null,[e]=await (0,v.A)`
@@ -66,6 +69,8 @@
         phone = COALESCE(${c.phone??null}, phone),
         rating = COALESCE(${c.rating??null}, rating),
         comment = COALESCE(${c.comment??c.review_text??null}, comment),
+        photo_url = COALESCE(${c.photo_url??null}, photo_url),
+        customer_location = COALESCE(${c.customer_location??null}, customer_location),
         approved = COALESCE(${d}, approved)
       WHERE id = ${b}::uuid
       RETURNING *

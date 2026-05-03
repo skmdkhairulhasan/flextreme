@@ -1,4 +1,4 @@
-import { apiFetchServer } from "@/lib/api/server"
+import sql from "@/lib/db"
 import ContactForm from "@/components/ui/ContactForm"
 import ContactSocialBubbles from "./ContactSocialBubbles"
 
@@ -14,8 +14,8 @@ function addHttps(url: string) {
 export default async function ContactPage() {
   const s: Record<string, string> = {}
   try {
-    const res = await apiFetchServer<{ settings: any[] }>("/api/settings")
-    res.settings?.forEach((r: any) => { s[r.key] = r.value })
+    const rows = await sql`SELECT key, value FROM settings ORDER BY key`
+    rows.forEach((r: any) => { s[r.key] = r.value })
   } catch {}
 
   const email    = s.store_email || ""
@@ -131,7 +131,7 @@ export default async function ContactPage() {
         </div>
       </div>
 
-      {/* Social Bubbles — only on this page */}
+      {/* Social Bubbles — only render if socials exist */}
       {socials.length > 0 && <ContactSocialBubbles socials={socials} />}
     </div>
   )

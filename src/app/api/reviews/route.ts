@@ -111,14 +111,17 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const [review] = await sql`
       INSERT INTO reviews (
-        product_id, customer_name, phone, rating, comment, approved
+        product_id, customer_name, phone, rating, comment, approved,
+        photo_url, customer_location
       ) VALUES (
         ${body.product_id}::uuid,
         ${body.customer_name || body.name || ""},
         ${body.phone ?? null},
         ${body.rating || 5},
         ${body.comment || body.review_text || ""},
-        ${body.status === "approved" || body.approved === true}
+        ${body.status === "approved" || body.approved === true},
+        ${body.photo_url ?? null},
+        ${body.customer_location ?? null}
       )
       RETURNING *
     `
@@ -153,6 +156,8 @@ export async function PATCH(request: NextRequest) {
         phone = COALESCE(${updates.phone ?? null}, phone),
         rating = COALESCE(${updates.rating ?? null}, rating),
         comment = COALESCE(${updates.comment ?? updates.review_text ?? null}, comment),
+        photo_url = COALESCE(${updates.photo_url ?? null}, photo_url),
+        customer_location = COALESCE(${updates.customer_location ?? null}, customer_location),
         approved = COALESCE(${approved}, approved)
       WHERE id = ${id}::uuid
       RETURNING *
