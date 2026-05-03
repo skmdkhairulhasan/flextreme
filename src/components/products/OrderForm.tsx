@@ -119,8 +119,8 @@ export default function OrderForm({ product }: OrderFormProps) {
   // Current combo stock status
   const currentStock = (selectedSize && selectedColor) ? getStock(selectedSize, selectedColor) : null
   const comboOOS = currentStock !== null && currentStock <= 0
-  const comboLow = currentStock !== null && currentStock > 0 && currentStock <= 5
-  const comboGood = currentStock !== null && currentStock > 5
+  const comboLow = currentStock !== null && currentStock > 0 && currentStock <= 10
+  const comboGood = currentStock !== null && currentStock > 10
 
   // Stock badge for the selected combo
   function StockBadge() {
@@ -137,7 +137,7 @@ export default function OrderForm({ product }: OrderFormProps) {
     )
     if (comboGood) return (
       <div style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem", padding: "0.4rem 0.875rem", backgroundColor: "#f0fdf4", border: "1px solid #bbf7d0", fontSize: "0.82rem", fontWeight: 700, color: "#16a34a" }}>
-        ✓ {currentStock} in stock
+        ✓ In Stock
       </div>
     )
     return null

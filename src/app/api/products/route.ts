@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
     let rows
 
     if (id) {
-      rows = await sql`SELECT * FROM products WHERE id = ${id}::uuid ORDER BY sort_order ASC, created_at DESC`
+      rows = await sql`SELECT * FROM products WHERE id = ${id} ORDER BY sort_order ASC, created_at DESC`
     } else if (slug) {
       rows = await sql`SELECT * FROM products WHERE slug = ${slug} ORDER BY sort_order ASC, created_at DESC`
     } else if (featured === "true" && inStock === "true" && limit) {
@@ -96,18 +96,18 @@ export async function PATCH(req: NextRequest) {
         original_price = COALESCE(${updates.original_price ?? null}, original_price),
         category = COALESCE(${updates.category ?? null}, category),
         subcategory = COALESCE(${updates.subcategory ?? null}, subcategory),
-        sizes = COALESCE(${updates.sizes ? JSON.stringify(updates.sizes) : null}::jsonb, sizes),
-        colors = COALESCE(${updates.colors ? JSON.stringify(updates.colors) : null}::jsonb, colors),
-        images = COALESCE(${updates.images ? JSON.stringify(updates.images) : null}::jsonb, images),
+        sizes = COALESCE(${updates.sizes ? JSON.stringify(updates.sizes) : null}, sizes),
+        colors = COALESCE(${updates.colors ? JSON.stringify(updates.colors) : null}, colors),
+        images = COALESCE(${updates.images ? JSON.stringify(updates.images) : null}, images),
         video_url = COALESCE(${updates.video_url ?? null}, video_url),
         description = COALESCE(${updates.description ?? null}, description),
         is_featured = COALESCE(${updates.is_featured ?? null}, is_featured),
         in_stock = COALESCE(${updates.in_stock ?? null}, in_stock),
         stock_quantity = COALESCE(${updates.stock_quantity ?? null}, stock_quantity),
         sort_order = COALESCE(${body.sort_order ?? null}, sort_order),
-        stock_matrix = COALESCE(${updates.stock_matrix ? JSON.stringify(updates.stock_matrix) : null}::jsonb, stock_matrix),
-        updated_at = NOW()
-      WHERE id = ${id}::uuid
+        stock_matrix = COALESCE(${updates.stock_matrix ? JSON.stringify(updates.stock_matrix) : null}, stock_matrix),
+        updated_at = datetime('now')
+      WHERE id = ${id}
       RETURNING *
     `
     return NextResponse.json({ success: true, product: normalizeProduct(product) })
@@ -122,7 +122,7 @@ export async function DELETE(req: NextRequest) {
     const { searchParams } = new URL(req.url)
     const id = searchParams.get("id")
     if (!id) return NextResponse.json({ error: "Product ID required" }, { status: 400 })
-    await sql`DELETE FROM products WHERE id = ${id}::uuid`
+    await sql`DELETE FROM products WHERE id = ${id}`
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error("Products DELETE error:", error)
