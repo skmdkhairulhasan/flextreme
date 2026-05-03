@@ -30,25 +30,25 @@ export async function GET(req: NextRequest) {
     let rows
 
     if (id) {
-      rows = await sql`SELECT * FROM products WHERE id = ${id} ORDER BY created_at DESC`
+      rows = await sql`SELECT * FROM products WHERE id = ${id}::uuid ORDER BY sort_order ASC, created_at DESC`
     } else if (slug) {
-      rows = await sql`SELECT * FROM products WHERE slug = ${slug} ORDER BY created_at DESC`
+      rows = await sql`SELECT * FROM products WHERE slug = ${slug} ORDER BY sort_order ASC, created_at DESC`
     } else if (featured === "true" && inStock === "true" && limit) {
-      rows = await sql`SELECT * FROM products WHERE is_featured = true AND in_stock = true ORDER BY created_at DESC LIMIT ${limit}`
+      rows = await sql`SELECT * FROM products WHERE is_featured = true AND in_stock = true ORDER BY sort_order ASC, created_at DESC LIMIT ${limit}`
     } else if (featured === "true" && inStock === "true") {
-      rows = await sql`SELECT * FROM products WHERE is_featured = true AND in_stock = true ORDER BY created_at DESC`
+      rows = await sql`SELECT * FROM products WHERE is_featured = true AND in_stock = true ORDER BY sort_order ASC, created_at DESC`
     } else if (featured === "true" && limit) {
-      rows = await sql`SELECT * FROM products WHERE is_featured = true ORDER BY created_at DESC LIMIT ${limit}`
+      rows = await sql`SELECT * FROM products WHERE is_featured = true ORDER BY sort_order ASC, created_at DESC LIMIT ${limit}`
     } else if (featured === "true") {
-      rows = await sql`SELECT * FROM products WHERE is_featured = true ORDER BY created_at DESC`
+      rows = await sql`SELECT * FROM products WHERE is_featured = true ORDER BY sort_order ASC, created_at DESC`
     } else if (inStock === "true" && limit) {
-      rows = await sql`SELECT * FROM products WHERE in_stock = true ORDER BY created_at DESC LIMIT ${limit}`
+      rows = await sql`SELECT * FROM products WHERE in_stock = true ORDER BY sort_order ASC, created_at DESC LIMIT ${limit}`
     } else if (inStock === "true") {
-      rows = await sql`SELECT * FROM products WHERE in_stock = true ORDER BY created_at DESC`
+      rows = await sql`SELECT * FROM products WHERE in_stock = true ORDER BY sort_order ASC, created_at DESC`
     } else if (limit) {
-      rows = await sql`SELECT * FROM products ORDER BY created_at DESC LIMIT ${limit}`
+      rows = await sql`SELECT * FROM products ORDER BY sort_order ASC, created_at DESC LIMIT ${limit}`
     } else {
-      rows = await sql`SELECT * FROM products ORDER BY created_at DESC`
+      rows = await sql`SELECT * FROM products ORDER BY sort_order ASC, created_at DESC`
     }
 
     return NextResponse.json({ products: rows.map(normalizeProduct) })
@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
       INSERT INTO products (
         name, slug, price, original_price, category, subcategory,
         sizes, colors, images, video_url, description,
-        is_featured, in_stock, stock_quantity, low_stock_alert, stock_matrix
+        is_featured, in_stock, stock_quantity, low_stock_alert, stock_matrix, sort_order
       ) VALUES (
         ${body.name}, ${body.slug}, ${body.price}, ${body.original_price ?? null},
         ${body.category ?? null}, ${body.subcategory ?? null},
@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
         ${JSON.stringify(body.images || [])}, ${body.video_url ?? null},
         ${body.description || ""}, ${body.is_featured || false},
         ${body.in_stock ?? true}, ${body.stock_quantity ?? null},
-        ${body.low_stock_alert || 5}, ${JSON.stringify(body.stock_matrix || {})}
+        ${body.low_stock_alert || 5}, ${JSON.stringify(body.stock_matrix || {})}, ${body.sort_order ?? 9999}
       )
       RETURNING *
     `
@@ -96,17 +96,18 @@ export async function PATCH(req: NextRequest) {
         original_price = COALESCE(${updates.original_price ?? null}, original_price),
         category = COALESCE(${updates.category ?? null}, category),
         subcategory = COALESCE(${updates.subcategory ?? null}, subcategory),
-        sizes = COALESCE(${updates.sizes ? JSON.stringify(updates.sizes) : null}, sizes),
-        colors = COALESCE(${updates.colors ? JSON.stringify(updates.colors) : null}, colors),
-        images = COALESCE(${updates.images ? JSON.stringify(updates.images) : null}, images),
+        sizes = COALESCE(${updates.sizes ? JSON.stringify(updates.sizes) : null}::jsonb, sizes),
+        colors = COALESCE(${updates.colors ? JSON.stringify(updates.colors) : null}::jsonb, colors),
+        images = COALESCE(${updates.images ? JSON.stringify(updates.images) : null}::jsonb, images),
         video_url = COALESCE(${updates.video_url ?? null}, video_url),
         description = COALESCE(${updates.description ?? null}, description),
         is_featured = COALESCE(${updates.is_featured ?? null}, is_featured),
         in_stock = COALESCE(${updates.in_stock ?? null}, in_stock),
         stock_quantity = COALESCE(${updates.stock_quantity ?? null}, stock_quantity),
-        stock_matrix = COALESCE(${updates.stock_matrix ? JSON.stringify(updates.stock_matrix) : null}, stock_matrix),
-        updated_at = datetime('now')
-      WHERE id = ${id}
+        sort_order = COALESCE(${body.sort_order ?? null}, sort_order),
+        stock_matrix = COALESCE(${updates.stock_matrix ? JSON.stringify(updates.stock_matrix) : null}::jsonb, stock_matrix),
+        updated_at = NOW()
+      WHERE id = ${id}::uuid
       RETURNING *
     `
     return NextResponse.json({ success: true, product: normalizeProduct(product) })
@@ -121,7 +122,7 @@ export async function DELETE(req: NextRequest) {
     const { searchParams } = new URL(req.url)
     const id = searchParams.get("id")
     if (!id) return NextResponse.json({ error: "Product ID required" }, { status: 400 })
-    await sql`DELETE FROM products WHERE id = ${id}`
+    await sql`DELETE FROM products WHERE id = ${id}::uuid`
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error("Products DELETE error:", error)
