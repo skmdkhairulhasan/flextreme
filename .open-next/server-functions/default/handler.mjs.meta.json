@@ -4996,8 +4996,8 @@
       ],
       "format": "cjs"
     },
-    ".open-next/server-functions/default/.next/server/app/api/settings/route.js": {
-      "bytes": 7835,
+    ".open-next/server-functions/default/.next/server/app/api/products/route.js": {
+      "bytes": 11062,
       "imports": [
         {
           "path": ".open-next/server-functions/default/node_modules/next/dist/shared/lib/router/utils/app-paths.js",
@@ -5047,8 +5047,8 @@
       ],
       "format": "cjs"
     },
-    ".open-next/server-functions/default/.next/server/app/api/products/route.js": {
-      "bytes": 11062,
+    ".open-next/server-functions/default/.next/server/app/api/settings/route.js": {
+      "bytes": 7835,
       "imports": [
         {
           "path": ".open-next/server-functions/default/node_modules/next/dist/shared/lib/router/utils/app-paths.js",
@@ -5297,7 +5297,7 @@
       "format": "cjs"
     },
     ".open-next/server-functions/default/.next/server/app/admin/reviews/page.js": {
-      "bytes": 29117,
+      "bytes": 30896,
       "imports": [
         {
           "path": ".open-next/server-functions/default/node_modules/next/dist/shared/lib/router/utils/app-paths.js",
@@ -5414,7 +5414,7 @@
       "format": "cjs"
     },
     ".open-next/server-functions/default/.next/server/app/api/reviews/route.js": {
-      "bytes": 11502,
+      "bytes": 11569,
       "imports": [
         {
           "path": ".open-next/server-functions/default/node_modules/next/dist/shared/lib/router/utils/app-paths.js",
@@ -7214,14 +7214,14 @@
           "original": "C:\\Users\\SK\\Desktop\\flextreme\\.open-next\\server-functions\\default\\.next\\server\\app\\admin\\settings\\page.js"
         },
         {
-          "path": ".open-next/server-functions/default/.next/server/app/api/settings/route.js",
-          "kind": "require-call",
-          "original": "C:\\Users\\SK\\Desktop\\flextreme\\.open-next\\server-functions\\default\\.next\\server\\app\\api\\settings\\route.js"
-        },
-        {
           "path": ".open-next/server-functions/default/.next/server/app/api/products/route.js",
           "kind": "require-call",
           "original": "C:\\Users\\SK\\Desktop\\flextreme\\.open-next\\server-functions\\default\\.next\\server\\app\\api\\products\\route.js"
+        },
+        {
+          "path": ".open-next/server-functions/default/.next/server/app/api/settings/route.js",
+          "kind": "require-call",
+          "original": "C:\\Users\\SK\\Desktop\\flextreme\\.open-next\\server-functions\\default\\.next\\server\\app\\api\\settings\\route.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/app/order-success/page.js",
@@ -9795,11 +9795,11 @@
         ".open-next/server-functions/default/.next/server/app/admin/settings/page.js": {
           "bytesInOutput": 126291
         },
-        ".open-next/server-functions/default/.next/server/app/api/settings/route.js": {
-          "bytesInOutput": 7942
-        },
         ".open-next/server-functions/default/.next/server/app/api/products/route.js": {
           "bytesInOutput": 11265
+        },
+        ".open-next/server-functions/default/.next/server/app/api/settings/route.js": {
+          "bytesInOutput": 7942
         },
         ".open-next/server-functions/default/.next/server/app/order-success/page.js": {
           "bytesInOutput": 26264
@@ -9811,13 +9811,13 @@
           "bytesInOutput": 40473
         },
         ".open-next/server-functions/default/.next/server/app/admin/reviews/page.js": {
-          "bytesInOutput": 29467
+          "bytesInOutput": 31270
         },
         ".open-next/server-functions/default/.next/server/app/api/contact/route.js": {
           "bytesInOutput": 7005
         },
         ".open-next/server-functions/default/.next/server/app/api/reviews/route.js": {
-          "bytesInOutput": 11663
+          "bytesInOutput": 11760
         },
         ".open-next/server-functions/default/.next/server/app/favicon.ico/route.js": {
           "bytesInOutput": 41386
@@ -10042,7 +10042,7 @@
           "bytesInOutput": 66893
         }
       },
-      "bytes": 4481970
+      "bytes": 4483870
     }
   }
 }
