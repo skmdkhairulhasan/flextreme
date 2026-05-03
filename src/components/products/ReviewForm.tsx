@@ -5,7 +5,7 @@ import { apiFetchClient, uploadFileToApi } from "@/lib/api/client"
 export default function ReviewForm({ productId, productName }: { productId: string, productName: string }) {
   const [name, setName] = useState("")
   const [location, setLocation] = useState("")
-  const [rating, setRating] = useState(0)
+  const [rating, setRating] = useState(5)
   const [hoverRating, setHoverRating] = useState(0)
   const [text, setText] = useState("")
   const [photo, setPhoto] = useState<File | null>(null)
@@ -17,7 +17,6 @@ export default function ReviewForm({ productId, productName }: { productId: stri
 
   async function handleSubmit() {
     if (!name.trim()) { setError("Please enter your name"); return }
-    if (rating === 0) { setError("Please select a star rating"); return }
     if (!text.trim()) { setError("Please write your review"); return }
     if (text.trim().length < 3) { setError("Review must be at least 3 characters"); return }
     setLoading(true)
@@ -76,7 +75,7 @@ export default function ReviewForm({ productId, productName }: { productId: stri
             <button key={star} onClick={() => setRating(star)} onMouseEnter={() => setHoverRating(star)} onMouseLeave={() => setHoverRating(0)} style={{ background: "none", border: "none", fontSize: "2rem", cursor: "pointer", color: star <= (hoverRating || rating) ? "#f0a500" : "#e0e0e0", transition: "color 0.15s", padding: "0", lineHeight: 1 }}>★</button>
           ))}
         </div>
-        {rating > 0 && <p style={{ fontSize: "0.75rem", color: "#999", marginTop: "0.3rem" }}>{["", "Poor", "Fair", "Good", "Very Good", "Excellent"][rating]}</p>}
+        <p style={{ fontSize: "0.75rem", color: "#999", marginTop: "0.3rem" }}>{["", "Poor", "Fair", "Good", "Very Good", "Excellent"][rating]}</p>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1rem" }}>
