@@ -76,7 +76,7 @@ export default function CheckoutPage() {
     try {
       const res = await fetch(`/api/customer-check?phone=${encodeURIComponent(ph.trim())}`)
       const data = await res.json()
-      setIsFlex100(data?.customer?.flex100 === true)
+      setIsFlex100(data?.flex100 === true || data?.customer?.flex100 === 1 || data?.customer?.flex100 === true)
       setDiscountChecked(true)
       if (data?.customer?.name) setCustomerName(data.customer.name)
     } catch {
