@@ -4,6 +4,7 @@ import { uploadToCloudinary } from "@/lib/cloudinary"
 
 export default function WriteReviewPage() {
   const [name, setName] = useState("")
+  const [email, setEmail] = useState("")
   const [location, setLocation] = useState("")
   const [rating, setRating] = useState(5)
   const [text, setText] = useState("")
@@ -67,6 +68,7 @@ export default function WriteReviewPage() {
         body: JSON.stringify({
           customer_name: name.trim(),
           customer_location: location.trim() || null,
+          email: email.trim() || null,
           rating,
           review_text: text.trim(),
           product_name: product.trim() || null,
@@ -179,6 +181,26 @@ export default function WriteReviewPage() {
               placeholder="Dhaka, Bangladesh" 
               value={location} 
               onChange={e => setLocation(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "0.875rem",
+                border: "1px solid #e0e0e0",
+                borderRadius: "4px",
+                fontSize: "0.95rem",
+                outline: "none"
+              }}
+            />
+          </div>
+
+          <div>
+            <label style={{ display: "block", fontWeight: 600, marginBottom: "0.5rem", fontSize: "0.875rem", color: "#333" }}>
+              Email (Optional)
+            </label>
+            <input 
+              type="email"
+              placeholder="your@email.com" 
+              value={email} 
+              onChange={e => setEmail(e.target.value)}
               style={{
                 width: "100%",
                 padding: "0.875rem",

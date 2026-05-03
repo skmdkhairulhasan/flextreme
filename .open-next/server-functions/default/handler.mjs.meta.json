@@ -3337,7 +3337,7 @@
       "format": "cjs"
     },
     ".open-next/server-functions/default/node_modules/next/dist/server/load-manifest.external.js": {
-      "bytes": 229425,
+      "bytes": 229429,
       "imports": [
         {
           "path": "path",
@@ -4550,7 +4550,7 @@
       "format": "cjs"
     },
     ".open-next/server-functions/default/.next/server/app/products/[slug]/page.js": {
-      "bytes": 60712,
+      "bytes": 61857,
       "imports": [
         {
           "path": ".open-next/server-functions/default/node_modules/next/dist/shared/lib/router/utils/app-paths.js",
@@ -5165,7 +5165,7 @@
       "format": "cjs"
     },
     ".open-next/server-functions/default/.next/server/app/reviews/write/page.js": {
-      "bytes": 23720,
+      "bytes": 24161,
       "imports": [
         {
           "path": ".open-next/server-functions/default/node_modules/next/dist/shared/lib/router/utils/app-paths.js",
@@ -7015,7 +7015,7 @@
       "format": "cjs"
     },
     ".open-next/server-functions/default/.next/server/app/page.js": {
-      "bytes": 55619,
+      "bytes": 55849,
       "imports": [
         {
           "path": ".open-next/server-functions/default/node_modules/next/dist/shared/lib/router/utils/app-paths.js",
@@ -9658,7 +9658,7 @@
           "bytesInOutput": 11898
         },
         ".open-next/server-functions/default/node_modules/next/dist/server/load-manifest.external.js": {
-          "bytesInOutput": 198045
+          "bytesInOutput": 198049
         },
         ".open-next/server-functions/default/node_modules/next/dist/server/app-render/action-async-storage-instance.js": {
           "bytesInOutput": 501
@@ -9775,7 +9775,7 @@
           "bytesInOutput": 10330
         },
         ".open-next/server-functions/default/.next/server/app/products/[slug]/page.js": {
-          "bytesInOutput": 61608
+          "bytesInOutput": 62758
         },
         ".open-next/server-functions/default/.next/server/app/admin/customers/page.js": {
           "bytesInOutput": 41645
@@ -9805,7 +9805,7 @@
           "bytesInOutput": 26264
         },
         ".open-next/server-functions/default/.next/server/app/reviews/write/page.js": {
-          "bytesInOutput": 23948
+          "bytesInOutput": 24391
         },
         ".open-next/server-functions/default/.next/server/app/admin/finance/page.js": {
           "bytesInOutput": 40473
@@ -9928,7 +9928,7 @@
           "bytesInOutput": 3581
         },
         ".open-next/server-functions/default/.next/server/app/page.js": {
-          "bytesInOutput": 56631
+          "bytesInOutput": 56861
         },
         ".open-next/server-functions/default/node_modules/next/dist/server/require.js": {
           "bytesInOutput": 28415
@@ -10042,7 +10042,7 @@
           "bytesInOutput": 66893
         }
       },
-      "bytes": 4488847
+      "bytes": 4490674
     }
   }
 }

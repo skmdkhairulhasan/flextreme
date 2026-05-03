@@ -4,7 +4,9 @@ import { apiFetchClient, uploadFileToApi } from "@/lib/api/client"
 
 export default function ReviewForm({ productId, productName }: { productId: string, productName: string }) {
   const [name, setName] = useState("")
+  const [email, setEmail] = useState("")
   const [location, setLocation] = useState("")
+  const [product, setProduct] = useState(productName || "")
   const [rating, setRating] = useState(5)
   const [hoverRating, setHoverRating] = useState(0)
   const [text, setText] = useState("")
@@ -37,12 +39,13 @@ export default function ReviewForm({ productId, productName }: { productId: stri
         method: "POST",
         body: JSON.stringify({
           product_id: productId,
-          product_name: productName,
           customer_name: name.trim(),
           customer_location: location.trim(),
+          email: email.trim() || null,
           rating,
           review_text: text.trim(),
           photo_url,
+          product_name: product.trim() || productName || null,
           status: "pending",
         }),
       })
@@ -86,6 +89,14 @@ export default function ReviewForm({ productId, productName }: { productId: stri
         <div>
           <label style={{ display: "block", fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.4rem", color: "#555" }}>City / District</label>
           <input value={location} onChange={e => setLocation(e.target.value)} placeholder="e.g. Dhaka" style={{ width: "100%", border: "1px solid #e0e0e0", padding: "0.65rem 0.875rem", fontSize: "0.9rem", outline: "none", boxSizing: "border-box" }} />
+        </div>
+        <div>
+          <label style={{ display: "block", fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.4rem", color: "#555" }}>Email <span style={{ fontWeight: 400, textTransform: "none" }}>(Optional)</span></label>
+          <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="your@email.com" style={{ width: "100%", border: "1px solid #e0e0e0", padding: "0.65rem 0.875rem", fontSize: "0.9rem", outline: "none", boxSizing: "border-box" }} />
+        </div>
+        <div>
+          <label style={{ display: "block", fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.4rem", color: "#555" }}>Product <span style={{ fontWeight: 400, textTransform: "none" }}>(Optional)</span></label>
+          <input value={product} onChange={e => setProduct(e.target.value)} placeholder="Which product?" style={{ width: "100%", border: "1px solid #e0e0e0", padding: "0.65rem 0.875rem", fontSize: "0.9rem", outline: "none", boxSizing: "border-box" }} />
         </div>
       </div>
 

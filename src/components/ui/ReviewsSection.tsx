@@ -75,6 +75,14 @@ export default function ReviewsSection({ reviews }: { reviews: any[] }) {
           display: flex;
           justify-content: space-between;
           align-items: flex-end;
+          min-height: 64px;
+        }
+        .review-meta {
+          display: flex;
+          flex-direction: column;
+          gap: 0.15rem;
+          min-height: 44px;
+          justify-content: flex-end;
         }
         .review-image-wrap {
           height: 220px;
@@ -120,10 +128,10 @@ export default function ReviewsSection({ reviews }: { reviews: any[] }) {
                 </div>
                 <p className="review-text">"{review.review_text}"</p>
                 <div className="review-footer">
-                  <div>
+                  <div className="review-meta">
                     <p style={{ fontWeight: 700, fontSize: "0.82rem", color: "white" }}>{review.customer_name}</p>
                     {review.customer_location && <p style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.4)" }}>{review.customer_location}</p>}
-                    {review.product_name && <p style={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.3)", marginTop: "0.25rem" }}>Purchased: {review.product_name}</p>}
+                    <p style={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.3)", minHeight: "1.1em" }}>{review.product_name ? "Purchased: " + review.product_name : ""}</p>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: "0.3rem", flexShrink: 0 }}>
                     <span style={{ width: "13px", height: "13px", backgroundColor: "white", borderRadius: "50%", display: "inline-flex", alignItems: "center", justifyContent: "center", color: "black", fontSize: "0.45rem" }}>v</span>
