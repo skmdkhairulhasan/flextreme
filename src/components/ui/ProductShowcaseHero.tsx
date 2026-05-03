@@ -499,7 +499,15 @@ export default function ProductShowcaseHero({
   const openActiveProduct = useCallback(() => {
     if (clickSuppressRef.current) return
     const slug = activeProduct?.slug
-    if (slug) router.push(slug)
+    if (!slug) return
+    // Handle both full URLs (https://...) and relative paths (/products/...)
+    try {
+      const url = new URL(slug)
+      router.push(url.pathname)
+    } catch {
+      // It's already a relative path
+      router.push(slug.startsWith('/') ? slug : '/' + slug)
+    }
   }, [activeProduct?.slug, router])
 
   const defaultHeading = heading || "ULTRA FLEX\nENGINEERED TO FLEX.\nBUILT TO PERFORM."

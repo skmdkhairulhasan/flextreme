@@ -300,9 +300,15 @@ function ProductCard({ product }: { product: Product }) {
   const image = product.images && product.images[0] ? product.images[0] : "https://images.unsplash.com/photo-1571945153237-4929e783af4a?w=800"
   const discount = product.original_price ? Math.round(((product.original_price - product.price) / product.original_price) * 100) : null
   return (
-    <Link href={"/products/" + product.slug} style={{ textDecoration: "none", color: "inherit" }}>
-      <div style={{ cursor: "pointer" }}>
-        <div style={{ position: "relative", backgroundColor: "#f5f5f5", aspectRatio: "3/4", overflow: "hidden", marginBottom: "1rem" }}>
+    <Link href={"/products/" + product.slug} style={{ textDecoration: "none", color: "inherit", display: "block" }}>
+      <style>{`
+        .product-card-wrap { transition: transform 0.25s cubic-bezier(0.25,0.46,0.45,0.94); cursor: pointer; }
+        .product-card-wrap:hover { transform: translateY(-6px); }
+        .product-card-wrap:hover .product-card-img img { transform: scale(1.04); }
+        .product-card-img img { transition: transform 0.35s cubic-bezier(0.25,0.46,0.45,0.94); }
+      `}</style>
+      <div className="product-card-wrap">
+        <div className="product-card-img" style={{ position: "relative", backgroundColor: "#f5f5f5", aspectRatio: "3/4", overflow: "hidden", marginBottom: "1rem" }}>
           <img src={image} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
           {discount && <div style={{ position: "absolute", top: "1rem", left: "1rem", backgroundColor: "var(--theme-primary, black)", color: "white", padding: "0.25rem 0.6rem", fontSize: "0.7rem", fontWeight: 700 }}>-{discount}%</div>}
         </div>

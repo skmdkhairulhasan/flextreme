@@ -3281,12 +3281,12 @@
       "imports": [],
       "format": "cjs"
     },
-    ".open-next/server-functions/default/.next/server/app/api/settings/route_client-reference-manifest.js": {
+    ".open-next/server-functions/default/.next/server/app/api/products/route_client-reference-manifest.js": {
       "bytes": 13286,
       "imports": [],
       "format": "cjs"
     },
-    ".open-next/server-functions/default/.next/server/app/api/products/route_client-reference-manifest.js": {
+    ".open-next/server-functions/default/.next/server/app/api/settings/route_client-reference-manifest.js": {
       "bytes": 13286,
       "imports": [],
       "format": "cjs"
@@ -3337,7 +3337,7 @@
       "format": "cjs"
     },
     ".open-next/server-functions/default/node_modules/next/dist/server/load-manifest.external.js": {
-      "bytes": 229429,
+      "bytes": 229433,
       "imports": [
         {
           "path": "path",
@@ -3410,14 +3410,14 @@
           "original": "C:\\Users\\SK\\Desktop\\flextreme\\.open-next\\server-functions\\default\\.next\\server\\app\\api\\customers\\route_client-reference-manifest.js"
         },
         {
-          "path": ".open-next/server-functions/default/.next/server/app/api/settings/route_client-reference-manifest.js",
-          "kind": "require-call",
-          "original": "C:\\Users\\SK\\Desktop\\flextreme\\.open-next\\server-functions\\default\\.next\\server\\app\\api\\settings\\route_client-reference-manifest.js"
-        },
-        {
           "path": ".open-next/server-functions/default/.next/server/app/api/products/route_client-reference-manifest.js",
           "kind": "require-call",
           "original": "C:\\Users\\SK\\Desktop\\flextreme\\.open-next\\server-functions\\default\\.next\\server\\app\\api\\products\\route_client-reference-manifest.js"
+        },
+        {
+          "path": ".open-next/server-functions/default/.next/server/app/api/settings/route_client-reference-manifest.js",
+          "kind": "require-call",
+          "original": "C:\\Users\\SK\\Desktop\\flextreme\\.open-next\\server-functions\\default\\.next\\server\\app\\api\\settings\\route_client-reference-manifest.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/app/sitemap.xml/route_client-reference-manifest.js",
@@ -4931,7 +4931,7 @@
       "format": "cjs"
     },
     ".open-next/server-functions/default/.next/server/app/admin/settings/page.js": {
-      "bytes": 124179,
+      "bytes": 124636,
       "imports": [
         {
           "path": ".open-next/server-functions/default/node_modules/next/dist/shared/lib/router/utils/app-paths.js",
@@ -7015,7 +7015,7 @@
       "format": "cjs"
     },
     ".open-next/server-functions/default/.next/server/app/page.js": {
-      "bytes": 55849,
+      "bytes": 56372,
       "imports": [
         {
           "path": ".open-next/server-functions/default/node_modules/next/dist/shared/lib/router/utils/app-paths.js",
@@ -9624,10 +9624,10 @@
         ".open-next/server-functions/default/.next/server/app/api/customers/route_client-reference-manifest.js": {
           "bytesInOutput": 11910
         },
-        ".open-next/server-functions/default/.next/server/app/api/settings/route_client-reference-manifest.js": {
+        ".open-next/server-functions/default/.next/server/app/api/products/route_client-reference-manifest.js": {
           "bytesInOutput": 11907
         },
-        ".open-next/server-functions/default/.next/server/app/api/products/route_client-reference-manifest.js": {
+        ".open-next/server-functions/default/.next/server/app/api/settings/route_client-reference-manifest.js": {
           "bytesInOutput": 11907
         },
         ".open-next/server-functions/default/.next/server/app/sitemap.xml/route_client-reference-manifest.js": {
@@ -9658,7 +9658,7 @@
           "bytesInOutput": 11898
         },
         ".open-next/server-functions/default/node_modules/next/dist/server/load-manifest.external.js": {
-          "bytesInOutput": 198049
+          "bytesInOutput": 198053
         },
         ".open-next/server-functions/default/node_modules/next/dist/server/app-render/action-async-storage-instance.js": {
           "bytesInOutput": 501
@@ -9793,7 +9793,7 @@
           "bytesInOutput": 30441
         },
         ".open-next/server-functions/default/.next/server/app/admin/settings/page.js": {
-          "bytesInOutput": 126291
+          "bytesInOutput": 126748
         },
         ".open-next/server-functions/default/.next/server/app/api/products/route.js": {
           "bytesInOutput": 11265
@@ -9928,7 +9928,7 @@
           "bytesInOutput": 3581
         },
         ".open-next/server-functions/default/.next/server/app/page.js": {
-          "bytesInOutput": 56861
+          "bytesInOutput": 57389
         },
         ".open-next/server-functions/default/node_modules/next/dist/server/require.js": {
           "bytesInOutput": 28415
@@ -10042,7 +10042,7 @@
           "bytesInOutput": 66893
         }
       },
-      "bytes": 4490674
+      "bytes": 4491663
     }
   }
 }

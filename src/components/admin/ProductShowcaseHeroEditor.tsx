@@ -83,11 +83,18 @@ export default function ProductShowcaseHeroEditor({
         .showcase-editor-card textarea { box-sizing: border-box; max-width: 100%; }
         .showcase-image-row { display: flex; gap: 0.75rem; align-items: flex-start; flex-wrap: wrap; }
         .showcase-image-row label { flex-shrink: 0; }
-        .showcase-image-row .url-input { flex: 1; min-width: 140px; }
+        .showcase-image-row .url-input { flex: 1; min-width: 0; width: 100%; overflow: hidden; }
+        .showcase-image-row .url-input input { width: 100%; min-width: 0; box-sizing: border-box; }
         .showcase-color-row { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; }
         .showcase-color-row input[type="color"] { flex-shrink: 0; width: 60px; height: 44px; }
-        .showcase-color-row .hex-input { flex: 1; min-width: 100px; }
+        .showcase-color-row .hex-input { flex: 1; min-width: 0; width: 100%; }
+        .showcase-color-row .hex-input input { width: 100%; min-width: 0; box-sizing: border-box; }
         .showcase-color-row .color-preview { flex-shrink: 0; width: 48px; height: 48px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+        @media (max-width: 480px) {
+          .showcase-image-row { flex-direction: column; }
+          .showcase-image-row label { width: 100%; }
+          .showcase-color-row .color-preview { display: none; }
+        }
       `}</style>
 
       <h2 style={{ marginBottom: "1.5rem", fontSize: "1.25rem", fontWeight: 700 }}>
