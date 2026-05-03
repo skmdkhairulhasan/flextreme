@@ -61,6 +61,9 @@ export default function OrderForm({ product }: OrderFormProps) {
   const [phone, setPhone] = useState("")
   const [address, setAddress] = useState("")
   const [notes, setNotes] = useState("")
+  const [isFlex100, setIsFlex100] = useState(false)
+  const [flex100Name, setFlex100Name] = useState("")
+  const [flex100Checked, setFlex100Checked] = useState(false)
 
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
@@ -142,7 +145,23 @@ export default function OrderForm({ product }: OrderFormProps) {
 
   const deliveryFee = freeDelivery ? 0 : (deliveryOptions.find(o => o.name === selectedDelivery)?.price || 0)
   const subtotal = product.price * quantity
-  const total = subtotal + deliveryFee
+  const rawTotal = subtotal + deliveryFee
+  const discountAmount = isFlex100 ? Math.round(rawTotal * 0.1) : 0
+  const total = rawTotal - discountAmount
+
+  async function checkFlex100(ph: string) {
+    if (!ph.trim()) return
+    try {
+      const res = await fetch(`/api/customer-check?phone=${encodeURIComponent(ph.trim())}`)
+      const data = await res.json()
+      const isF = data?.flex100 === true || data?.customer?.flex100 === 1 || data?.customer?.flex100 === true
+      setIsFlex100(isF)
+      setFlex100Checked(true)
+      if (data?.customer?.name) setFlex100Name(data.customer.name)
+    } catch {
+      setFlex100Checked(true)
+    }
+  }
 
   function validateSelections(): string {
     if (product.sizes?.length && !selectedSize) return "Please select a size"
@@ -385,10 +404,15 @@ export default function OrderForm({ product }: OrderFormProps) {
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.4rem", fontSize: "0.9rem", color: "#555" }}>
               <span>Product ({quantity}×)</span><span>BDT {subtotal.toLocaleString()}</span>
             </div>
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.75rem", fontSize: "0.9rem", color: "#555" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.4rem", fontSize: "0.9rem", color: "#555" }}>
               <span>Delivery</span>
               <span>{freeDelivery ? <strong style={{ color: "#16a34a" }}>FREE</strong> : selectedDelivery ? `BDT ${deliveryFee.toLocaleString()}` : "—"}</span>
             </div>
+            {isFlex100 && discountAmount > 0 && (
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.4rem", fontSize: "0.9rem", color: "#16a34a", fontWeight: 700 }}>
+                <span>🥇 FLEX100 Discount (10%)</span><span>-BDT {discountAmount.toLocaleString()}</span>
+              </div>
+            )}
             <div style={{ display: "flex", justifyContent: "space-between", paddingTop: "0.75rem", borderTop: "2px solid black", fontSize: "1.2rem", fontWeight: 900 }}>
               <span>Total</span><span>BDT {total.toLocaleString()}</span>
             </div>
@@ -427,8 +451,16 @@ export default function OrderForm({ product }: OrderFormProps) {
           </div>
           <div>
             <label style={label}>Phone Number *</label>
-            <input value={phone} onChange={e => { setPhone(e.target.value); setError("") }} placeholder="01XXXXXXXXX" type="tel" style={input} />
+            <input value={phone} onChange={e => { setPhone(e.target.value); setError(""); setFlex100Checked(false); setIsFlex100(false) }} onBlur={e => checkFlex100(e.target.value)} placeholder="01XXXXXXXXX" type="tel" style={input} />
           </div>
+          {flex100Checked && isFlex100 && (
+            <div style={{ padding: "0.75rem 1rem", backgroundColor: "#fef9c3", border: "1px solid #fcd34d", borderLeft: "4px solid #f59e0b" }}>
+              <p style={{ fontSize: "0.85rem", fontWeight: 700, color: "#854d0e" }}>
+                🎉 Welcome back{flex100Name ? ", " + flex100Name : ""}! FLEX100 member — <span style={{ color: "#16a34a" }}>10% lifetime discount applied ✓</span>
+              </p>
+            </div>
+          )}
+
           <div>
             <label style={label}>Delivery Address *</label>
             <textarea value={address} onChange={e => { setAddress(e.target.value); setError("") }}
