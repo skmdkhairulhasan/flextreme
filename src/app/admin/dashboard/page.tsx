@@ -20,7 +20,7 @@ async function getData() {
           (SELECT COUNT(*) FROM orders) AS order_count,
           (SELECT COUNT(*) FROM reviews) AS review_count,
           (SELECT COALESCE(AVG(rating), 0) FROM reviews WHERE approved = true) AS avg_rating,
-          (SELECT COALESCE(SUM(total_price), 0) FROM orders WHERE status = ANY(${["confirmed","processing","shipped","delivered"]})) AS total_revenue
+          (SELECT COALESCE(SUM(total_price), 0) FROM orders WHERE status IN ('confirmed','processing','shipped','delivered')) AS total_revenue
       `,
     ])
     const s = statsRow[0]

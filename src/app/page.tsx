@@ -129,7 +129,7 @@ export default async function HomePage() {
       sql`SELECT COUNT(*) as count FROM customers`,
       sql`SELECT COUNT(*) as count FROM reviews`,
       sql`SELECT COALESCE(AVG(rating), 0) as avg_rating FROM reviews WHERE approved = true`,
-      sql`SELECT COALESCE(SUM(total_price), 0) as total_revenue FROM orders WHERE status = ANY(${["confirmed", "processing", "shipped", "delivered"]})`,
+      sql`SELECT COALESCE(SUM(total_price), 0) as total_revenue FROM orders WHERE status IN ('confirmed','processing','shipped','delivered')`,
     ])
     stats = {
       productCount: Number(products_count[0]?.count || 0),

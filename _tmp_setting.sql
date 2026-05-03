@@ -1,0 +1,1 @@
+INSERT OR REPLACE INTO settings (key, value) VALUES ('hero_headline_spacing', '-0.05');

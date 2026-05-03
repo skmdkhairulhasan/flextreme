@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
 
     let rows
     if (productId) {
-      rows = await sql`SELECT * FROM products WHERE id = ${productId}::uuid LIMIT 1`
+      rows = await sql`SELECT * FROM products WHERE id = ${productId} LIMIT 1`
     } else if (slug) {
       rows = await sql`SELECT * FROM products WHERE slug = ${slug} LIMIT 1`
     } else {
@@ -45,18 +45,18 @@ export async function POST(req: NextRequest) {
       const soldRows = await sql`
         SELECT COALESCE(SUM(quantity), 0) as sold
         FROM orders
-        WHERE product_id = ${product.id}::uuid
+        WHERE product_id = ${product.id}
           AND LOWER(size) = LOWER(${size})
           AND LOWER(color) = LOWER(${color})
-          AND status = ANY(${["confirmed", "processing", "shipped", "delivered"]})
+          AND status IN ('confirmed','processing','shipped','delivered')
       `
       sold = Number(soldRows[0]?.sold || 0)
     } else {
       const soldRows = await sql`
         SELECT COALESCE(SUM(quantity), 0) as sold
         FROM orders
-        WHERE product_id = ${product.id}::uuid
-          AND status = ANY(${["confirmed", "processing", "shipped", "delivered"]})
+        WHERE product_id = ${product.id}
+          AND status IN ('confirmed','processing','shipped','delivered')
       `
       sold = Number(soldRows[0]?.sold || 0)
     }

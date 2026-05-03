@@ -2,11 +2,10 @@ import { NextRequest, NextResponse } from "next/server"
 import sql from "@/lib/db"
 
 async function recalculateCustomerStats(phone: string) {
-  const counted = ["confirmed", "processing", "shipped", "delivered"]
   const [stats] = await sql`
     SELECT COUNT(*) as total_orders, COALESCE(SUM(total_price), 0) as total_spent
     FROM orders
-    WHERE phone = ${phone} AND status = ANY(${counted})
+    WHERE phone = ${phone} AND status IN ('confirmed','processing','shipped','delivered')
   `
   await sql`
     UPDATE customers SET
@@ -22,7 +21,7 @@ export async function GET(
 ) {
   try {
     const { id } = await context.params
-    const rows = await sql`SELECT * FROM orders WHERE id = ${id}::uuid LIMIT 1`
+    const rows = await sql`SELECT * FROM orders WHERE id = ${id} LIMIT 1`
 
     if (rows.length === 0) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 })
@@ -45,7 +44,7 @@ export async function PATCH(
   try {
     const { id } = await context.params
     const body = await req.json()
-    const [oldOrder] = await sql`SELECT phone FROM orders WHERE id = ${id}::uuid LIMIT 1`
+    const [oldOrder] = await sql`SELECT phone FROM orders WHERE id = ${id} LIMIT 1`
 
     // Build update fields — handle product_id cast separately to avoid nested sql`` bug
     const productId = body.product_id ?? null
@@ -57,7 +56,7 @@ export async function PATCH(
             phone = COALESCE(${body.phone ?? null}, phone),
             email = COALESCE(${body.email ?? null}, email),
             address = COALESCE(${body.address ?? null}, address),
-            product_id = ${productId}::uuid,
+            product_id = ${productId},
             product_name = COALESCE(${body.product_name ?? null}, product_name),
             size = COALESCE(${body.size ?? null}, size),
             color = COALESCE(${body.color ?? null}, color),
@@ -66,8 +65,8 @@ export async function PATCH(
             status = COALESCE(${body.status ?? null}, status),
             notes = COALESCE(${body.notes ?? null}, notes),
             tracking_url = COALESCE(${body.tracking_url ?? null}, tracking_url),
-            updated_at = NOW()
-          WHERE id = ${id}::uuid
+            updated_at = datetime('now')
+          WHERE id = ${id}
           RETURNING *
         `
       : await sql`
@@ -84,8 +83,8 @@ export async function PATCH(
             status = COALESCE(${body.status ?? null}, status),
             notes = COALESCE(${body.notes ?? null}, notes),
             tracking_url = COALESCE(${body.tracking_url ?? null}, tracking_url),
-            updated_at = NOW()
-          WHERE id = ${id}::uuid
+            updated_at = datetime('now')
+          WHERE id = ${id}
           RETURNING *
         `
 
@@ -112,7 +111,7 @@ export async function DELETE(
 ) {
   try {
     const { id } = await context.params
-    const [order] = await sql`DELETE FROM orders WHERE id = ${id}::uuid RETURNING phone`
+    const [order] = await sql`DELETE FROM orders WHERE id = ${id} RETURNING phone`
 
     if (!order) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 })

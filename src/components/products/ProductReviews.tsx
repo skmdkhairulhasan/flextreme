@@ -17,7 +17,7 @@ export default async function ProductReviews({ productId }: { productId: string 
       SELECT r.*, p.name AS product_name
       FROM reviews r
       LEFT JOIN products p ON p.id = r.product_id
-      WHERE r.product_id = ${productId}::uuid
+      WHERE r.product_id = ${productId}
         AND r.approved = true
       ORDER BY r.created_at DESC
     `

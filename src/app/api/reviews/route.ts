@@ -22,7 +22,7 @@ let columnsReady = false
 async function ensureColumns() {
   if (columnsReady) return
   try {
-    await sql`ALTER TABLE reviews ALTER COLUMN product_id DROP NOT NULL`
+    // D1/SQLite: product_id is nullable by default (no NOT NULL constraint in schema)
   } catch {}
   try {
     await sql`ALTER TABLE reviews ADD COLUMN IF NOT EXISTS photo_url TEXT`
@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
             SELECT r.*, p.name AS product_name
             FROM reviews r
             LEFT JOIN products p ON p.id = r.product_id
-            WHERE r.product_id = ${productId}::uuid
+            WHERE r.product_id = ${productId}
             ORDER BY r.featured DESC, r.created_at DESC
             LIMIT ${limitNum}
           `
@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
             SELECT r.*, p.name AS product_name
             FROM reviews r
             LEFT JOIN products p ON p.id = r.product_id
-            WHERE r.product_id = ${productId}::uuid
+            WHERE r.product_id = ${productId}
             ORDER BY r.featured DESC, r.created_at DESC
           `
     } else {
@@ -134,7 +134,7 @@ export async function POST(request: NextRequest) {
           product_id, customer_name, phone, rating, comment,
           approved, status, photo_url, customer_location, featured
         ) VALUES (
-          ${body.product_id}::uuid,
+          ${body.product_id},
           ${customerName},
           ${body.phone ?? null},
           ${Number(body.rating) || 5},
@@ -203,14 +203,14 @@ export async function PATCH(request: NextRequest) {
       UPDATE reviews SET
         customer_name     = COALESCE(${updates.customer_name     ?? null}, customer_name),
         phone             = COALESCE(${updates.phone             ?? null}, phone),
-        rating            = COALESCE(${updates.rating            ?? null}::int, rating),
+        rating            = COALESCE(${updates.rating            ?? null}, rating),
         comment           = COALESCE(${updates.comment ?? updates.review_text ?? null}, comment),
         photo_url         = COALESCE(${updates.photo_url         ?? null}, photo_url),
         customer_location = COALESCE(${updates.customer_location ?? null}, customer_location),
         status            = COALESCE(${newStatus},   status),
         approved          = COALESCE(${newApproved}, approved),
         featured          = COALESCE(${newFeatured}, featured)
-      WHERE id = ${id}::uuid
+      WHERE id = ${id}
       RETURNING *
     `
 
@@ -226,7 +226,7 @@ export async function DELETE(request: NextRequest) {
   try {
     const id = request.nextUrl.searchParams.get("id")
     if (!id) return NextResponse.json({ error: "Review ID required" }, { status: 400 })
-    const rows = await sql`DELETE FROM reviews WHERE id = ${id}::uuid RETURNING id`
+    const rows = await sql`DELETE FROM reviews WHERE id = ${id} RETURNING id`
     if (!rows[0]) return NextResponse.json({ error: "Review not found" }, { status: 404 })
     return NextResponse.json({ success: true })
   } catch (error) {

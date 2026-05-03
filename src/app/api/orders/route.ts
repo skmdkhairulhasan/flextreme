@@ -2,11 +2,10 @@ import { NextRequest, NextResponse } from "next/server"
 import sql from "@/lib/db"
 
 async function recalculateCustomerStats(phone: string) {
-  const counted = ["confirmed", "processing", "shipped", "delivered"]
   const [stats] = await sql`
     SELECT COUNT(*) as total_orders, COALESCE(SUM(total_price), 0) as total_spent
     FROM orders
-    WHERE phone = ${phone} AND status = ANY(${counted})
+    WHERE phone = ${phone} AND status IN ('confirmed','processing','shipped','delivered')
   `
   await sql`
     UPDATE customers SET
@@ -27,13 +26,17 @@ export async function GET(request: NextRequest) {
     if (phone) {
       rows = await sql`SELECT * FROM orders WHERE phone = ${phone} ORDER BY created_at DESC`
     } else if (productId && status) {
-      const statuses = status.split(",")
-      rows = await sql`SELECT * FROM orders WHERE product_id = ${productId}::uuid AND status = ANY(${statuses}) ORDER BY created_at DESC`
+      // D1: filter by status in JS after fetching by product_id
+      rows = await sql`SELECT * FROM orders WHERE product_id = ${productId} ORDER BY created_at DESC`
+      if (status !== "all") {
+        const statuses = status.split(",")
+        rows = (rows as any[]).filter((r: any) => statuses.includes(r.status))
+      }
     } else if (productId) {
-      rows = await sql`SELECT * FROM orders WHERE product_id = ${productId}::uuid ORDER BY created_at DESC`
+      rows = await sql`SELECT * FROM orders WHERE product_id = ${productId} ORDER BY created_at DESC`
     } else if (status) {
       const statuses = status.split(",")
-      rows = await sql`SELECT * FROM orders WHERE status = ANY(${statuses}) ORDER BY created_at DESC`
+      rows = await sql`SELECT * FROM orders WHERE status IN ('pending','confirmed','processing','shipped','delivered','cancelled') ORDER BY created_at DESC`
     } else {
       rows = await sql`SELECT * FROM orders ORDER BY created_at DESC`
     }
@@ -59,7 +62,7 @@ export async function POST(request: NextRequest) {
           ) VALUES (
             ${body.customer_name || body.name},
             ${body.phone}, ${body.email ?? null}, ${body.address ?? null},
-            ${productId}::uuid,
+            ${productId},
             ${body.product_name ?? null}, ${body.size ?? null}, ${body.color ?? null},
             ${body.quantity || 1}, ${body.total_price || 0},
             ${body.status || "pending"}, ${body.notes || ""}, ${body.tracking_url ?? null}
@@ -102,7 +105,7 @@ export async function PATCH(request: NextRequest) {
   try {
     const body = await request.json()
     const { id, ...updates } = body
-    const [oldOrder] = await sql`SELECT phone FROM orders WHERE id = ${id}::uuid`
+    const [oldOrder] = await sql`SELECT phone FROM orders WHERE id = ${id}`
     const [order] = await sql`
       UPDATE orders SET
         name = COALESCE(${updates.name ?? null}, name),
@@ -111,8 +114,8 @@ export async function PATCH(request: NextRequest) {
         notes = COALESCE(${updates.notes ?? null}, notes),
         tracking_url = COALESCE(${updates.tracking_url ?? null}, tracking_url),
         address = COALESCE(${updates.address ?? null}, address),
-        updated_at = NOW()
-      WHERE id = ${id}::uuid
+        updated_at = datetime('now')
+      WHERE id = ${id}
       RETURNING *
     `
     if (oldOrder) await recalculateCustomerStats(oldOrder.phone)
@@ -129,8 +132,8 @@ export async function DELETE(request: NextRequest) {
     const { searchParams } = request.nextUrl
     const id = searchParams.get("id")
     if (!id) return NextResponse.json({ error: "Order ID required" }, { status: 400 })
-    const [order] = await sql`SELECT phone FROM orders WHERE id = ${id}::uuid`
-    await sql`DELETE FROM orders WHERE id = ${id}::uuid`
+    const [order] = await sql`SELECT phone FROM orders WHERE id = ${id}`
+    await sql`DELETE FROM orders WHERE id = ${id}`
     if (order) await recalculateCustomerStats(order.phone)
     return NextResponse.json({ success: true })
   } catch (error) {

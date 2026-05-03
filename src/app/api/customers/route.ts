@@ -33,7 +33,7 @@ export async function PATCH(request: NextRequest) {
         phone    = COALESCE(${updates.phone    ?? null}, phone),
         vip      = COALESCE(${updates.vip      ?? null}, vip),
         flex100  = COALESCE(${updates.flex100  ?? null}, flex100)
-      WHERE id = ${id}::uuid
+      WHERE id = ${id}
       RETURNING *
     `
 
@@ -52,7 +52,7 @@ export async function DELETE(request: NextRequest) {
 
     if (!id) return NextResponse.json({ error: "Customer ID required" }, { status: 400 })
 
-    const rows = await sql`DELETE FROM customers WHERE id = ${id}::uuid RETURNING id`
+    const rows = await sql`DELETE FROM customers WHERE id = ${id} RETURNING id`
     if (rows.length === 0) return NextResponse.json({ error: "Customer not found" }, { status: 404 })
 
     return NextResponse.json({ success: true })

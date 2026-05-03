@@ -41,8 +41,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   try {
     soldOrders = await sql`
       SELECT size, color, quantity FROM orders
-      WHERE product_id = ${p.id}::uuid
-        AND status = ANY(${["confirmed", "processing", "shipped", "delivered"]})
+      WHERE product_id = ${p.id}
+        AND status IN ('confirmed','processing','shipped','delivered')
     `
   } catch {}
 
