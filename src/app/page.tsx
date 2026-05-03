@@ -96,7 +96,8 @@ export default async function HomePage() {
   }
 
   try {
-    // Featured reviews first, fill rest with recent approved (up to 6 total)
+    // Add featured column if missing, then fetch
+    try { await sql`ALTER TABLE reviews ADD COLUMN IF NOT EXISTS featured BOOLEAN NOT NULL DEFAULT false` } catch {}
     const featuredRows = await sql`
       SELECT r.*, p.name AS product_name
       FROM reviews r LEFT JOIN products p ON p.id = r.product_id
@@ -109,7 +110,7 @@ export default async function HomePage() {
       otherRows = await sql`
         SELECT r.*, p.name AS product_name
         FROM reviews r LEFT JOIN products p ON p.id = r.product_id
-        WHERE r.approved = true AND (r.featured = false OR r.featured IS NULL)
+        WHERE r.approved = true AND r.featured = false
         ORDER BY r.created_at DESC
         LIMIT ${remaining}
       `
@@ -123,6 +124,11 @@ export default async function HomePage() {
     }))
   } catch (e) {
     console.error("Reviews error:", e)
+    // Fallback: just get recent approved reviews without featured filter
+    try {
+      const rows = await sql`SELECT r.*, p.name AS product_name FROM reviews r LEFT JOIN products p ON p.id = r.product_id WHERE r.approved = true ORDER BY r.created_at DESC LIMIT 6`
+      reviews = rows.map((r: any) => ({ ...r, review_text: r.comment || r.review_text || "", customer_location: r.customer_location || "", photo_url: r.photo_url || null }))
+    } catch {}
   }
 
   try {
