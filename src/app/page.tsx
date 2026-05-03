@@ -104,7 +104,12 @@ export default async function HomePage() {
       ORDER BY r.created_at DESC
       LIMIT 6
     `
-    reviews = rows
+    reviews = rows.map((r: any) => ({
+      ...r,
+      review_text: r.comment || r.review_text || "",
+      customer_location: r.customer_location || "",
+      photo_url: r.photo_url || null,
+    }))
   } catch (e) {
     console.error("Reviews error:", e)
   }
