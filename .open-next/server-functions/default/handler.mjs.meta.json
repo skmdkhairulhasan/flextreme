@@ -3281,12 +3281,12 @@
       "imports": [],
       "format": "cjs"
     },
-    ".open-next/server-functions/default/.next/server/app/api/products/route_client-reference-manifest.js": {
+    ".open-next/server-functions/default/.next/server/app/api/settings/route_client-reference-manifest.js": {
       "bytes": 13286,
       "imports": [],
       "format": "cjs"
     },
-    ".open-next/server-functions/default/.next/server/app/api/settings/route_client-reference-manifest.js": {
+    ".open-next/server-functions/default/.next/server/app/api/products/route_client-reference-manifest.js": {
       "bytes": 13286,
       "imports": [],
       "format": "cjs"
@@ -3410,14 +3410,14 @@
           "original": "C:\\Users\\SK\\Desktop\\flextreme\\.open-next\\server-functions\\default\\.next\\server\\app\\api\\customers\\route_client-reference-manifest.js"
         },
         {
-          "path": ".open-next/server-functions/default/.next/server/app/api/products/route_client-reference-manifest.js",
-          "kind": "require-call",
-          "original": "C:\\Users\\SK\\Desktop\\flextreme\\.open-next\\server-functions\\default\\.next\\server\\app\\api\\products\\route_client-reference-manifest.js"
-        },
-        {
           "path": ".open-next/server-functions/default/.next/server/app/api/settings/route_client-reference-manifest.js",
           "kind": "require-call",
           "original": "C:\\Users\\SK\\Desktop\\flextreme\\.open-next\\server-functions\\default\\.next\\server\\app\\api\\settings\\route_client-reference-manifest.js"
+        },
+        {
+          "path": ".open-next/server-functions/default/.next/server/app/api/products/route_client-reference-manifest.js",
+          "kind": "require-call",
+          "original": "C:\\Users\\SK\\Desktop\\flextreme\\.open-next\\server-functions\\default\\.next\\server\\app\\api\\products\\route_client-reference-manifest.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/app/sitemap.xml/route_client-reference-manifest.js",
@@ -4406,8 +4406,8 @@
       ],
       "format": "cjs"
     },
-    ".open-next/server-functions/default/.next/server/app/api/order-lookup/route.js": {
-      "bytes": 7168,
+    ".open-next/server-functions/default/.next/server/app/api/nlp-classify/route.js": {
+      "bytes": 7211,
       "imports": [
         {
           "path": ".open-next/server-functions/default/node_modules/next/dist/shared/lib/router/utils/app-paths.js",
@@ -4415,19 +4415,9 @@
           "original": "next/dist/shared/lib/router/utils/app-paths"
         },
         {
-          "path": ".open-next/server-functions/default/node_modules/next/dist/server/app-render/after-task-async-storage.external.js",
-          "kind": "require-call",
-          "original": "next/dist/server/app-render/after-task-async-storage.external.js"
-        },
-        {
           "path": ".open-next/server-functions/default/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js",
           "kind": "require-call",
           "original": "next/dist/compiled/next-server/app-page.runtime.prod.js"
-        },
-        {
-          "path": ".open-next/server-functions/default/node_modules/next/dist/server/app-render/action-async-storage.external.js",
-          "kind": "require-call",
-          "original": "next/dist/server/app-render/action-async-storage.external.js"
         },
         {
           "path": ".open-next/server-functions/default/node_modules/next/dist/server/app-render/work-async-storage.external.js",
@@ -4457,8 +4447,8 @@
       ],
       "format": "cjs"
     },
-    ".open-next/server-functions/default/.next/server/app/api/nlp-classify/route.js": {
-      "bytes": 7211,
+    ".open-next/server-functions/default/.next/server/app/api/order-lookup/route.js": {
+      "bytes": 7168,
       "imports": [
         {
           "path": ".open-next/server-functions/default/node_modules/next/dist/shared/lib/router/utils/app-paths.js",
@@ -4466,9 +4456,19 @@
           "original": "next/dist/shared/lib/router/utils/app-paths"
         },
         {
+          "path": ".open-next/server-functions/default/node_modules/next/dist/server/app-render/after-task-async-storage.external.js",
+          "kind": "require-call",
+          "original": "next/dist/server/app-render/after-task-async-storage.external.js"
+        },
+        {
           "path": ".open-next/server-functions/default/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js",
           "kind": "require-call",
           "original": "next/dist/compiled/next-server/app-page.runtime.prod.js"
+        },
+        {
+          "path": ".open-next/server-functions/default/node_modules/next/dist/server/app-render/action-async-storage.external.js",
+          "kind": "require-call",
+          "original": "next/dist/server/app-render/action-async-storage.external.js"
         },
         {
           "path": ".open-next/server-functions/default/node_modules/next/dist/server/app-render/work-async-storage.external.js",
@@ -7015,7 +7015,7 @@
       "format": "cjs"
     },
     ".open-next/server-functions/default/.next/server/app/page.js": {
-      "bytes": 55446,
+      "bytes": 55157,
       "imports": [
         {
           "path": ".open-next/server-functions/default/node_modules/next/dist/shared/lib/router/utils/app-paths.js",
@@ -7164,14 +7164,14 @@
           "original": "C:\\Users\\SK\\Desktop\\flextreme\\.open-next\\server-functions\\default\\.next\\server\\app\\api\\flex-ai-chat\\route.js"
         },
         {
-          "path": ".open-next/server-functions/default/.next/server/app/api/order-lookup/route.js",
-          "kind": "require-call",
-          "original": "C:\\Users\\SK\\Desktop\\flextreme\\.open-next\\server-functions\\default\\.next\\server\\app\\api\\order-lookup\\route.js"
-        },
-        {
           "path": ".open-next/server-functions/default/.next/server/app/api/nlp-classify/route.js",
           "kind": "require-call",
           "original": "C:\\Users\\SK\\Desktop\\flextreme\\.open-next\\server-functions\\default\\.next\\server\\app\\api\\nlp-classify\\route.js"
+        },
+        {
+          "path": ".open-next/server-functions/default/.next/server/app/api/order-lookup/route.js",
+          "kind": "require-call",
+          "original": "C:\\Users\\SK\\Desktop\\flextreme\\.open-next\\server-functions\\default\\.next\\server\\app\\api\\order-lookup\\route.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/app/api/orders/[id]/route.js",
@@ -9624,10 +9624,10 @@
         ".open-next/server-functions/default/.next/server/app/api/customers/route_client-reference-manifest.js": {
           "bytesInOutput": 11910
         },
-        ".open-next/server-functions/default/.next/server/app/api/products/route_client-reference-manifest.js": {
+        ".open-next/server-functions/default/.next/server/app/api/settings/route_client-reference-manifest.js": {
           "bytesInOutput": 11907
         },
-        ".open-next/server-functions/default/.next/server/app/api/settings/route_client-reference-manifest.js": {
+        ".open-next/server-functions/default/.next/server/app/api/products/route_client-reference-manifest.js": {
           "bytesInOutput": 11907
         },
         ".open-next/server-functions/default/.next/server/app/sitemap.xml/route_client-reference-manifest.js": {
@@ -9765,11 +9765,11 @@
         ".open-next/server-functions/default/.next/server/app/api/flex-ai-chat/route.js": {
           "bytesInOutput": 29638
         },
-        ".open-next/server-functions/default/.next/server/app/api/order-lookup/route.js": {
-          "bytesInOutput": 7268
-        },
         ".open-next/server-functions/default/.next/server/app/api/nlp-classify/route.js": {
           "bytesInOutput": 7388
+        },
+        ".open-next/server-functions/default/.next/server/app/api/order-lookup/route.js": {
+          "bytesInOutput": 7268
         },
         ".open-next/server-functions/default/.next/server/app/api/orders/[id]/route.js": {
           "bytesInOutput": 10330
@@ -9928,7 +9928,7 @@
           "bytesInOutput": 3581
         },
         ".open-next/server-functions/default/.next/server/app/page.js": {
-          "bytesInOutput": 56470
+          "bytesInOutput": 56169
         },
         ".open-next/server-functions/default/node_modules/next/dist/server/require.js": {
           "bytesInOutput": 28415
@@ -10042,7 +10042,7 @@
           "bytesInOutput": 66893
         }
       },
-      "bytes": 4488745
+      "bytes": 4488444
     }
   }
 }

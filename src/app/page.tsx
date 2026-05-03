@@ -96,7 +96,7 @@ export default async function HomePage() {
   }
 
   try {
-    // Add featured column if missing, then fetch
+    // Show ONLY featured reviews. If none are featured, show up to 6 recent approved.
     try { await sql`ALTER TABLE reviews ADD COLUMN IF NOT EXISTS featured BOOLEAN NOT NULL DEFAULT false` } catch {}
     const featuredRows = await sql`
       SELECT r.*, p.name AS product_name
@@ -104,18 +104,14 @@ export default async function HomePage() {
       WHERE r.approved = true AND r.featured = true
       ORDER BY r.created_at DESC
     `
-    const remaining = Math.max(0, 6 - featuredRows.length)
-    let otherRows: any[] = []
-    if (remaining > 0) {
-      otherRows = await sql`
-        SELECT r.*, p.name AS product_name
-        FROM reviews r LEFT JOIN products p ON p.id = r.product_id
-        WHERE r.approved = true AND r.featured = false
-        ORDER BY r.created_at DESC
-        LIMIT ${remaining}
-      `
-    }
-    reviews = [...featuredRows, ...otherRows].map((r: any) => ({
+    const sourceRows = featuredRows.length > 0 ? featuredRows : await sql`
+      SELECT r.*, p.name AS product_name
+      FROM reviews r LEFT JOIN products p ON p.id = r.product_id
+      WHERE r.approved = true
+      ORDER BY r.created_at DESC
+      LIMIT 6
+    `
+    reviews = sourceRows.map((r: any) => ({
       ...r,
       review_text: r.comment || r.review_text || "",
       customer_location: r.customer_location || "",
@@ -124,11 +120,6 @@ export default async function HomePage() {
     }))
   } catch (e) {
     console.error("Reviews error:", e)
-    // Fallback: just get recent approved reviews without featured filter
-    try {
-      const rows = await sql`SELECT r.*, p.name AS product_name FROM reviews r LEFT JOIN products p ON p.id = r.product_id WHERE r.approved = true ORDER BY r.created_at DESC LIMIT 6`
-      reviews = rows.map((r: any) => ({ ...r, review_text: r.comment || r.review_text || "", customer_location: r.customer_location || "", photo_url: r.photo_url || null }))
-    } catch {}
   }
 
   try {

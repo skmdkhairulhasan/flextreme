@@ -26,15 +26,19 @@ export default function ReviewsSection({ reviews }: { reviews: any[] }) {
 
       <style>{`
         .reviews-grid {
-          display: grid;
-          grid-template-columns: repeat(4, 1fr);
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: center;
           gap: 20px;
         }
-        @media (max-width: 1024px) {
-          .reviews-grid { grid-template-columns: repeat(2, 1fr); }
+        .reviews-grid .review-card {
+          flex: 1 1 260px;
+          max-width: 320px;
+          min-width: 220px;
         }
         @media (max-width: 640px) {
-          .reviews-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+          .reviews-grid .review-card { flex: 1 1 calc(50% - 10px); max-width: none; min-width: 0; }
+          .reviews-grid { gap: 12px; }
         }
         .review-card {
           display: flex;
