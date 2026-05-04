@@ -3256,12 +3256,12 @@
       "imports": [],
       "format": "cjs"
     },
-    ".open-next/server-functions/default/.next/server/app/api/nlp-classify/route_client-reference-manifest.js": {
+    ".open-next/server-functions/default/.next/server/app/api/order-lookup/route_client-reference-manifest.js": {
       "bytes": 13294,
       "imports": [],
       "format": "cjs"
     },
-    ".open-next/server-functions/default/.next/server/app/api/order-lookup/route_client-reference-manifest.js": {
+    ".open-next/server-functions/default/.next/server/app/api/nlp-classify/route_client-reference-manifest.js": {
       "bytes": 13294,
       "imports": [],
       "format": "cjs"
@@ -3337,7 +3337,7 @@
       "format": "cjs"
     },
     ".open-next/server-functions/default/node_modules/next/dist/server/load-manifest.external.js": {
-      "bytes": 229425,
+      "bytes": 229427,
       "imports": [
         {
           "path": "path",
@@ -3385,14 +3385,14 @@
           "original": "C:\\Users\\SK\\Desktop\\flextreme\\.open-next\\server-functions\\default\\.next\\server\\app\\api\\hero-products\\route_client-reference-manifest.js"
         },
         {
-          "path": ".open-next/server-functions/default/.next/server/app/api/nlp-classify/route_client-reference-manifest.js",
-          "kind": "require-call",
-          "original": "C:\\Users\\SK\\Desktop\\flextreme\\.open-next\\server-functions\\default\\.next\\server\\app\\api\\nlp-classify\\route_client-reference-manifest.js"
-        },
-        {
           "path": ".open-next/server-functions/default/.next/server/app/api/order-lookup/route_client-reference-manifest.js",
           "kind": "require-call",
           "original": "C:\\Users\\SK\\Desktop\\flextreme\\.open-next\\server-functions\\default\\.next\\server\\app\\api\\order-lookup\\route_client-reference-manifest.js"
+        },
+        {
+          "path": ".open-next/server-functions/default/.next/server/app/api/nlp-classify/route_client-reference-manifest.js",
+          "kind": "require-call",
+          "original": "C:\\Users\\SK\\Desktop\\flextreme\\.open-next\\server-functions\\default\\.next\\server\\app\\api\\nlp-classify\\route_client-reference-manifest.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/app/api/flex-ai-chat/route_client-reference-manifest.js",
@@ -4921,7 +4921,7 @@
       "format": "cjs"
     },
     ".open-next/server-functions/default/.next/server/app/admin/settings/page.js": {
-      "bytes": 124636,
+      "bytes": 124964,
       "imports": [
         {
           "path": ".open-next/server-functions/default/node_modules/next/dist/shared/lib/router/utils/app-paths.js",
@@ -6882,7 +6882,7 @@
       "format": "cjs"
     },
     ".open-next/server-functions/default/.next/server/app/about/page.js": {
-      "bytes": 24558,
+      "bytes": 25390,
       "imports": [
         {
           "path": ".open-next/server-functions/default/node_modules/next/dist/shared/lib/router/utils/app-paths.js",
@@ -7005,7 +7005,7 @@
       "format": "cjs"
     },
     ".open-next/server-functions/default/.next/server/app/page.js": {
-      "bytes": 58220,
+      "bytes": 58459,
       "imports": [
         {
           "path": ".open-next/server-functions/default/node_modules/next/dist/shared/lib/router/utils/app-paths.js",
@@ -9599,10 +9599,10 @@
         ".open-next/server-functions/default/.next/server/app/api/hero-products/route_client-reference-manifest.js": {
           "bytesInOutput": 11921
         },
-        ".open-next/server-functions/default/.next/server/app/api/nlp-classify/route_client-reference-manifest.js": {
+        ".open-next/server-functions/default/.next/server/app/api/order-lookup/route_client-reference-manifest.js": {
           "bytesInOutput": 11918
         },
-        ".open-next/server-functions/default/.next/server/app/api/order-lookup/route_client-reference-manifest.js": {
+        ".open-next/server-functions/default/.next/server/app/api/nlp-classify/route_client-reference-manifest.js": {
           "bytesInOutput": 11918
         },
         ".open-next/server-functions/default/.next/server/app/api/flex-ai-chat/route_client-reference-manifest.js": {
@@ -9648,7 +9648,7 @@
           "bytesInOutput": 11898
         },
         ".open-next/server-functions/default/node_modules/next/dist/server/load-manifest.external.js": {
-          "bytesInOutput": 198045
+          "bytesInOutput": 198047
         },
         ".open-next/server-functions/default/node_modules/next/dist/server/app-render/action-async-storage-instance.js": {
           "bytesInOutput": 501
@@ -9780,7 +9780,7 @@
           "bytesInOutput": 32993
         },
         ".open-next/server-functions/default/.next/server/app/admin/settings/page.js": {
-          "bytesInOutput": 126748
+          "bytesInOutput": 127117
         },
         ".open-next/server-functions/default/.next/server/app/api/products/route.js": {
           "bytesInOutput": 13394
@@ -9906,7 +9906,7 @@
           "bytesInOutput": 458
         },
         ".open-next/server-functions/default/.next/server/app/about/page.js": {
-          "bytesInOutput": 24844
+          "bytesInOutput": 25708
         },
         ".open-next/server-functions/default/.next/server/pages/_error.js": {
           "bytesInOutput": 83205
@@ -9915,7 +9915,7 @@
           "bytesInOutput": 3581
         },
         ".open-next/server-functions/default/.next/server/app/page.js": {
-          "bytesInOutput": 59277
+          "bytesInOutput": 59523
         },
         ".open-next/server-functions/default/node_modules/next/dist/server/require.js": {
           "bytesInOutput": 28415
@@ -10029,7 +10029,7 @@
           "bytesInOutput": 66893
         }
       },
-      "bytes": 4382159
+      "bytes": 4383640
     }
   }
 }

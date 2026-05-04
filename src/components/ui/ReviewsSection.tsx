@@ -49,11 +49,19 @@ export default function ReviewsSection({ reviews }: { reviews: any[] }) {
           overflow: hidden;
           background: rgba(255,255,255,0.04);
         }
+        /* Text area — fixed height so all cards align */
         .review-card-body {
           padding: 1.25rem;
-          flex: 1;
           display: flex;
           flex-direction: column;
+          height: 220px;
+          flex-shrink: 0;
+          box-sizing: border-box;
+        }
+        /* Text-only cards (no photo) expand to fill full height */
+        .review-card.no-photo .review-card-body {
+          height: 100%;
+          flex: 1;
         }
         .review-text {
           font-size: 0.875rem;
@@ -61,7 +69,6 @@ export default function ReviewsSection({ reviews }: { reviews: any[] }) {
           color: rgba(255,255,255,0.75);
           font-style: italic;
           flex: 1;
-          height: 5.6em;
           display: -webkit-box;
           -webkit-line-clamp: 4;
           -webkit-box-orient: vertical;
@@ -76,6 +83,7 @@ export default function ReviewsSection({ reviews }: { reviews: any[] }) {
           justify-content: space-between;
           align-items: flex-end;
           min-height: 64px;
+          flex-shrink: 0;
         }
         .review-meta {
           display: flex;
@@ -84,6 +92,7 @@ export default function ReviewsSection({ reviews }: { reviews: any[] }) {
           min-height: 44px;
           justify-content: flex-end;
         }
+        /* Photo area — fixed height, always same size */
         .review-image-wrap {
           height: 220px;
           overflow: hidden;
@@ -98,17 +107,11 @@ export default function ReviewsSection({ reviews }: { reviews: any[] }) {
           object-fit: cover;
           display: block;
         }
-        .review-no-image {
-          height: 220px;
-          background: rgba(255,255,255,0.02);
-          border-top: 1px solid rgba(255,255,255,0.06);
-          flex-shrink: 0;
-        }
         @media (max-width: 640px) {
-          .review-card-body { padding: 0.875rem; }
-          .review-text { font-size: 0.78rem; height: 4.2em; -webkit-line-clamp: 3; }
+          .review-card-body { padding: 0.875rem; height: 180px; }
+          .review-card.no-photo .review-card-body { height: 100%; }
+          .review-text { font-size: 0.78rem; -webkit-line-clamp: 3; }
           .review-image-wrap { height: 160px; }
-          .review-no-image { height: 160px; }
         }
       `}</style>
 
@@ -121,7 +124,7 @@ export default function ReviewsSection({ reviews }: { reviews: any[] }) {
 
         <div className="reviews-grid">
           {reviews.map((review: any, index: number) => (
-            <div key={review.id || index} className="review-card">
+            <div key={review.id || index} className={`review-card${!review.photo_url ? " no-photo" : ""}`}>
               <div className="review-card-body">
                 <div style={{ fontSize: "0.9rem", marginBottom: "0.6rem", color: "#f0a500" }}>
                   {"★".repeat(review.rating)}<span style={{ color: "rgba(255,255,255,0.15)" }}>{"★".repeat(5 - review.rating)}</span>
@@ -139,13 +142,11 @@ export default function ReviewsSection({ reviews }: { reviews: any[] }) {
                   </div>
                 </div>
               </div>
-              {review.photo_url ? (
+              {review.photo_url && (
                 <div className="review-image-wrap" style={{ cursor: "zoom-in" }} onClick={() => setLightbox(review.photo_url)}>
                   <img className="review-image" src={review.photo_url} alt="Customer photo" />
                   <p style={{ position: "absolute", bottom: 0, left: 0, right: 0, fontSize: "0.62rem", color: "rgba(255,255,255,0.4)", textAlign: "center", padding: "0.25rem", background: "rgba(0,0,0,0.4)" }}>📷 Tap to enlarge</p>
                 </div>
-              ) : (
-                <div className="review-no-image" />
               )}
             </div>
           ))}

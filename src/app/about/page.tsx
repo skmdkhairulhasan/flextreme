@@ -1,6 +1,22 @@
 import Link from "next/link"
 import sql from "@/lib/db"
 
+// Renders **bold**, _italic_, and line breaks
+function renderRichText(text: string) {
+  if (!text) return null
+  const lines = text.split("\n")
+  return <>{lines.map((line: string, li: number) => {
+    const parts = line.split(/(\*\*[\s\S]+?\*\*|_[\s\S]+?_|<u>[\s\S]+?<\/u>)/g)
+    const rendered = parts.map((part: string, i: number) => {
+      if (part.startsWith("**") && part.endsWith("**") && part.length > 4) return <strong key={i}>{part.slice(2, -2)}</strong>
+      if (part.startsWith("_") && part.endsWith("_") && part.length > 2) return <em key={i}>{part.slice(1, -1)}</em>
+      if (part.startsWith("<u>") && part.endsWith("</u>")) return <u key={i}>{part.slice(3, -4)}</u>
+      return <span key={i}>{part}</span>
+    })
+    return <span key={li}>{rendered}{li < lines.length - 1 && <br />}</span>
+  })}</>
+}
+
 export const dynamic = "force-dynamic"
 export const metadata = { title: "About Us | Flextreme" }
 
@@ -40,6 +56,7 @@ export default async function AboutPage() {
   const s = settings
 
   const heroHeadline = s.about_hero_headline || "Born From The Grind."
+  const heroTagline  = s.about_hero_tagline || s.brand_tagline || "Born In The Gym. Built For The Grind."
   const heroSub      = s.about_hero_sub || ""
   const storyTitle   = s.about_story_title || "Our Story"
   const statsTitle   = s.about_stats_title || "Growing"
@@ -77,7 +94,8 @@ Every product you see here passed through real athletes first. Because we believ
             <span key={i}>{line}{i < heroHeadline.split("|").length - 1 && <br />}</span>
           ))}
         </h1>
-        {heroSub && <p style={{ marginTop: "1rem", color: "rgba(255,255,255,0.7)", fontSize: "1.125rem", maxWidth: "600px", margin: "1rem auto 0" }}>{heroSub}</p>}
+        {heroTagline && <p style={{ marginTop: "1rem", color: "rgba(255,255,255,0.6)", fontSize: "1rem", maxWidth: "600px", margin: "0.75rem auto 0", fontWeight: 600, letterSpacing: "0.05em", textTransform: "uppercase" }}>{heroTagline}</p>}
+        {heroSub && <p style={{ marginTop: "0.75rem", color: "rgba(255,255,255,0.7)", fontSize: "1.125rem", maxWidth: "600px", margin: "0.75rem auto 0" }}>{heroSub}</p>}
       </section>
 
       {/* Content */}
@@ -87,8 +105,8 @@ Every product you see here passed through real athletes first. Because we believ
           {/* Brand Story */}
           <div style={{ maxWidth: "800px", margin: "0 auto 6rem" }}>
             <h2 style={{ textAlign: "center", fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.3em", textTransform: "uppercase", color: "#999", marginBottom: "2rem" }}>{storyTitle}</h2>
-            <div style={{ fontSize: "1.125rem", lineHeight: 1.8, color: "#333", whiteSpace: "pre-wrap" }}>
-              {brandStory}
+            <div style={{ fontSize: "1.125rem", lineHeight: 1.8, color: "#333" }}>
+              {renderRichText(brandStory)}
             </div>
           </div>
 

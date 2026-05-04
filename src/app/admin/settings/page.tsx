@@ -1,4 +1,5 @@
 "use client"
+import React from "react"
 import ConfirmModal from "@/components/ui/ConfirmModal"
 import HeroBgUploader from "@/components/admin/HeroBgUploader"
 
@@ -22,34 +23,55 @@ interface DeliveryEditorProps {
   onSave: () => void
 }
 function DeliveryEditor({ groups, saving, saved, onUpdate, onSave, requestConfirm }: DeliveryEditorProps & { requestConfirm: (msg: string, onOk: () => void) => void }) {
+  // Local state prevents focus loss on every keystroke
+  const [local, setLocal] = React.useState<DeliveryGroup[]>(groups)
+  const localRef = React.useRef(local)
+  localRef.current = local
+  React.useEffect(() => { setLocal(groups) }, [JSON.stringify(groups)])
+
+  function commit(updated: DeliveryGroup[]) {
+    setLocal(updated)
+    onUpdate(updated)
+  }
+
   function addGroup() {
-    onUpdate([...groups, { id: "g_" + Date.now(), name: "New Group", zones: [] }])
+    commit([...localRef.current, { id: "g_" + Date.now(), name: "New Group", zones: [] }])
   }
   function deleteGroup(id: string) {
-    const g = groups.find(g => g.id === id)
+    const g = localRef.current.find(g => g.id === id)
     requestConfirm("Delete group <strong>" + (g?.name || "this group") + "</strong> and all its cities? Cannot be undone.", () => {
-      onUpdate(groups.filter(g => g.id !== id))
+      commit(localRef.current.filter(g => g.id !== id))
     })
   }
   function updateGroupName(id: string, name: string) {
-    onUpdate(groups.map(g => g.id === id ? { ...g, name } : g))
+    const updated = localRef.current.map(g => g.id === id ? { ...g, name } : g)
+    setLocal(updated)
+  }
+  function blurGroupName(id: string, name: string) {
+    commit(localRef.current.map(g => g.id === id ? { ...g, name } : g))
   }
   function addZone(groupId: string) {
-    onUpdate(groups.map(g => g.id !== groupId ? g : {
+    commit(localRef.current.map(g => g.id !== groupId ? g : {
       ...g, zones: [...g.zones, { id: "z_" + Date.now(), name: "New City", charge: "", days: "" }]
     }))
   }
   function deleteZone(groupId: string, zoneId: string) {
-    const g = groups.find(g => g.id === groupId)
+    const g = localRef.current.find(g => g.id === groupId)
     const z = g?.zones.find(z => z.id === zoneId)
     requestConfirm("Delete city <strong>" + (z?.name || "this city") + "</strong>? Cannot be undone.", () => {
-      onUpdate(groups.map(g => g.id !== groupId ? g : { ...g, zones: g.zones.filter(z => z.id !== zoneId) }))
+      commit(localRef.current.map(g => g.id !== groupId ? g : { ...g, zones: g.zones.filter(z => z.id !== zoneId) }))
     })
   }
   function updateZone(groupId: string, zoneId: string, field: keyof DeliveryZone, value: string) {
-    onUpdate(groups.map(g => g.id !== groupId ? g : {
+    // Update local only — no parent re-render = no focus loss
+    const updated = localRef.current.map(g => g.id !== groupId ? g : {
       ...g, zones: g.zones.map(z => z.id !== zoneId ? z : { ...z, [field]: value })
-    }))
+    })
+    setLocal(updated)
+  }
+  function commitZone() {
+    // Sync to parent on blur
+    onUpdate(localRef.current)
   }
   return (
     <div>
@@ -76,7 +98,7 @@ function DeliveryEditor({ groups, saving, saved, onUpdate, onSave, requestConfir
           <div style={{ backgroundColor: "#111", color: "white", padding: "0.75rem 1rem", display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
             <input
               value={group.name}
-              onChange={e => updateGroupName(group.id, e.target.value)}
+              onChange={e => updateGroupName(group.id, e.target.value)} onBlur={e => blurGroupName(group.id, e.target.value)}
               placeholder="Group name e.g. Dhaka Division"
               style={{ flex: 1, minWidth: "120px", background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)", color: "white", padding: "0.35rem 0.75rem", fontSize: "0.85rem", fontWeight: 700, outline: "none" }}
             />
@@ -93,16 +115,16 @@ function DeliveryEditor({ groups, saving, saved, onUpdate, onSave, requestConfir
                   <div key={i} style={{ padding: "0.4rem 0.6rem", fontSize: "0.62rem", fontWeight: 700, textTransform: "uppercase", color: "#666" }}>{h}</div>
                 ))}
               </div>
-              {group.zones.map((zone, idx) => (
+              {groups.find(g=>g.id===group.id)?.zones.map((zone, idx) => (
                 <div key={zone.id} style={{ display: "grid", gridTemplateColumns: "1fr 100px 90px 36px", borderBottom: "1px solid #f5f5f5", backgroundColor: idx % 2 === 0 ? "white" : "#fafafa", alignItems: "center", minWidth: "360px" }}>
                   <div style={{ padding: "0.3rem 0.5rem" }}>
-                    <input value={zone.name} onChange={e => updateZone(group.id, zone.id, "name", e.target.value)} placeholder="City name" style={{ width: "100%", border: "1px solid #e0e0e0", padding: "0.35rem 0.5rem", fontSize: "0.82rem", outline: "none", boxSizing: "border-box" as const }} />
+                    <input value={zone.name} onChange={e => updateZone(group.id, zone.id, "name", e.target.value)} onBlur={commitZone} placeholder="City name" style={{ width: "100%", border: "1px solid #e0e0e0", padding: "0.35rem 0.5rem", fontSize: "0.82rem", outline: "none", boxSizing: "border-box" as const }} />
                   </div>
                   <div style={{ padding: "0.3rem 0.4rem" }}>
-                    <input value={zone.charge} onChange={e => updateZone(group.id, zone.id, "charge", e.target.value)} placeholder="60" style={{ width: "100%", border: "1px solid #e0e0e0", padding: "0.35rem 0.4rem", fontSize: "0.82rem", outline: "none", boxSizing: "border-box" as const }} />
+                    <input value={zone.charge} onChange={e => updateZone(group.id, zone.id, "charge", e.target.value)} onBlur={commitZone} placeholder="60" style={{ width: "100%", border: "1px solid #e0e0e0", padding: "0.35rem 0.4rem", fontSize: "0.82rem", outline: "none", boxSizing: "border-box" as const }} />
                   </div>
                   <div style={{ padding: "0.3rem 0.4rem" }}>
-                    <input value={zone.days} onChange={e => updateZone(group.id, zone.id, "days", e.target.value)} placeholder="1-2" style={{ width: "100%", border: "1px solid #e0e0e0", padding: "0.35rem 0.4rem", fontSize: "0.82rem", outline: "none", boxSizing: "border-box" as const }} />
+                    <input value={zone.days} onChange={e => updateZone(group.id, zone.id, "days", e.target.value)} onBlur={commitZone} placeholder="1-2" style={{ width: "100%", border: "1px solid #e0e0e0", padding: "0.35rem 0.4rem", fontSize: "0.82rem", outline: "none", boxSizing: "border-box" as const }} />
                   </div>
                   <div style={{ padding: "0.3rem 0.25rem", display: "flex", justifyContent: "center" }}>
                     <button onClick={() => deleteZone(group.id, zone.id)} style={{ width: "24px", height: "24px", backgroundColor: "#fff0f0", border: "1px solid #ffcccc", color: "#cc0000", cursor: "pointer", fontSize: "0.65rem", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900 }}>✕</button>

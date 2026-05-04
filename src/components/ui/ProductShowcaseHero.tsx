@@ -468,6 +468,20 @@ export default function ProductShowcaseHero({
     if (Math.abs(dragDeltaRef.current) > 8) clickSuppressRef.current = true
   }, [])
 
+  const openActiveProduct = useCallback(() => {
+    if (clickSuppressRef.current) return
+    const slug = activeProduct?.slug
+    if (!slug) return
+    // Handle both full URLs (https://...) and relative paths (/products/...)
+    try {
+      const url = new URL(slug)
+      router.push(url.pathname)
+    } catch {
+      // It's already a relative path
+      router.push(slug.startsWith('/') ? slug : '/' + slug)
+    }
+  }, [activeProduct?.slug, router])
+
   const endDrag = useCallback((e: ReactPointerEvent<HTMLDivElement>) => {
     if (pointerIdRef.current !== e.pointerId) return
 
@@ -483,32 +497,24 @@ export default function ProductShowcaseHero({
       pauseAfterInteraction()
       if (dragDelta < 0) nextSlide()
       else prevSlide()
+      clickSuppressRef.current = true
+    } else if (Math.abs(dragDelta) <= 8) {
+      // It was a tap/click, not a drag — navigate to product
+      clickSuppressRef.current = false
+      openActiveProduct()
+      return
     }
 
     window.setTimeout(() => {
       clickSuppressRef.current = false
     }, 100)
-  }, [nextSlide, pauseAfterInteraction, prevSlide])
+  }, [nextSlide, openActiveProduct, pauseAfterInteraction, prevSlide])
 
   const handleArrowClick = useCallback((direction: "next" | "prev") => {
     pauseAfterInteraction()
     if (direction === "next") nextSlide()
     else prevSlide()
   }, [nextSlide, pauseAfterInteraction, prevSlide])
-
-  const openActiveProduct = useCallback(() => {
-    if (clickSuppressRef.current) return
-    const slug = activeProduct?.slug
-    if (!slug) return
-    // Handle both full URLs (https://...) and relative paths (/products/...)
-    try {
-      const url = new URL(slug)
-      router.push(url.pathname)
-    } catch {
-      // It's already a relative path
-      router.push(slug.startsWith('/') ? slug : '/' + slug)
-    }
-  }, [activeProduct?.slug, router])
 
   const defaultHeading = heading || "ULTRA FLEX\nENGINEERED TO FLEX.\nBUILT TO PERFORM."
   const defaultSubtext = subtext || "Performance wear that moves with you."
