@@ -96,18 +96,18 @@ export default async function HomePage() {
   }
 
   try {
-    // Show ONLY featured reviews. If none are featured, show up to 6 recent approved.
-    try { await sql`ALTER TABLE reviews ADD COLUMN IF NOT EXISTS featured BOOLEAN NOT NULL DEFAULT false` } catch {}
+    // Show ONLY featured reviews. Fallback to 6 recent approved if none featured.
+    // D1: featured is INTEGER 1/0
     const featuredRows = await sql`
       SELECT r.*, p.name AS product_name
       FROM reviews r LEFT JOIN products p ON p.id = r.product_id
-      WHERE r.approved = true AND r.featured = true
+      WHERE r.approved = 1 AND r.featured = 1
       ORDER BY r.created_at DESC
     `
     const sourceRows = featuredRows.length > 0 ? featuredRows : await sql`
       SELECT r.*, p.name AS product_name
       FROM reviews r LEFT JOIN products p ON p.id = r.product_id
-      WHERE r.approved = true
+      WHERE r.approved = 1
       ORDER BY r.created_at DESC
       LIMIT 6
     `
@@ -116,7 +116,7 @@ export default async function HomePage() {
       review_text: r.comment || r.review_text || "",
       customer_location: r.customer_location || "",
       photo_url: r.photo_url || null,
-      featured: r.featured === true,
+      featured: r.featured === 1,
     }))
   } catch (e) {
     console.error("Reviews error:", e)
@@ -129,7 +129,7 @@ export default async function HomePage() {
       sql`SELECT COUNT(*) as count FROM customers`,
       sql`SELECT COUNT(*) as count FROM reviews`,
       sql`SELECT COALESCE(AVG(rating), 0) as avg_rating FROM reviews WHERE approved = true`,
-      sql`SELECT COALESCE(SUM(total_price), 0) as total_revenue FROM orders WHERE status IN ('confirmed','processing','shipped','delivered')`,
+      sql`SELECT COALESCE(SUM(total_price), 0) as total_revenue FROM orders WHERE status = ANY(${["confirmed", "processing", "shipped", "delivered"]})`,
     ])
     stats = {
       productCount: Number(products_count[0]?.count || 0),
