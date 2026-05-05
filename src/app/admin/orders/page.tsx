@@ -29,7 +29,7 @@ type Order = {
   tracking_url?: string; email?: string
 }
 
-type EditForm = { name: string; phone: string; address: string; notes: string; total_price: string }
+type EditForm = { name: string; phone: string; address: string; notes: string; total_price: string; tracking_url: string }
 
 export default function AdminOrders() {
   const [orders, setOrders] = useState<Order[]>([])
@@ -40,7 +40,7 @@ export default function AdminOrders() {
   const [bulkDeleting, setBulkDeleting] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; label: string } | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [editForm, setEditForm] = useState<EditForm>({ name: "", phone: "", address: "", notes: "", total_price: "" })
+  const [editForm, setEditForm] = useState<EditForm>({ name: "", phone: "", address: "", notes: "", total_price: "", tracking_url: "" })
   const [addressPopup, setAddressPopup] = useState<{ name: string; phone: string; address: string; notes?: string } | null>(null)
   const [copied, setCopied] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -73,7 +73,8 @@ export default function AdminOrders() {
       phone: order.phone,
       address: order.address,
       notes: order.notes || "",
-      total_price: String(order.total_price)
+      total_price: String(order.total_price),
+      tracking_url: order.tracking_url || ""
     })
   }
 
@@ -91,6 +92,7 @@ export default function AdminOrders() {
           address: editForm.address.trim(),
           notes: editForm.notes.trim(),
           total_price: Number(editForm.total_price) || 0,
+          tracking_url: editForm.tracking_url.trim() || null,
         }),
       })
       setOrders(prev => prev.map(o => o.id === editingId ? { ...o, ...editForm, total_price: Number(editForm.total_price) } : o))
@@ -267,6 +269,7 @@ export default function AdminOrders() {
                         <input value={editForm.phone} onChange={e => setEditForm(prev => ({ ...prev, phone: e.target.value }))} placeholder="Phone" style={{ padding: "0.5rem", border: "1px solid #e0e0e0", width: "100%" }} />
                         <textarea value={editForm.address} onChange={e => setEditForm(prev => ({ ...prev, address: e.target.value }))} placeholder="Address" rows={2} style={{ padding: "0.5rem", border: "1px solid #e0e0e0", width: "100%", fontFamily: "inherit" }} />
                         <textarea value={editForm.notes} onChange={e => setEditForm(prev => ({ ...prev, notes: e.target.value }))} placeholder="Notes" rows={2} style={{ padding: "0.5rem", border: "1px solid #e0e0e0", width: "100%", fontFamily: "inherit" }} />
+                        <input value={editForm.tracking_url} onChange={e => setEditForm(prev => ({ ...prev, tracking_url: e.target.value }))} placeholder="Tracking URL (e.g. https://pathao.com/track/...)" style={{ padding: "0.5rem", border: "1px solid #e0e0e0", width: "100%" }} />
                         <input type="number" value={editForm.total_price} onChange={e => setEditForm(prev => ({ ...prev, total_price: e.target.value }))} placeholder="Price" style={{ padding: "0.5rem", border: "1px solid #e0e0e0", width: "150px" }} />
                         <div style={{ display: "flex", gap: "0.5rem" }}>
                           <button onClick={saveEdit} disabled={saving} style={{ padding: "0.5rem 1rem", backgroundColor: "black", color: "white", border: "none", fontWeight: 600, cursor: saving ? "not-allowed" : "pointer" }}>
@@ -312,9 +315,14 @@ export default function AdminOrders() {
                         </div>
 
                         {order.notes && (
-                          <div style={{ fontSize: "0.75rem", color: "#666", marginBottom: "0.75rem", fontStyle: "italic" }}>
+                          <div style={{ fontSize: "0.75rem", color: "#666", marginBottom: "0.5rem", fontStyle: "italic" }}>
                             Note: {order.notes}
                           </div>
+                        )}
+                        {order.tracking_url && (
+                          <a href={order.tracking_url} target="_blank" rel="noopener noreferrer" style={{ display: "inline-block", marginBottom: "0.75rem", fontSize: "0.78rem", color: "#2563eb", fontWeight: 700, textDecoration: "none" }}>
+                            🚚 Track Package →
+                          </a>
                         )}
 
                         <div style={{ display: "flex", gap: "0.5rem", fontSize: "0.75rem", flexWrap: "wrap" }}>
