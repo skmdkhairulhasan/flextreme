@@ -321,7 +321,7 @@ export default function ChatBot() {
               const color = o.color ? "\nColor: " + o.color : ""
               orderReply += `ORDER ${i+1}\nProduct: ${product}\nStatus: ${status}\nQuantity: ${qty}${size}${color}`
               if (status === "shipped" && o.tracking_url) {
-                orderReply += `\n\n🚚 Track: ${o.tracking_url}\n`
+                orderReply += `\n\n${o.tracking_url}\n`
               }
               orderReply += "\n\n"
             })
