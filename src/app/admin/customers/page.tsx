@@ -234,15 +234,19 @@ export default function CustomersPage() {
   // ── Delete ──
   async function deleteCustomer(customer: Customer) {
     setDeletingId(customer.id)
+    // Safety: always reset after 8s even if something hangs
+    const safety = setTimeout(() => setDeletingId(null), 8000)
     try {
       const res = await fetch(`/api/customers?id=${customer.id}`, { method: "DELETE" })
-      if (!res.ok) throw new Error("Failed")
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || "Failed")
       setCustomers(prev => prev.filter(c => c.id !== customer.id))
       if (selected === customer.id) setSelected(null)
       showToast(`${customer.name} deleted`, "success")
-    } catch {
-      showToast("Failed to delete customer", "error")
+    } catch (e: any) {
+      showToast(e.message || "Failed to delete customer", "error")
     } finally {
+      clearTimeout(safety)
       setDeletingId(null)
     }
   }
