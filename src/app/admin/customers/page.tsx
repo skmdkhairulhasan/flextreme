@@ -233,15 +233,19 @@ export default function CustomersPage() {
 
   // ── Delete ──
   async function deleteCustomer(customer: Customer) {
-    setDeletingId(customer.id)
-    // Safety: always reset after 8s even if something hangs
+    const key = customer.phone || customer.id  // phone is always present, id can be null
+    setDeletingId(key)
     const safety = setTimeout(() => setDeletingId(null), 8000)
     try {
-      const res = await fetch(`/api/customers?id=${customer.id}`, { method: "DELETE" })
+      // Try by ID first, fall back to phone if ID is null
+      const param = customer.id
+        ? `id=${customer.id}`
+        : `phone=${encodeURIComponent(customer.phone)}`
+      const res = await fetch(`/api/customers?${param}`, { method: "DELETE" })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data.error || "Failed")
-      setCustomers(prev => prev.filter(c => c.id !== customer.id))
-      if (selected === customer.id) setSelected(null)
+      setCustomers(prev => prev.filter(c => c.phone !== customer.phone))
+      if (selected === customer.id || selected === customer.phone) setSelected(null)
       showToast(`${customer.name} deleted`, "success")
     } catch (e: any) {
       showToast(e.message || "Failed to delete customer", "error")
@@ -462,10 +466,10 @@ export default function CustomersPage() {
                         if (!confirm(`Delete ${customer.name}? This cannot be undone.`)) return
                         deleteCustomer(customer)
                       }}
-                      disabled={deletingId === customer.id}
-                      style={{ padding: "0.5rem 1rem", backgroundColor: "#fee2e2", color: "#dc2626", border: "1px solid #fca5a5", fontWeight: 700, fontSize: "0.75rem", cursor: deletingId === customer.id ? "not-allowed" : "pointer", marginLeft: "auto" }}
+                      disabled={deletingId === (customer.phone || customer.id)}
+                      style={{ padding: "0.5rem 1rem", backgroundColor: "#fee2e2", color: "#dc2626", border: "1px solid #fca5a5", fontWeight: 700, fontSize: "0.75rem", cursor: deletingId === (customer.phone || customer.id) ? "not-allowed" : "pointer", marginLeft: "auto" }}
                     >
-                      {deletingId === customer.id ? "Deleting..." : "🗑 Delete"}
+                      {deletingId === (customer.phone || customer.id) ? "Deleting..." : "🗑 Delete"}
                     </button>
                   </div>
 

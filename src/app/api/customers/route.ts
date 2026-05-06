@@ -48,12 +48,16 @@ export async function PATCH(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     const { searchParams } = request.nextUrl
-    const id = searchParams.get("id")
+    const id    = searchParams.get("id")
+    const phone = searchParams.get("phone")
 
-    if (!id) return NextResponse.json({ error: "Customer ID required" }, { status: 400 })
+    if (!id && !phone) return NextResponse.json({ error: "ID or phone required" }, { status: 400 })
 
-    const rows = await sql`DELETE FROM customers WHERE id = ${id} RETURNING id`
-    if (rows.length === 0) return NextResponse.json({ error: "Customer not found" }, { status: 404 })
+    if (id) {
+      await sql`DELETE FROM customers WHERE id = ${id}`
+    } else {
+      await sql`DELETE FROM customers WHERE phone = ${phone}`
+    }
 
     return NextResponse.json({ success: true })
   } catch (error) {
