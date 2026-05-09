@@ -565,7 +565,7 @@ export default function ProductShowcaseHero({
         <div
           ref={productZoneRef}
           className="product-zone"
-          style={{ cursor: isDragging ? 'grabbing' : activeProduct?.slug ? 'pointer' : 'grab' }}
+          style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={endDrag}
@@ -600,19 +600,20 @@ export default function ProductShowcaseHero({
               <div
                 key={idx}
                 className={`product-item ${state}`}
-                onClick={isActive ? openActiveProduct : undefined}
-                role={isActive && product.slug ? "button" : undefined}
-                tabIndex={isActive && product.slug ? 0 : -1}
-                onKeyDown={isActive ? (e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault()
-                    openActiveProduct()
-                  }
-                } : undefined}
               >
                 <img 
                   src={product.image}
                   alt={product.label}
+                  onClick={isActive ? openActiveProduct : undefined}
+                  role={isActive && product.slug ? "button" : undefined}
+                  tabIndex={isActive && product.slug ? 0 : -1}
+                  onKeyDown={isActive ? (e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault()
+                      openActiveProduct()
+                    }
+                  } : undefined}
+                  style={{ cursor: isActive && product.slug ? "pointer" : "default", pointerEvents: isActive ? "auto" : "none" }}
                   className="product-image"
                   draggable="false"
                   loading={idx === 0 ? "eager" : "lazy"}

@@ -1,7 +1,7 @@
 .cinematic-hero {
   --slide-offset: clamp(220px, 28vw, 320px);
-  height: 100dvh;
-  min-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  height: 100svh;
+  min-height: calc(100svh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
   background: #000;
   color: #fff;
   position: relative;
@@ -89,7 +89,7 @@
   --product-controls-space: 112px;
   position: relative;
   width: 100%;
-  height: min(64dvh, 700px);
+  height: min(64svh, 700px);
   min-height: 390px;
   display: flex;
   align-items: center;
@@ -337,7 +337,7 @@
   }
 
   .product-zone {
-    height: 43dvh;
+    height: 43svh;
     min-height: 310px;
   }
 
@@ -394,7 +394,7 @@
   .product-zone {
     width: min(100%, 420px);
     --product-controls-space: 96px;
-    height: 40dvh;
+    height: 40svh;
     min-height: 260px;
     margin: 0 auto;
   }
@@ -447,7 +447,7 @@
   }
 
   .product-zone {
-    height: 36dvh;
+    height: 36svh;
     min-height: 220px;
   }
 

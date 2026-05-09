@@ -62,10 +62,9 @@ export default function ReviewsSection({ reviews }: { reviews: any[] }) {
         .rv-body {
           height: ${TEXT_H}px;
           padding: 1.25rem 1.25rem 0;
-          display: flex;
-          flex-direction: column;
           box-sizing: border-box;
           flex-shrink: 0;
+          overflow: hidden;
         }
 
         .rv-stars { font-size: 0.9rem; margin-bottom: 0.6rem; color: #f0a500; flex-shrink: 0; }
@@ -75,11 +74,13 @@ export default function ReviewsSection({ reviews }: { reviews: any[] }) {
           line-height: 1.6;
           color: rgba(255,255,255,0.75);
           font-style: italic;
-          flex: 1;
           overflow: hidden;
           display: -webkit-box;
           -webkit-line-clamp: 4;
           -webkit-box-orient: vertical;
+          margin: 0;
+          word-break: break-word;
+          overflow-wrap: anywhere;
         }
 
         /* Footer — fixed height, same for ALL cards */
@@ -124,10 +125,10 @@ export default function ReviewsSection({ reviews }: { reviews: any[] }) {
         @media (max-width: 640px) {
           .rv-card { flex: 1 1 calc(50% - 10px); max-width: none; min-width: 0; }
           .rv-grid  { gap: 12px; }
-          .rv-body  { height: ${Math.round(TEXT_H * 0.85)}px; padding: 0.875rem 0.875rem 0; }
-          .rv-footer{ height: ${Math.round(FOOT_H * 0.9)}px; padding: 0.5rem 0.875rem 0.6rem; }
+          .rv-body  { height: ${Math.round(TEXT_H * 0.9)}px; padding: 0.875rem 0.875rem 0; }
+          .rv-footer{ height: ${Math.round(FOOT_H * 0.95)}px; padding: 0.5rem 0.875rem 0.6rem; }
           .rv-photo { height: ${Math.round(IMAGE_H * 0.75)}px; }
-          .rv-text  { font-size: 0.78rem; -webkit-line-clamp: 3; }
+          .rv-text  { font-size: 0.78rem; -webkit-line-clamp: 5; line-height: 1.5; }
         }
       `}</style>
 
