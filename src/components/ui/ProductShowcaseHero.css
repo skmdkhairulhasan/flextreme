@@ -124,6 +124,7 @@
   justify-content: center;
   z-index: 2;
   will-change: transform, opacity, filter;
+  pointer-events: none;
 }
 
 .product-item.active {

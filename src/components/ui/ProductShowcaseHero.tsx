@@ -498,17 +498,15 @@ export default function ProductShowcaseHero({
       if (dragDelta < 0) nextSlide()
       else prevSlide()
       clickSuppressRef.current = true
-    } else if (Math.abs(dragDelta) <= 8) {
-      // It was a tap/click, not a drag — navigate to product
-      clickSuppressRef.current = false
-      openActiveProduct()
-      return
+    } else {
+      // Small or no drag — allow img onClick to fire naturally
+      clickSuppressRef.current = Math.abs(dragDelta) > 8
     }
 
     window.setTimeout(() => {
       clickSuppressRef.current = false
-    }, 100)
-  }, [nextSlide, openActiveProduct, pauseAfterInteraction, prevSlide])
+    }, 150)
+  }, [nextSlide, pauseAfterInteraction, prevSlide])
 
   const handleArrowClick = useCallback((direction: "next" | "prev") => {
     pauseAfterInteraction()
@@ -604,7 +602,10 @@ export default function ProductShowcaseHero({
                 <img 
                   src={product.image}
                   alt={product.label}
-                  onClick={isActive ? openActiveProduct : undefined}
+                  onClick={isActive && product.slug ? (e) => {
+                    e.stopPropagation()
+                    if (!clickSuppressRef.current) openActiveProduct()
+                  } : undefined}
                   role={isActive && product.slug ? "button" : undefined}
                   tabIndex={isActive && product.slug ? 0 : -1}
                   onKeyDown={isActive ? (e) => {
@@ -613,7 +614,11 @@ export default function ProductShowcaseHero({
                       openActiveProduct()
                     }
                   } : undefined}
-                  style={{ cursor: isActive && product.slug ? "pointer" : "default", pointerEvents: isActive ? "auto" : "none" }}
+                  style={{
+                    cursor: isActive && product.slug ? "pointer" : "default",
+                    pointerEvents: isActive ? "auto" : "none",
+                    display: "block",
+                  }}
                   className="product-image"
                   draggable="false"
                   loading={idx === 0 ? "eager" : "lazy"}
